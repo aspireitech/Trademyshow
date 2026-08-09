@@ -1,0 +1,338 @@
+<title>TradeMyShow — Product Design Doc</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --ink: #182236;
+    --dim: #5c6a85;
+    --border: #dee5f0;
+    --accent: #2f6fe4;
+    --accent-soft: rgba(47, 111, 228, 0.1);
+    --gain: #1e9e63;
+    --loss: #d64545;
+    --mock-bg: #0b0f17;
+    --mock-surface: #121826;
+    --mock-border: #232d42;
+    --mock-ink: #e8edf6;
+    --mock-dim: #93a0b8;
+    --mock-accent: #4f8cff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1119;
+      --surface: #141b28;
+      --ink: #e8edf6;
+      --dim: #94a1ba;
+      --border: #253048;
+      --accent: #5b93ff;
+      --accent-soft: rgba(91, 147, 255, 0.13);
+      --gain: #34c07d;
+      --loss: #e5605a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1119;
+    --surface: #141b28;
+    --ink: #e8edf6;
+    --dim: #94a1ba;
+    --border: #253048;
+    --accent: #5b93ff;
+    --accent-soft: rgba(91, 147, 255, 0.13);
+    --gain: #34c07d;
+    --loss: #e5605a;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 "Avenir Next", "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+    padding: 48px 20px 80px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  h1 { font-size: 40px; line-height: 1.12; letter-spacing: -0.02em; text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--accent); }
+  h2 { font-size: 24px; letter-spacing: -0.015em; margin-bottom: 6px; text-wrap: balance; }
+  .lede { color: var(--dim); max-width: 64ch; margin-top: 12px; }
+  .sub { color: var(--dim); max-width: 68ch; margin-bottom: 20px; font-size: 15px; }
+
+  .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  .chip {
+    font-size: 12.5px; font-weight: 600; padding: 4px 12px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent); border: 1px solid transparent;
+  }
+  .chip.ok { background: rgba(30, 158, 99, 0.12); color: var(--gain); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
+  }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+
+  /* ---- product mockups (always the product's dark UI, deliberately) ---- */
+  .mock {
+    background: var(--mock-bg); border: 1px solid var(--mock-border); border-radius: 12px;
+    overflow: hidden; font-size: 11.5px; color: var(--mock-ink); line-height: 1.5;
+  }
+  .mock .bar {
+    display: flex; align-items: center; gap: 5px; padding: 8px 12px;
+    background: var(--mock-surface); border-bottom: 1px solid var(--mock-border);
+  }
+  .mock .bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--mock-border); display: inline-block; }
+  .mock .bar span { margin-left: 8px; color: var(--mock-dim); font-size: 10px; }
+  .mock .body { padding: 16px; }
+  .mock h4 { font-size: 15px; margin-bottom: 4px; }
+  .mock .dim { color: var(--mock-dim); }
+  .mock .btn {
+    display: inline-block; background: var(--mock-accent); color: #fff; border-radius: 6px;
+    padding: 4px 12px; font-weight: 600; font-size: 10.5px;
+  }
+  .mock .panel {
+    background: var(--mock-surface); border: 1px solid var(--mock-border); border-radius: 8px;
+    padding: 10px 12px; margin-top: 10px;
+  }
+  .mock .gain { color: #2fbf71; }
+  .mock .loss { color: #e5534b; }
+  .mock .mono { font-family: ui-monospace, Consolas, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .mock table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .mock th { text-align: left; color: var(--mock-dim); font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 4px; border-bottom: 1px solid var(--mock-border); }
+  .mock td { padding: 5px 4px; border-bottom: 1px solid var(--mock-border); }
+  .mock tr:last-child td { border-bottom: none; }
+  .mock .tfs { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; }
+  .mock .tfs b {
+    border: 1px solid var(--mock-border); color: var(--mock-dim); border-radius: 4px;
+    padding: 1px 6px; font-size: 9px; font-weight: 600;
+  }
+  .mock .tfs b.on { border-color: var(--mock-accent); color: var(--mock-accent); background: rgba(79,140,255,0.14); }
+  .caption { font-size: 13px; color: var(--dim); margin-top: 10px; }
+
+  /* ---- diagrams & tables ---- */
+  .diagram { overflow-x: auto; }
+  pre.mermaid { background: transparent; display: flex; justify-content: center; }
+
+  table.spec { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  table.spec th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.spec td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.spec tr:last-child td { border-bottom: none; }
+  table.spec td:first-child { font-weight: 600; white-space: nowrap; }
+
+  ol.road { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--dim); }
+  ol.road b { color: var(--ink); }
+  a { color: var(--accent); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Product design document · v1 · Aug 2026</p>
+    <h1>TradeMyShow — know exactly <em>why</em> your portfolio moved today</h1>
+    <p class="lede">
+      A freemium SaaS where users group their favorite stocks and get a daily, plain-language AI
+      digest: which holdings drove the move, by exactly how much, and which news was behind it.
+      Analytics and education by design — never predictions, never advice.
+    </p>
+    <div class="meta">
+      <span class="chip ok">MVP built &amp; pushed</span>
+      <span class="chip ok">30 unit/API tests passing</span>
+      <span class="chip ok">Playwright e2e passing</span>
+      <span class="chip">Next.js 15 · TypeScript · SQLite · Claude</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">01 · Mockups</p>
+    <h2>The three screens that matter</h2>
+    <p class="sub">The product commits to a dark trading-desk interface; these frames mirror the shipped UI.</p>
+    <div class="grid2">
+      <div>
+        <div class="mock">
+          <div class="bar"><i></i><i></i><i></i><span>trademyshow.com</span></div>
+          <div class="body" style="text-align:center; padding: 26px 18px;">
+            <h4 style="font-size:17px;">Know exactly <span style="color:var(--mock-accent)">why</span> your portfolio moved today</h4>
+            <p class="dim" style="margin:6px 0 12px;">Group your favorite stocks — our AI explains every move in plain language.</p>
+            <span class="btn">Create your free group</span>
+            <div class="panel" style="text-align:left;">
+              <span class="dim" style="font-size:9px; text-transform:uppercase; letter-spacing:0.06em;">Today's digest — example</span>
+              <p style="font-weight:700; margin-top:4px;">"AI &amp; Chips" is up <span class="gain">+1.4%</span> today, led by NVDA</p>
+              <p class="dim">NVIDIA rose +3.2%, contributing +1.1% of the move — likely driver: earnings beat…</p>
+            </div>
+          </div>
+        </div>
+        <p class="caption"><b>Landing.</b> The digest itself is the hero — the value prop is shown, not described.</p>
+      </div>
+      <div>
+        <div class="mock">
+          <div class="bar"><i></i><i></i><i></i><span>/dashboard</span></div>
+          <div class="body">
+            <p style="display:flex; justify-content:space-between;"><b>Your groups</b><span class="btn">Create</span></p>
+            <div class="panel">
+              <b>AI &amp; Chips</b>
+              <p class="mono" style="font-size:15px; font-weight:700;">$1,284</p>
+              <p><span class="gain">+1.42% today</span> <span class="dim">· 3 stocks</span></p>
+            </div>
+            <div class="panel">
+              <b>Dividend Core</b>
+              <p class="mono" style="font-size:15px; font-weight:700;">$4,970</p>
+              <p><span class="loss">−0.31% today</span> <span class="dim">· 5 stocks · Pro</span></p>
+            </div>
+          </div>
+        </div>
+        <p class="caption"><b>Dashboard.</b> Group cards lead with value + day change — the daily habit loop.</p>
+      </div>
+    </div>
+    <div style="margin-top: 20px;">
+      <div class="mock">
+        <div class="bar"><i></i><i></i><i></i><span>/dashboard/groups/1 — AI &amp; Chips</span></div>
+        <div class="body">
+          <div class="panel" style="margin-top:0;">
+            <p style="display:flex; justify-content:space-between; gap:8px;"><b>Daily AI digest</b><span class="btn">Refresh digest</span></p>
+            <p style="font-weight:700; margin-top:6px;">Your "AI &amp; Chips" group gained <span class="gain">+1.42%</span> today, led by NVDA</p>
+            <p class="dim">NVIDIA (NVDA) rose +3.21%, contributing +1.08% of the group's move (33.9% of the portfolio).
+            Likely driver: NVIDIA tops quarterly earnings estimates, raises full-year guidance (MarketWire).
+            TSM fell −0.84%, costing −0.22%… <i>Not investment advice.</i></p>
+          </div>
+          <div class="panel">
+            <p style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+              <b>Holdings &amp; trends</b>
+            </p>
+            <div class="tfs"><b>1D</b><b>1W</b><b class="on">1M</b><b>3M</b><b>6M</b><b>1Y</b><b>5Y</b><b>YTD</b><b>ALL</b></div>
+            <table>
+              <tr><th>Stock</th><th>Price</th><th>Today</th><th>1M trend</th><th>1M %</th><th>Weight</th><th>Contribution</th></tr>
+              <tr><td><b>NVDA</b></td><td class="mono">$435.10</td><td class="mono gain">+3.21%</td>
+                <td><svg width="70" height="18" viewBox="0 0 70 18"><path d="M1,15 L12,13 L23,14 L34,10 L45,8 L56,9 L69,3" fill="none" stroke="#2fbf71" stroke-width="1.5"/></svg></td>
+                <td class="mono gain">+8.4%</td><td class="mono dim">33.9%</td><td class="mono gain">+1.08%</td></tr>
+              <tr><td><b>AMD</b></td><td class="mono">$162.44</td><td class="mono gain">+1.02%</td>
+                <td><svg width="70" height="18" viewBox="0 0 70 18"><path d="M1,12 L12,10 L23,13 L34,11 L45,9 L56,10 L69,7" fill="none" stroke="#2fbf71" stroke-width="1.5"/></svg></td>
+                <td class="mono gain">+3.1%</td><td class="mono dim">37.9%</td><td class="mono gain">+0.39%</td></tr>
+              <tr><td><b>TSM</b></td><td class="mono">$121.02</td><td class="mono loss">−0.84%</td>
+                <td><svg width="70" height="18" viewBox="0 0 70 18"><path d="M1,6 L12,8 L23,7 L34,10 L45,12 L56,11 L69,14" fill="none" stroke="#e5534b" stroke-width="1.5"/></svg></td>
+                <td class="mono loss">−2.2%</td><td class="mono dim">28.2%</td><td class="mono loss">−0.22%</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <p class="caption"><b>Group detail — the core screen.</b> Digest on top, then per-holding attribution: today's move,
+      the selected timeframe's trend, portfolio weight, and each stock's exact contribution to the group's change.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">02 · User flow</p>
+    <h2>From visitor to paying subscriber</h2>
+    <div class="card diagram">
+      <pre class="mermaid">
+flowchart TD
+    Start([Visitor]) --> Landing[Landing: example digest as hero]
+    Landing --> Register[Sign up free]
+    Register --> Dash[Dashboard: group cards]
+    Dash --> NewGroup[Create group] --> Group[Group detail]
+    Dash --> Group
+    Group --> AddStock[Search + add favorite stocks]
+    Group --> Trends[Timeframe tabs: 1D → ALL]
+    Group --> Digest[Generate daily AI digest]
+    Digest --> Read[Why it moved: contributions + news]
+    Read -- wants depth / more groups --> Upgrade[Pro · $9/mo]
+    Group -- hits free limits --> Upgrade
+    Upgrade --> Group
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">03 · Architecture</p>
+    <h2>System overview</h2>
+    <div class="card diagram">
+      <pre class="mermaid">
+flowchart LR
+    subgraph Browser["Browser · React"]
+        UI[Landing · Auth · Dashboard · Group detail]
+    end
+    subgraph Server["Next.js 15 App Router"]
+        API[API routes: auth · groups · stocks · digest · billing]
+        Auth[auth.ts · bcrypt + JWT cookie]
+        Plans[plans.ts · free/pro gates]
+        Engine[digest engine · pure attribution math]
+        Writer[digest writer · AI narration]
+        MD[market data provider]
+        NW[news provider]
+        DB[(SQLite)]
+    end
+    subgraph Ext["External · adapter seams"]
+        Claude[Anthropic API · claude-opus-5]
+        Feed[Finnhub / Polygon · NewsAPI]
+        Stripe[Stripe]
+    end
+    UI -->|JSON| API
+    API --> Auth --> DB
+    API --> Plans
+    API --> Engine --> MD
+    Engine --> NW
+    API --> Writer --> Claude
+    API --> DB
+    MD -.-> Feed
+    NW -.-> Feed
+    API -.-> Stripe
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">04 · Tech flow</p>
+    <h2>The digest pipeline</h2>
+    <p class="sub">The one deliberate constraint that defines the product: math first, AI second.
+    The engine computes every number; Claude only narrates the computed facts — so the digest can
+    never invent a figure, never predicts, and never advises.</p>
+    <div class="card diagram">
+      <pre class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant API as POST /groups/:id/digest
+    participant EN as Engine (pure math)
+    participant WR as Writer
+    participant C as Claude
+    participant DB as SQLite
+    U->>API: Generate digest
+    API->>EN: holdings + quotes + news
+    EN-->>API: facts: value, day change, weights, contributions
+    API->>WR: writeDigest(facts, deep = pro)
+    alt API key present
+        WR->>C: system prompt (no advice, facts only) + JSON facts
+        C-->>WR: headline + body
+    else no key / error / refusal
+        WR-->>WR: deterministic template prose
+    end
+    API->>DB: persist digest
+    API-->>U: headline + plain-language body
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">05 · Build status</p>
+    <h2>What's shipped vs. what's next</h2>
+    <div class="card" style="margin-bottom: 20px;">
+      <table class="spec">
+        <tr><th>Layer</th><th>Shipped in MVP</th></tr>
+        <tr><td>Auth</td><td>Email/password, bcrypt, JWT httpOnly session, guarded routes</td></tr>
+        <tr><td>Groups</td><td>CRUD, favorites per group, server-side free/pro limits</td></tr>
+        <tr><td>Analytics</td><td>9 timeframes (1D–ALL), sparklines, weight &amp; contribution attribution</td></tr>
+        <tr><td>AI digest</td><td>Claude writer + deterministic fallback; refusal-safe; per-plan depth</td></tr>
+        <tr><td>Data</td><td>Deterministic mock market/news providers behind real-provider seams</td></tr>
+        <tr><td>Billing</td><td>Plan gating live; upgrade stub with documented Stripe seam</td></tr>
+        <tr><td>Testing</td><td>30 vitest unit + API integration tests · Playwright e2e journey</td></tr>
+      </table>
+    </div>
+    <ol class="road">
+      <li><b>Real data feeds</b> — licensed market data + news APIs behind the existing provider interfaces, with caching.</li>
+      <li><b>Scheduled digests</b> — nightly batch per user, delivered by email (the habit loop).</li>
+      <li><b>Stripe billing</b> — Checkout + webhooks replacing the stub.</li>
+      <li><b>Broker linking</b> — Plaid/SnapTrade so digests explain real positions, not just watchlists.</li>
+      <li><b>Postgres + hosting</b> — swap the contained SQLite layer when scale demands.</li>
+    </ol>
+  </section>
+
+</div>
