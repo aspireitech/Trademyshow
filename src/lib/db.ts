@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import type { Digest, DigestFacts, Group, Holding, Plan, User } from "./types";
+import type { Digest, DigestFacts, DigestWriter, Group, Holding, Plan, User } from "./types";
 
 let db: Database.Database | null = null;
 
@@ -177,7 +177,7 @@ interface DigestRow {
   headline: string;
   body: string;
   facts_json: string;
-  writer: "claude" | "template";
+  writer: DigestWriter;
   created_at: string;
 }
 
@@ -200,7 +200,7 @@ export function saveDigest(
   headline: string,
   body: string,
   facts: DigestFacts,
-  writer: "claude" | "template",
+  writer: DigestWriter,
 ): Digest {
   const info = getDb()
     .prepare("INSERT INTO digests (group_id, as_of, headline, body, facts_json, writer) VALUES (?, ?, ?, ?, ?, ?)")

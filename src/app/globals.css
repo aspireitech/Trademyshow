@@ -228,6 +228,65 @@ table.holdings tr:hover td {
   color: var(--accent);
 }
 
+/* ---------- stock lookup dropdown ---------- */
+.lookup {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.lookup button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.lookup button:last-child {
+  border-bottom: none;
+}
+.lookup button:hover,
+.lookup button:focus-visible {
+  background: var(--bg-hover);
+}
+
+/* ---------- timeframe grid (single-stock view) ---------- */
+.tf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+.tf-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.tf-cell:hover,
+.tf-cell:focus-visible {
+  border-color: var(--accent);
+}
+.tf-cell strong {
+  font-size: 15px;
+}
+
 /* ---------- landing ---------- */
 .hero {
   padding: 90px 0 60px;

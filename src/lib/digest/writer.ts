@@ -1,21 +1,22 @@
-import Anthropic from "@anthropic-ai/sdk";
-import type { DigestFacts } from "../types";
+import { anyProviderConfigured, getRouter } from "../llm";
+import type { DigestFacts, DigestWriter } from "../types";
 
 /**
- * The digest writer turns DigestFacts into plain-language prose. Two
- * implementations:
- *  - Claude (when ANTHROPIC_API_KEY is set): natural, contextual narration.
- *  - Template (fallback): deterministic prose so the app works offline and
- *    in tests. Same output shape either way.
+ * The digest writer turns DigestFacts into plain-language prose.
  *
- * The writer never predicts prices and never receives numbers other than
- * the computed facts — the system prompt constrains it to explain, not advise.
+ * Narration is routed through the multi-provider LLM router (Gemini primary,
+ * Anthropic and OpenAI as automatic backups). If every provider is rate
+ * limited or unconfigured, it falls back to a deterministic template so the
+ * product never hard-fails on a quota wall.
+ *
+ * The writer never predicts prices and never receives numbers other than the
+ * computed facts — the system prompt constrains it to explain, not advise.
  */
 
 export interface WrittenDigest {
   headline: string;
   body: string;
-  writer: "claude" | "template";
+  writer: DigestWriter;
 }
 
 const SYSTEM_PROMPT = `You write a daily portfolio digest for a retail investor.
@@ -39,48 +40,31 @@ BODY:
 <the digest body>`;
 
 export async function writeDigest(facts: DigestFacts, deep: boolean): Promise<WrittenDigest> {
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      return await writeWithClaude(facts, deep);
-    } catch (err) {
-      console.error("Claude digest failed, falling back to template:", err);
-    }
-  }
-  return writeWithTemplate(facts, deep);
-}
+  if (!anyProviderConfigured()) return writeWithTemplate(facts, deep);
 
-async function writeWithClaude(facts: DigestFacts, deep: boolean): Promise<WrittenDigest> {
-  const client = new Anthropic();
-  const userContent =
-    `Depth: ${deep ? "deep (per-holding detail for a Pro subscriber)" : "summary (top movers only, free tier)"}\n` +
-    `Facts:\n${JSON.stringify(facts)}`;
-
-  const response = await client.messages.create({
-    model: "claude-opus-5",
-    max_tokens: 1500,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userContent }],
-  });
-
-  if (response.stop_reason === "refusal") {
-    // Safety classifiers declined — fall back to the deterministic writer.
+  try {
+    const res = await getRouter().complete({
+      system: SYSTEM_PROMPT,
+      user:
+        `Depth: ${deep ? "deep (per-holding detail for a Pro subscriber)" : "summary (top movers only, free tier)"}\n` +
+        `Facts:\n${JSON.stringify(facts)}`,
+      maxTokens: 1500,
+    });
+    return { ...parseDigest(res.text, facts), writer: res.provider };
+  } catch (err) {
+    // Every provider exhausted (or a bad request) — degrade, never 500.
+    console.error("[digest] all LLM providers failed, using template:", err);
     return writeWithTemplate(facts, deep);
   }
+}
 
-  let text = "";
-  for (const block of response.content) {
-    if (block.type === "text") text += block.text;
-  }
+function parseDigest(text: string, facts: DigestFacts): { headline: string; body: string } {
   const headlineMatch = text.match(/HEADLINE:\s*(.+)/);
   const bodyMatch = text.match(/BODY:\s*\n?([\s\S]+)/);
   if (!headlineMatch || !bodyMatch) {
-    return { headline: defaultHeadline(facts), body: text.trim(), writer: "claude" };
+    return { headline: defaultHeadline(facts), body: text.trim() };
   }
-  return {
-    headline: headlineMatch[1].trim(),
-    body: bodyMatch[1].trim(),
-    writer: "claude",
-  };
+  return { headline: headlineMatch[1].trim(), body: bodyMatch[1].trim() };
 }
 
 // ---------- deterministic template writer ----------
@@ -121,9 +105,7 @@ export function writeWithTemplate(facts: DigestFacts, deep: boolean): WrittenDig
       (h) => !facts.topContributors.slice(0, 3).some((c) => c.symbol === h.symbol),
     );
     if (quiet.length > 0) {
-      const quietSummary = quiet
-        .map((h) => `${h.symbol} ${pct(h.dayChangePct)}`)
-        .join(", ");
+      const quietSummary = quiet.map((h) => `${h.symbol} ${pct(h.dayChangePct)}`).join(", ");
       lines.push(`Elsewhere in the group: ${quietSummary}.`);
     }
   }
@@ -132,9 +114,5 @@ export function writeWithTemplate(facts: DigestFacts, deep: boolean): WrittenDig
     "This digest explains today's moves using computed portfolio math and related headlines. It is not investment advice.",
   );
 
-  return {
-    headline: defaultHeadline(facts),
-    body: lines.join("\n\n"),
-    writer: "template",
-  };
+  return { headline: defaultHeadline(facts), body: lines.join("\n\n"), writer: "template" };
 }

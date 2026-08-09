@@ -17,6 +17,13 @@ interface StockDetail {
   trends: Record<Timeframe, number>;
 }
 
+const WRITER_LABELS: Record<string, string> = {
+  gemini: "Gemini",
+  anthropic: "Claude",
+  openai: "GPT",
+  template: "rules engine",
+};
+
 export default function GroupDetail({ groupId }: { groupId: number }) {
   const [data, setData] = useState<GroupResponse | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -159,7 +166,7 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
               {digest.body}
             </p>
             <p className="dim" style={{ fontSize: 11, marginTop: 10 }}>
-              {digest.asOf} · written by {digest.writer === "claude" ? "Claude" : "rules engine"}
+              {digest.asOf} · written by {WRITER_LABELS[digest.writer] ?? digest.writer}
             </p>
           </div>
         ) : (
@@ -229,7 +236,9 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
                   return (
                     <tr key={h.symbol}>
                       <td>
-                        <strong>{h.symbol}</strong>
+                        <Link href={`/dashboard/stocks/${h.symbol}`}>
+                          <strong>{h.symbol}</strong>
+                        </Link>
                         <br />
                         <span className="dim" style={{ fontSize: 12 }}>
                           {h.name}

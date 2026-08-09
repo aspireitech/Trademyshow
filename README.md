@@ -11,17 +11,47 @@ investment advice, never price predictions.
 ## Features
 
 - **Auth** — email/password accounts, bcrypt-hashed, JWT session cookie (httpOnly).
-- **Groups** — organize favorite stocks into named groups (watchlists/portfolios).
-- **Multi-timeframe trends** — per-stock sparklines and % change across 9 timeframes.
+- **Group analysis** — organize favorite stocks into named groups (watchlists/portfolios)
+  and see what each holding contributed to the group's move.
+- **Individual stock analysis** — look up any stock directly for price, a chart, every
+  timeframe at a glance, a plain-language trend read, and its latest news.
+- **Multi-timeframe trends** — sparklines and % change across 9 timeframes (1D → all-time).
 - **Digest engine** — pure-math attribution: each holding's day move, weight, and exact
   contribution to the group's change. The AI narrates only computed facts, so it can't
   invent numbers.
-- **AI writer** — Claude (`claude-opus-5`) when `ANTHROPIC_API_KEY` is set, with a
-  deterministic template fallback so the app runs fully offline.
+- **AI writer with automatic failover** — Gemini primary, Anthropic and OpenAI as
+  automatic backups, plus a deterministic template fallback. See below.
 - **News mapping** — related headlines per holding, aligned to the day's move.
 - **Freemium plans** — Free (1 group, 3 stocks, summary digest) vs Pro (10 groups, 30
   stocks, deep per-holding digest). Billing route ships as a stub with the Stripe
   integration point documented.
+
+## Lightweight by design
+
+No charting library, no CSS framework, no state-management library. Charts are hand-rolled
+inline SVG; styling is plain CSS with custom properties. Page-specific JavaScript is
+**1.5–2.9 kB** per route (the ~103 kB shared bundle is the React/Next.js baseline floor),
+so screens paint immediately.
+
+## LLM failover: never blocked by a quota wall
+
+Providers are tried in priority order (`LLM_PROVIDER_ORDER`, default
+`gemini,anthropic,openai`). Failures are classified and handled differently:
+
+| Failure | Behavior |
+|---|---|
+| **Rate limit / quota** | Provider goes into cooldown (honouring `Retry-After`), request is served by the next provider immediately. Subsequent requests **skip** the cooling provider entirely rather than re-hitting it. |
+| **Transient** (5xx, network) | Retried on the same provider with exponential backoff, then failover. |
+| **Auth** (bad key) | Provider disabled for the process — retrying can't help. |
+| **Refusal** (safety block) | Fail over; another model may answer. |
+| **Malformed request** | **Not** failed over — it would fail everywhere, so the bug surfaces instead of being masked by a bigger bill. |
+
+If every provider is exhausted, digests degrade to the deterministic template writer rather
+than erroring. `GET /api/llm/status` reports the live chain: which provider is active,
+which are cooling down and for how long, and which are misconfigured.
+
+Add only the keys you have — unconfigured providers are skipped automatically, so the app
+runs on Gemini alone, on all three, or on none.
 
 ## Quick start
 

@@ -40,9 +40,31 @@ test("full user journey: signup to AI digest", async ({ page }) => {
   await expect(page.getByText(/AI & Chips/).first()).toBeVisible();
   await expect(page.getByText(/not investment advice/i)).toBeVisible({ timeout: 15_000 });
 
+  // Individual stock analysis: drill in from the holdings table
+  await page.getByRole("link", { name: "NVDA" }).click();
+  await expect(page.getByRole("heading", { name: /NVDA/ })).toBeVisible();
+  await expect(page.getByText("Every timeframe at a glance")).toBeVisible();
+  await page.getByRole("button", { name: "Show 1Y chart" }).click();
+  await expect(page.getByText(/over 1Y/)).toBeVisible();
+
   // Free plan gate: a second group must be rejected
-  await page.getByRole("link", { name: "← All groups" }).click();
+  await page.getByRole("link", { name: "← Dashboard" }).click();
   await page.getByPlaceholder(/New group name/).fill("Second Group");
   await page.getByRole("button", { name: "Create" }).click();
   await expect(page.getByText(/Upgrade to Pro/i).first()).toBeVisible();
+});
+
+test("look up any stock directly from the dashboard", async ({ page }) => {
+  const email = `e2e-lookup-${Date.now()}@example.com`;
+  await page.goto("/register");
+  await page.getByLabel("Name").fill("Lookup Tester");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel(/Password/).fill("password123");
+  await page.getByRole("button", { name: "Sign up free" }).click();
+
+  // No group needed — search and open a single stock
+  await page.getByPlaceholder(/Look up any stock/).fill("TSLA");
+  await page.getByRole("button", { name: /TSLA/ }).click();
+  await expect(page.getByRole("heading", { name: /TSLA/ })).toBeVisible();
+  await expect(page.getByText(/not investment advice/i)).toBeVisible();
 });

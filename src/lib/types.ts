@@ -81,6 +81,9 @@ export interface DigestFacts {
   topContributors: HoldingSnapshot[]; // by |contribution|
 }
 
+/** Which engine produced the digest prose: an LLM provider, or the fallback. */
+export type DigestWriter = "gemini" | "anthropic" | "openai" | "template";
+
 export interface Digest {
   id: number;
   groupId: number;
@@ -88,7 +91,7 @@ export interface Digest {
   headline: string;
   body: string;
   facts: DigestFacts;
-  writer: "claude" | "template";
+  writer: DigestWriter;
   createdAt: string;
 }
 

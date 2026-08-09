@@ -66,6 +66,32 @@ flowchart TD
     H --> J[JSON response]
 ```
 
+## LLM provider failover
+
+The digest writer never calls a provider SDK directly — it calls the router, which owns
+priority order, error classification, cooldown state and retries.
+
+```mermaid
+flowchart TD
+    Req[writeDigest facts] --> R{Router: next eligible provider}
+    R -->|none eligible| T[Template writer - deterministic fallback]
+    R --> P[Call provider]
+    P -->|success| Done[Return prose + provider name]
+    P -->|error| C{Classify failure}
+    C -->|rate_limit| CD[Cooldown provider - honour Retry-After] --> R
+    C -->|transient| RT{Retries left?}
+    RT -->|yes| BO[Exponential backoff] --> P
+    RT -->|no| R
+    C -->|auth| DIS[Disable provider for process] --> R
+    C -->|refusal| R
+    C -->|permanent| TH[Throw - malformed request fails everywhere]
+```
+
+Cooldown state is held on a process-wide router instance deliberately: knowing "Gemini is
+rate limited until 14:32" is only useful if every request shares that knowledge. The
+classifier reads HTTP status codes and message patterns rather than SDK-specific error
+classes, so a provider SDK upgrade cannot silently break failover.
+
 ## Key design decisions
 
 | Decision | Rationale |
