@@ -13,13 +13,13 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 |---|---|---|---|---|
 | Core product | 17 | 1 | 1 | 0 |
 | Data & AI | 2 | 3 | 2 | 2 |
-| Auth & security | 15 | 0 | 1 | 1 |
-| Billing & growth | 7 | 1 | 0 | 1 |
+| Auth & security | 15 | 0 | 2 | 1 |
+| Billing & growth | 8 | 1 | 0 | 1 |
 | Legal & compliance | 4 | 0 | 2 | 2 |
 | Infrastructure | 9 | 1 | 2 | 1 |
-| **Total** | **54** | **6** | **8** | **7** |
+| **Total** | **55** | **6** | **9** | **7** |
 
-**54 of 68 components complete (79%).** 199 automated tests plus 18 end-to-end journeys;
+**55 of 70 components complete (79%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
