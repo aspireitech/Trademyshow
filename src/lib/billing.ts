@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { getDb, getUserByReferralCode, setUserPlan } from "./db";
 import { PLAN_PRICING } from "./plans";
+import { guardExternalCharge } from "./sandbox";
 import type { Plan } from "./types";
 
 /**
@@ -16,6 +17,13 @@ import type { Plan } from "./types";
  */
 
 export function stripeConfigured(): boolean {
+  // A live key in a sandbox would charge a real card during a demo. Treat it
+  // as unconfigured so checkout falls back to the stub, and say so loudly.
+  const guard = guardExternalCharge();
+  if (!guard.allowed) {
+    console.error(`[billing] ${guard.reason}`);
+    return false;
+  }
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 

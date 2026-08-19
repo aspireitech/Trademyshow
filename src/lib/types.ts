@@ -98,6 +98,8 @@ export interface NewsItem {
   headline: string;
   summary: string;
   source: string;
+  /** Link to the original article, when the provider supplies one. */
+  url?: string;
   publishedAt: string;
   sentiment: "positive" | "negative" | "neutral";
   impact: number; // 0..1 estimated relevance to price action

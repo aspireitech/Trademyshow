@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { THEME_BOOTSTRAP } from "@/lib/csp";
+import SandboxBanner from "@/components/SandboxBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "https://trademyshow.com"),
@@ -25,7 +26,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             follows prefers-color-scheme on its own. */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <SandboxBanner />
+        {children}
+      </body>
     </html>
   );
 }

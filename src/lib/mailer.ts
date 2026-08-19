@@ -8,6 +8,8 @@
  * never sent.
  */
 
+import { shouldSuppressEmail } from "./sandbox";
+
 export interface Mail {
   to: string;
   subject: string;
@@ -24,6 +26,10 @@ function fromAddress(): string {
 }
 
 export async function sendMail(mail: Mail): Promise<MailResult> {
+  // A sandbox signs up with throwaway addresses. Mailing them from the real
+  // sending domain earns a spam reputation that takes months to undo, so the
+  // send is short-circuited before a provider is ever chosen.
+  if (shouldSuppressEmail()) return sendToConsole(mail);
   if (process.env.RESEND_API_KEY) return sendViaResend(mail);
   if (process.env.SMTP_URL) return sendViaSmtp(mail);
   return sendToConsole(mail);

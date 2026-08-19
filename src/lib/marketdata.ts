@@ -1,3 +1,4 @@
+import { cachedQuote } from "./providers/cache";
 import type { AssetClass, PricePoint, Quote, StockInfo, Timeframe } from "./types";
 
 /**
@@ -178,7 +179,19 @@ function closeAt(symbol: string, asOf: Date, daysBack: number): number {
   return closes[idx];
 }
 
+/** True when a live vendor is configured; otherwise everything is the mock. */
+export function usingLiveData(): boolean {
+  return (process.env.MARKET_DATA_PROVIDER ?? "mock") !== "mock";
+}
+
 export function getQuote(symbol: string, asOf: Date = new Date()): Quote {
+  // A live quote is only consulted for "now". Historical and back-dated
+  // requests stay deterministic, which is what keeps the test suite and the
+  // published track record reproducible.
+  if (usingLiveData() && Math.abs(Date.now() - asOf.getTime()) < 60_000) {
+    const live = cachedQuote(symbol);
+    if (live) return live;
+  }
   const price = closeAt(symbol, asOf, 0);
   const prevClose = closeAt(symbol, asOf, 1);
   return {

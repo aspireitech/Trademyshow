@@ -167,3 +167,71 @@ export function runAlertJob(now: Date = new Date()): AlertHit[] {
 
   return hits;
 }
+
+// ---------- market data refresh ----------
+
+export interface RefreshReport {
+  provider: string;
+  symbols: number;
+  quotes: number;
+  histories: number;
+  newsItems: number;
+  failures: { symbol: string; error: string }[];
+}
+
+/**
+ * Pull vendor data into the cache.
+ *
+ * Only refreshes symbols someone is actually watching, plus the index trackers
+ * used as comparison baselines. Refreshing the whole universe would burn a
+ * free-tier quota on symbols nobody has ever opened.
+ *
+ * Failures are collected rather than thrown: one delisted symbol must not stop
+ * the other ninety-nine from refreshing.
+ */
+export async function refreshMarketData(now: Date = new Date()): Promise<RefreshReport> {
+  const report: RefreshReport = {
+    provider: process.env.MARKET_DATA_PROVIDER ?? "mock",
+    symbols: 0, quotes: 0, histories: 0, newsItems: 0, failures: [],
+  };
+  if (report.provider === "mock") return report;
+
+  const { finnhubMarketData, finnhubNews } = await import("./providers/finnhub");
+  const { cacheCloses, cacheNews, cacheQuote } = await import("./providers/cache");
+
+  const watched = getDb()
+    .prepare("SELECT DISTINCT symbol FROM holdings ORDER BY symbol")
+    .all() as { symbol: string }[];
+  const symbols = [...new Set([...watched.map((r) => r.symbol), "SPY", "QQQ"])];
+  report.symbols = symbols.length;
+
+  for (const symbol of symbols) {
+    try {
+      const quote = await finnhubMarketData.fetchQuote(symbol);
+      if (quote) {
+        cacheQuote(quote, now);
+        report.quotes++;
+      }
+
+      const closes = await finnhubMarketData.fetchDailyCloses(symbol, 400);
+      if (closes.length > 0) {
+        cacheCloses(symbol, closes);
+        report.histories++;
+      }
+
+      const news = await finnhubNews.fetchNews(
+        symbol,
+        new Date(now.getTime() - 7 * 86_400_000),
+        now,
+      );
+      if (news.length > 0) {
+        cacheNews(symbol, news);
+        report.newsItems += news.length;
+      }
+    } catch (err) {
+      report.failures.push({ symbol, error: String(err).slice(0, 120) });
+    }
+  }
+
+  return report;
+}

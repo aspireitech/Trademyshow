@@ -176,6 +176,36 @@ function open(): Database.Database {
     );
     CREATE INDEX IF NOT EXISTS idx_contracts_user ON contracts(user_id);
   `);
+
+  // Vendor data, fetched asynchronously and read synchronously. See
+  // src/lib/providers/cache.ts for why this layer exists.
+  conn.exec(`
+    CREATE TABLE IF NOT EXISTS quote_cache (
+      symbol TEXT PRIMARY KEY,
+      price REAL NOT NULL,
+      prev_close REAL NOT NULL,
+      change_pct REAL NOT NULL,
+      fetched_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS close_cache (
+      symbol TEXT NOT NULL,
+      day TEXT NOT NULL,
+      price REAL NOT NULL,
+      PRIMARY KEY (symbol, day)
+    );
+    CREATE TABLE IF NOT EXISTS news_cache (
+      id TEXT PRIMARY KEY,
+      symbol TEXT NOT NULL,
+      headline TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      source TEXT NOT NULL,
+      url TEXT,
+      published_at TEXT NOT NULL,
+      sentiment TEXT NOT NULL,
+      impact REAL NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_news_cache_symbol ON news_cache(symbol, published_at DESC);
+  `);
   const cols = conn.prepare("PRAGMA table_info(digests)").all() as { name: string }[];
   if (!cols.some((c) => c.name === "period")) {
     conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");

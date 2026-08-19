@@ -16,10 +16,10 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 | Auth & security | 15 | 0 | 2 | 1 |
 | Billing & growth | 8 | 2 | 0 | 1 |
 | Legal & compliance | 8 | 0 | 4 | 4 |
-| Infrastructure | 9 | 1 | 2 | 1 |
-| **Total** | **59** | **7** | **11** | **9** |
+| Infrastructure | 13 | 2 | 2 | 1 |
+| **Total** | **63** | **8** | **11** | **9** |
 
-**59 of 77 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
+**63 of 82 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -60,8 +60,8 @@ decisions and purchases, not tickets.
 |---|---|---|---|
 | Multi-provider LLM router | ✅ | Gemini → Anthropic → OpenAI, auto-failover on quota | — |
 | Template fallback writer | ✅ | Product never hard-fails when AI is unavailable | — |
-| News → score pipeline | 🔨 | **Architecture is real, the feed is mock.** 30% of the score | **Yes** |
-| Market data provider | 🔨 | Deterministic mock; adapter seam ready at `src/lib/marketdata.ts` | **Yes** |
+| News → score pipeline | 🔨 | Finnhub adapter built and tested; needs a key + licence review | **Yes** |
+| Market data provider | 🔨 | Finnhub adapter + cache built and tested; needs a key + licence review | **Yes** |
 | AI narration | 🔨 | Works; needs a real API key to produce non-template prose | — |
 | Earnings calendar | ⬜ | Strong signal source, not yet ingested | — |
 | Sector/peer comparison | ⬜ | "Is this move the stock or the sector?" | — |
@@ -134,8 +134,13 @@ decisions and purchases, not tickets.
 | Scheduled job runner | ✅ | One authenticated cron endpoint drives all recurring work | — |
 | Postgres migration path | ✅ | Documented step by step in `docs/OPERATIONS.md` | — |
 | Database | 🔨 | SQLite. Correct until you need a second instance | — |
-| Hosting / deployment | ⬜ | **Not a code task.** Vercel or similar | **Yes** |
-| Staging environment | ⬜ | — | — |
+| Sandbox deployment | ✅ | `SANDBOX=true`, seeded demo, banner, live-key refusal; verified running | — |
+| Container image | ✅ | Multi-stage Dockerfile, standalone output, non-root, healthcheck | — |
+| Health / readiness endpoint | ✅ | `/api/health` reports subsystem config without leaking credentials | — |
+| Deployment guide | ✅ | `docs/DEPLOY.md` — sandbox in one command, production checklist | — |
+| Hosting / deployment | ⬜ | **Not a code task.** Fly/Render with a volume, or Vercel + Postgres | **Yes** |
+| Staging environment | ⬜ | Same image as sandbox with real credentials | — |
+| Dependency vulnerabilities | 🔨 | 3 high, all transitive via Next 15 (postcss, sharp). Fix needs Next 16 | — |
 
 ---
 

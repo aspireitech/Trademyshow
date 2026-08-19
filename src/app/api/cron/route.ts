@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runAlertJob, runDigestJob } from "@/lib/jobs";
+import { refreshMarketData, runAlertJob, runDigestJob } from "@/lib/jobs";
 import { purgeExpiredTokens } from "@/lib/tokens";
 import type { DigestPeriod } from "@/lib/types";
 
@@ -28,7 +28,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ job, fired: runAlertJob().length });
     case "purge":
       return NextResponse.json({ job, purged: purgeExpiredTokens() });
+    case "market-data":
+      // Must run before the digest job: a digest built on yesterday's cache
+      // explains yesterday's moves.
+      return NextResponse.json({ job, report: await refreshMarketData() });
     default:
-      return NextResponse.json({ error: "job must be digest, alerts or purge" }, { status: 400 });
+      return NextResponse.json(
+        { error: "job must be digest, alerts, purge or market-data" },
+        { status: 400 },
+      );
   }
 }

@@ -1,4 +1,5 @@
-import { getStockInfo } from "./marketdata";
+import { getStockInfo, usingLiveData } from "./marketdata";
+import { cachedNews } from "./providers/cache";
 import type { NewsItem } from "./types";
 
 /**
@@ -47,6 +48,15 @@ function hashString(s: string): number {
 export function getNews(symbol: string, dayChangePct: number, asOf: Date = new Date()): NewsItem[] {
   const info = getStockInfo(symbol);
   if (!info) return [];
+
+  // Real headlines win when a feed is configured and has something recent.
+  // Falling back to the mock rather than showing nothing keeps the news
+  // component of the score defined on days the vendor returns an empty set.
+  if (usingLiveData()) {
+    const since = new Date(asOf.getTime() - 3 * 86_400_000);
+    const live = cachedNews(symbol, since);
+    if (live.length > 0) return live;
+  }
   const dayKey = asOf.toISOString().slice(0, 10);
   const seed = hashString(`${symbol}:${dayKey}`);
 
