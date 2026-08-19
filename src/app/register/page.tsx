@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
+import SocialButtons from "@/components/SocialButtons";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function RegisterPage() {
@@ -14,7 +16,12 @@ export default function RegisterPage() {
           <Link href="/login">Have an account? Log in</Link>
         </div>
       </nav>
-      <AuthForm mode="register" />
+      <div style={{ marginTop: 60 }}>
+        <SocialButtons />
+      </div>
+      <Suspense fallback={<div className="card" style={{ maxWidth: 400, margin: "0 auto 60px", minHeight: 260 }} />}>
+        <AuthForm mode="register" />
+      </Suspense>
     </div>
   );
 }

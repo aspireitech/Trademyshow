@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Sparkline from "./Sparkline";
 import type { Digest, DigestFacts, DigestPeriod, Holding, StockInfo, Timeframe } from "@/lib/types";
 import { TIMEFRAMES } from "@/lib/types";
+import { apiFetch } from "@/lib/apiClient";
 
 interface GroupResponse {
   group: { id: number; name: string };
@@ -94,9 +95,8 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
 
   async function addStock(symbol: string) {
     setError(null);
-    const res = await fetch(`/api/groups/${groupId}/holdings`, {
+    const res = await apiFetch(`/api/groups/${groupId}/holdings`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ symbol, quantity: 1 }),
     });
     if (!res.ok) {
@@ -110,14 +110,14 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
   }
 
   async function removeStock(symbol: string) {
-    await fetch(`/api/groups/${groupId}/holdings?symbol=${symbol}`, { method: "DELETE" });
+    await apiFetch(`/api/groups/${groupId}/holdings?symbol=${symbol}`, { method: "DELETE" });
     await load();
   }
 
   async function generateDigest() {
     setDigestBusy(true);
     setError(null);
-    const res = await fetch(`/api/groups/${groupId}/digest?period=${period}`, { method: "POST" });
+    const res = await apiFetch(`/api/groups/${groupId}/digest?period=${period}`, { method: "POST" });
     setDigestBusy(false);
     if (!res.ok) {
       const d = (await res.json().catch(() => ({}))) as { error?: string };
@@ -204,6 +204,11 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
             {results.map((r) => (
               <button key={r.symbol} className="btn small secondary" onClick={() => addStock(r.symbol)}>
                 + {r.symbol} <span className="dim">{r.name}</span>
+                {r.assetClass && r.assetClass !== "stock" && (
+                  <span className="badge" style={{ marginLeft: 6, fontSize: 10 }}>
+                    {r.assetClass.toUpperCase()}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -224,9 +229,22 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
           </div>
         </div>
         {facts.holdings.length === 0 ? (
-          <p className="dim" style={{ marginTop: 12 }}>
-            No stocks yet — search above to add your favorites.
-          </p>
+          <div style={{ marginTop: 12 }}>
+            <p className="dim">
+              Nothing in this watchlist yet. Add two or three and the daily insight starts
+              explaining what moved them.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+              <span className="dim" style={{ fontSize: 13, alignSelf: "center" }}>
+                Popular starting points:
+              </span>
+              {["SPY", "AAPL", "NVDA", "MSFT", "BTC-USD"].map((sym) => (
+                <button key={sym} className="btn small secondary" onClick={() => addStock(sym)}>
+                  + {sym}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           <div style={{ overflowX: "auto", marginTop: 12 }}>
             <table className="holdings">

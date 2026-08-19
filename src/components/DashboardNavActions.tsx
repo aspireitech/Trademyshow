@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function DashboardNavActions({
   plan,
@@ -17,17 +18,16 @@ export default function DashboardNavActions({
 
   async function upgrade() {
     setBusy(true);
-    await fetch("/api/billing/upgrade", {
+    await apiFetch("/api/billing/checkout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: "pro" }),
+      body: JSON.stringify({ plan: "pro", interval: "monthly" }),
     });
     setBusy(false);
     router.refresh();
   }
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await apiFetch("/api/auth/logout", { method: "POST" });
     router.push("/");
     router.refresh();
   }

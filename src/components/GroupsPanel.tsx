@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 
 interface GroupSummary {
   id: number;
@@ -28,21 +29,24 @@ export default function GroupsPanel() {
     void load();
   }, [load]);
 
-  async function createGroup(e: React.FormEvent) {
-    e.preventDefault();
+  async function createNamed(watchlistName: string) {
     setError(null);
-    const res = await fetch("/api/groups", {
+    const res = await apiFetch("/api/groups", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name: watchlistName }),
     });
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? "Could not create group");
+      setError(data.error ?? "Could not create watchlist");
       return;
     }
     setName("");
     await load();
+  }
+
+  async function createGroup(e: React.FormEvent) {
+    e.preventDefault();
+    await createNamed(name);
   }
 
   return (
@@ -67,9 +71,24 @@ export default function GroupsPanel() {
         <div className="card">
           <h3>Create your first watchlist</h3>
           <p className="dim">
-            A watchlist is a set of stocks you care about — your holdings, or a theme you are
-            following. Once it has stocks, you get a daily insight explaining every move.
+            A watchlist is a set of stocks, funds or coins you care about — what you hold, or a
+            theme you are following. Once it has something in it, you get a daily insight
+            explaining every move and why it happened.
           </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+            <span className="dim" style={{ fontSize: 13, alignSelf: "center" }}>
+              Start with:
+            </span>
+            {["My portfolio", "AI & Chips", "Dividend income"].map((preset) => (
+              <button
+                key={preset}
+                className="btn small secondary"
+                onClick={() => void createNamed(preset)}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="grid cols-3">

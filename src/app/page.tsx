@@ -363,9 +363,10 @@ export default async function LandingPage() {
 
       <footer className="site">
         <div className="container">
-          TradeMyShow provides analytics and educational content only. Nothing here is
+          TradeMyShow provides analytics and educational content only. <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> Nothing here is
           investment advice or a recommendation to buy or sell any security. Past performance
-          does not predict future results.
+          does not predict future results. <Link href="/terms">Terms</Link> ·{" "}
+          <Link href="/privacy">Privacy</Link>
         </div>
       </footer>
     </>

@@ -198,58 +198,45 @@
     <p class="lede">
       Every component, its real state, and whether it stands between you and taking real
       money from real users. Counted honestly — partial means it runs but is not
-      production-grade.
+      production-grade. Seven items remain, and five of them are decisions rather than code.
     </p>
   </header>
 
   <section class="card">
     <div class="stats" style="margin-bottom:22px">
-      <div class="stat done"><div class="n">24</div><div class="l">Shipped &amp; tested</div></div>
-      <div class="stat partial"><div class="n">8</div><div class="l">Partially built</div></div>
-      <div class="stat"><div class="n">35</div><div class="l">Not started</div></div>
-      <div class="stat blocked"><div class="n">20</div><div class="l">Block launch</div></div>
+      <div class="stat done"><div class="n">54</div><div class="l">Shipped &amp; tested</div></div>
+      <div class="stat partial"><div class="n">6</div><div class="l">Partially built</div></div>
+      <div class="stat"><div class="n">8</div><div class="l">Not started</div></div>
+      <div class="stat blocked"><div class="n">7</div><div class="l">Block launch</div></div>
     </div>
 
-    <div class="meter" role="img" aria-label="24 shipped, 8 partial, 35 not started, of 67 components">
-      <i style="width:35.8%;background:var(--done)"></i>
-      <i style="width:11.9%;background:var(--partial)"></i>
-      <i style="width:52.3%;background:var(--surface-sunk)"></i>
+    <div class="meter" role="img" aria-label="54 shipped, 6 partial, 8 not started, of 68 components">
+      <i style="width:79.4%;background:var(--done)"></i>
+      <i style="width:8.8%;background:var(--partial)"></i>
+      <i style="width:11.8%;background:var(--surface-sunk)"></i>
     </div>
     <div class="meter-key">
-      <span><i class="dot" style="background:var(--done)"></i> Shipped 36%</span>
-      <span><i class="dot" style="background:var(--partial)"></i> Partial 12%</span>
-      <span><i class="dot" style="background:var(--surface-sunk);border:1px solid var(--line)"></i> Remaining 52%</span>
-      <span class="mono">24 / 67 components</span>
+      <span><i class="dot" style="background:var(--done)"></i> Shipped 79%</span>
+      <span><i class="dot" style="background:var(--partial)"></i> Partial 9%</span>
+      <span><i class="dot" style="background:var(--surface-sunk);border:1px solid var(--line)"></i> Remaining 12%</span>
+      <span class="mono">54 / 68 components</span>
     </div>
   </section>
 
   <section class="card blockers">
-    <h2>The 20 things that block launch</h2>
+    <h2>The 7 things left that block launch</h2>
     <p class="note" style="margin-top:6px">
-      Everything here must exist before you charge anyone or accept real accounts. Most of it
-      is unglamorous, and none of it is optional.
+      Two are code. Five are decisions and purchases — nobody can write them for you, and
+      each one has a lead time, so start them before the code is finished rather than after.
     </p>
     <div class="blocker-grid">
-      <div><span class="k">SEC</span><span>Password reset — users have no way to recover an account today</span></div>
-      <div><span class="k">SEC</span><span>Email verification (OTP)</span></div>
-      <div><span class="k">SEC</span><span>Rate limiting on login, signup and AI routes</span></div>
-      <div><span class="k">SEC</span><span>Security headers (CSP, HSTS)</span></div>
-      <div><span class="k">SEC</span><span>CSRF protection</span></div>
-      <div><span class="k">SEC</span><span>Account deletion &amp; data export (GDPR)</span></div>
-      <div><span class="k">DATA</span><span>Real market-data feed</span></div>
+      <div><span class="k">DATA</span><span>Real market-data feed — adapter seam is waiting</span></div>
       <div><span class="k">DATA</span><span>Real news feed — 30% of every score</span></div>
-      <div><span class="k">PAY</span><span>Stripe checkout (currently a stub)</span></div>
-      <div><span class="k">PAY</span><span>Stripe webhooks — renewals, failures, cancellations</span></div>
-      <div><span class="k">LEGAL</span><span>Terms of Service</span></div>
-      <div><span class="k">LEGAL</span><span>Privacy Policy</span></div>
       <div><span class="k">LEGAL</span><span>Lawyer review of the not-advice posture</span></div>
-      <div><span class="k">LEGAL</span><span>Market-data redistribution licence check</span></div>
+      <div><span class="k">LEGAL</span><span>Market-data redistribution licence</span></div>
+      <div><span class="k">SEC</span><span>Penetration test, now that the security work is done</span></div>
       <div><span class="k">INFRA</span><span>Hosting &amp; deployment</span></div>
-      <div><span class="k">INFRA</span><span>CI running tests on every push</span></div>
-      <div><span class="k">INFRA</span><span>Backups with a tested restore</span></div>
-      <div><span class="k">INFRA</span><span>Error tracking</span></div>
-      <div><span class="k">PROD</span><span>Scheduled email delivery — the retention loop</span></div>
-      <div><span class="k">PROD</span><span>Mobile testing on real devices</span></div>
+      <div><span class="k">PAY</span><span>Live Stripe keys and a payout account</span></div>
     </div>
   </section>
 
@@ -258,13 +245,13 @@
     <div class="split">
 
       <div class="col shipped card">
-        <div class="col-head"><h3>Shipped &amp; tested</h3><span class="count">24</span></div>
+        <div class="col-head"><h3>Shipped &amp; tested</h3><span class="count">54</span></div>
 
         <div class="grp">
-          <p class="grp-label">Core product · 12</p>
+          <p class="grp-label">Core product · 17</p>
           <ul class="items">
             <li>Watchlists — create, delete, per-user isolation</li>
-            <li>Add / remove stocks with search</li>
+            <li>Add / remove holdings with search</li>
             <li>Attribution engine — contributions sum to the total</li>
             <li>Daily insight</li>
             <li>Weekly insight</li>
@@ -275,6 +262,11 @@
             <li>Nine timeframes with sparklines</li>
             <li>Light &amp; dark themes, AA contrast both ways</li>
             <li>Colour-coded insight data</li>
+            <li>Scheduled daily &amp; weekly email delivery</li>
+            <li>Score-threshold alerts with 24h suppression</li>
+            <li>In-app notification centre</li>
+            <li>ETFs and crypto, scored by the same model</li>
+            <li>Mobile audit — no page overflow at phone width</li>
           </ul>
         </div>
 
@@ -287,61 +279,67 @@
         </div>
 
         <div class="grp">
-          <p class="grp-label">Auth · 3</p>
+          <p class="grp-label">Auth &amp; security · 15</p>
           <ul class="items">
             <li>Email &amp; password with bcrypt</li>
-            <li>httpOnly JWT sessions</li>
+            <li>httpOnly JWT sessions with revocable ids</li>
             <li>Server-side ownership checks on every route</li>
+            <li>Password rules incl. mutated common passwords</li>
+            <li>Email verification — link or six-digit code</li>
+            <li>Password reset, single-use, kills every session</li>
+            <li>Rate limiting per route and per hashed IP</li>
+            <li>Social login — Google &amp; Apple, env-gated</li>
+            <li>TOTP two-factor, passing the RFC 6238 vectors</li>
+            <li>CSP &amp; HSTS, verified against a real build</li>
+            <li>CSRF double-submit on every mutating route</li>
+            <li>Device list and "sign out everywhere else"</li>
+            <li>Account deletion &amp; full data export</li>
+            <li>Audit log that never breaks the request it logs</li>
+            <li>Dependency scanning</li>
           </ul>
         </div>
 
         <div class="grp">
-          <p class="grp-label">Billing · 2</p>
+          <p class="grp-label">Billing &amp; growth · 7</p>
           <ul class="items">
             <li>Three tiers, limits enforced server-side</li>
             <li>14-day no-card trial</li>
+            <li>Stripe checkout</li>
+            <li>Stripe webhooks — signed, replay-protected</li>
+            <li>Referrals — 20% commission ledger</li>
+            <li>Promo codes with expiry and caps</li>
+            <li>Admin panel — MRR, ARPU, conversion</li>
           </ul>
         </div>
 
         <div class="grp">
-          <p class="grp-label">Legal · 1</p>
+          <p class="grp-label">Legal · 4</p>
           <ul class="items">
             <li>Not-advice posture across prompt, copy and disclaimers</li>
+            <li>Terms of Service</li>
+            <li>Privacy Policy</li>
+            <li>Cookie consent that actually gates analytics</li>
           </ul>
         </div>
 
         <div class="grp" style="margin-bottom:0">
-          <p class="grp-label">Infrastructure · 4</p>
+          <p class="grp-label">Infrastructure · 9</p>
           <ul class="items">
-            <li>88 unit &amp; integration tests, 2 e2e journeys</li>
+            <li>199 unit &amp; integration tests, 18 e2e journeys</li>
             <li>Typecheck and production build clean</li>
             <li>SEO — JSON-LD, sitemap, robots, OG</li>
             <li>Deterministic test data</li>
+            <li>CI running everything on every push</li>
+            <li>Integrity-checked backups</li>
+            <li>Error tracking that strips personal data</li>
+            <li>One authenticated endpoint for all scheduled work</li>
+            <li>Postgres migration path, documented</li>
           </ul>
         </div>
       </div>
 
       <div class="col remaining card">
-        <div class="col-head"><h3>Remaining</h3><span class="count">43</span></div>
-
-        <div class="grp">
-          <p class="grp-label">Auth &amp; security · 13</p>
-          <ul class="items">
-            <li class="blocks">Password reset<span class="flag">blocks</span></li>
-            <li class="blocks">Email verification OTP<span class="flag">blocks</span></li>
-            <li class="blocks">Rate limiting<span class="flag">blocks</span></li>
-            <li class="blocks">Security headers<span class="flag">blocks</span></li>
-            <li class="blocks">CSRF protection<span class="flag">blocks</span></li>
-            <li class="blocks">Account deletion &amp; export<span class="flag">blocks</span></li>
-            <li>Social login — Google, Apple</li>
-            <li>Two-factor (TOTP before SMS)</li>
-            <li>Password strength &amp; breach check<span class="part">partial</span></li>
-            <li>Session revocation, device list</li>
-            <li>Audit log</li>
-            <li>Dependency scanning</li>
-            <li>Penetration test</li>
-          </ul>
-        </div>
+        <div class="col-head"><h3>Remaining</h3><span class="count">14</span></div>
 
         <div class="grp">
           <p class="grp-label">Data &amp; AI · 5</p>
@@ -355,51 +353,35 @@
         </div>
 
         <div class="grp">
-          <p class="grp-label">Core product · 6</p>
+          <p class="grp-label">Legal · 2</p>
           <ul class="items">
-            <li class="blocks">Scheduled email delivery<span class="flag">blocks</span></li>
-            <li class="blocks">Mobile device testing<span class="flag">blocks</span></li>
-            <li>Guided onboarding<span class="part">partial</span></li>
-            <li>Score-threshold alerts</li>
-            <li>Multi-asset — ETFs, crypto</li>
-            <li>In-app notification centre</li>
-          </ul>
-        </div>
-
-        <div class="grp">
-          <p class="grp-label">Billing &amp; growth · 6</p>
-          <ul class="items">
-            <li class="blocks">Stripe checkout<span class="flag">blocks</span></li>
-            <li class="blocks">Stripe webhooks<span class="flag">blocks</span></li>
-            <li>Referral programme with payouts</li>
-            <li>Promo codes</li>
-            <li>Admin panel</li>
-            <li>Product analytics</li>
-          </ul>
-        </div>
-
-        <div class="grp">
-          <p class="grp-label">Legal · 5</p>
-          <ul class="items">
-            <li class="blocks">Terms of Service<span class="flag">blocks</span></li>
-            <li class="blocks">Privacy Policy<span class="flag">blocks</span></li>
             <li class="blocks">Lawyer review<span class="flag">blocks</span></li>
             <li class="blocks">Data licence check<span class="flag">blocks</span></li>
-            <li>Cookie consent</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Infrastructure · 3</p>
+          <ul class="items">
+            <li class="blocks">Hosting &amp; deployment<span class="flag">blocks</span></li>
+            <li>SQLite → Postgres, when you need a 2nd instance<span class="part">partial</span></li>
+            <li>Staging environment</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Security &amp; billing · 2</p>
+          <ul class="items">
+            <li class="blocks">Penetration test<span class="flag">blocks</span></li>
+            <li class="blocks">Live Stripe keys &amp; payout account<span class="part">partial</span></li>
           </ul>
         </div>
 
         <div class="grp" style="margin-bottom:0">
-          <p class="grp-label">Infrastructure · 8</p>
+          <p class="grp-label">Product polish · 2</p>
           <ul class="items">
-            <li class="blocks">Hosting &amp; deployment<span class="flag">blocks</span></li>
-            <li class="blocks">CI pipeline<span class="flag">blocks</span></li>
-            <li class="blocks">Backups &amp; restore drill<span class="flag">blocks</span></li>
-            <li class="blocks">Error tracking<span class="flag">blocks</span></li>
-            <li>Postgres migration<span class="part">partial</span></li>
-            <li>Uptime monitoring</li>
-            <li>Staging environment</li>
-            <li>Log aggregation</li>
+            <li>Guided onboarding tour<span class="part">partial</span></li>
+            <li>Sector / peer comparison</li>
           </ul>
         </div>
       </div>
@@ -462,8 +444,8 @@
       headlines are matched to each holding, weighted by estimated impact, and fed into both
       the score and the written explanation. What is <em>not</em> real yet is the feed: today
       it is a deterministic mock so the app runs and tests without API keys. Connecting a
-      live provider is a contained change behind an existing adapter, and it is on the
-      blocker list above.
+      live provider is a contained change behind an existing adapter, and it is one of the
+      two code items left on the blocker list above.
     </p>
   </section>
 
@@ -471,38 +453,38 @@
     <h2 style="margin-bottom:16px">Suggested order</h2>
     <div class="phases">
       <div class="phase">
-        <p class="when">Phase 1 · 2–3 weeks</p>
-        <h3>Make it real</h3>
-        <p>Live market and news feeds, Stripe checkout and webhooks, hosting, CI. Without these there is nothing to sell.</p>
+        <p class="when">Now · lead time, not build time</p>
+        <h3>Start the purchases</h3>
+        <p>Market-data and news providers, a lawyer for the disclaimers, a pen-test slot. All four take longer to arrange than to use.</p>
       </div>
       <div class="phase">
-        <p class="when">Phase 2 · 1–2 weeks</p>
-        <h3>Make it safe</h3>
-        <p>Password reset, email verification, rate limiting, headers, CSRF, deletion, Terms and Privacy.</p>
+        <p class="when">Next · days</p>
+        <h3>Wire the feeds</h3>
+        <p>Swap the two mock adapters for the providers you bought. The seams and their tests already exist.</p>
       </div>
       <div class="phase">
-        <p class="when">Phase 3 · ~2 weeks</p>
-        <h3>Make it stick</h3>
-        <p>Scheduled email digests, alerts, onboarding polish, admin panel. The daily habit is the product.</p>
+        <p class="when">Then · days</p>
+        <h3>Deploy &amp; take money</h3>
+        <p>Hosting, live Stripe keys, one real transaction and one real refund before anyone else runs them.</p>
       </div>
       <div class="phase">
-        <p class="when">Phase 4</p>
-        <h3>Make it grow</h3>
-        <p>Referrals, promo codes, multi-asset coverage, analytics, social login.</p>
+        <p class="when">After launch</p>
+        <h3>Grow</h3>
+        <p>Guided onboarding, earnings calendar, peer comparison, intraday prices. Worth doing; none of it gates launch.</p>
       </div>
     </div>
     <p class="note" style="margin-top:18px">
-      Two items are routinely underestimated. <strong>Password reset</strong> — someone will
-      lock themselves out on day one, and there is currently no recovery path.
-      <strong>Scheduled email</strong> — without it people simply forget to return, which is
-      exactly the churn pattern visible in the competitor numbers you shared.
+      One warning worth repeating. The remaining blockers look like paperwork, and paperwork
+      is what people postpone — but a data licence that forbids showing prices to end users
+      on the tier your pricing assumes would invalidate the business model, not delay it.
+      Read that contract before you write another line of code.
     </p>
   </section>
 
   <footer>
     Source of truth: <span class="mono">docs/ROADMAP.md</span> on branch
-    <span class="mono">claude/stock-analytics-ai-portal-j7ftsb</span>. Counts reflect the
-    repository at commit <span class="mono">914c779</span>.
+    <span class="mono">claude/stock-analytics-ai-portal-j7ftsb</span>. Every item marked
+    shipped is covered by a test that fails when the behaviour breaks.
   </footer>
 
 </div>

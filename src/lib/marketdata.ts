@@ -1,4 +1,4 @@
-import type { PricePoint, Quote, StockInfo, Timeframe } from "./types";
+import type { AssetClass, PricePoint, Quote, StockInfo, Timeframe } from "./types";
 
 /**
  * Deterministic mock market-data provider.
@@ -47,7 +47,35 @@ export const UNIVERSE: StockInfo[] = [
   { symbol: "PLTR", name: "Palantir Technologies", sector: "Technology" },
   { symbol: "COIN", name: "Coinbase Global", sector: "Financials" },
   { symbol: "SQ", name: "Block Inc.", sector: "Financials" },
+
+  // Funds. Most people's first watchlist is an index tracker plus a handful of
+  // names, so leaving ETFs out makes the product feel broken on day one.
+  { symbol: "SPY", name: "SPDR S&P 500 ETF", sector: "Broad market", assetClass: "etf" },
+  { symbol: "VOO", name: "Vanguard S&P 500 ETF", sector: "Broad market", assetClass: "etf" },
+  { symbol: "QQQ", name: "Invesco Nasdaq 100 ETF", sector: "Broad market", assetClass: "etf" },
+  { symbol: "VTI", name: "Vanguard Total Stock Market ETF", sector: "Broad market", assetClass: "etf" },
+  { symbol: "IWM", name: "iShares Russell 2000 ETF", sector: "Small cap", assetClass: "etf" },
+  { symbol: "VEA", name: "Vanguard Developed Markets ETF", sector: "International", assetClass: "etf" },
+  { symbol: "VWO", name: "Vanguard Emerging Markets ETF", sector: "International", assetClass: "etf" },
+  { symbol: "SMH", name: "VanEck Semiconductor ETF", sector: "Semiconductors", assetClass: "etf" },
+  { symbol: "XLE", name: "Energy Select Sector SPDR", sector: "Energy", assetClass: "etf" },
+  { symbol: "XLF", name: "Financial Select Sector SPDR", sector: "Financials", assetClass: "etf" },
+  { symbol: "XLV", name: "Health Care Select Sector SPDR", sector: "Healthcare", assetClass: "etf" },
+  { symbol: "AGG", name: "iShares Core US Aggregate Bond ETF", sector: "Bonds", assetClass: "etf" },
+  { symbol: "TLT", name: "iShares 20+ Year Treasury Bond ETF", sector: "Bonds", assetClass: "etf" },
+  { symbol: "GLD", name: "SPDR Gold Shares", sector: "Commodities", assetClass: "etf" },
+
+  // Crypto, priced in USD. Included because people watch it next to equities,
+  // scored by the same maths — no separate model, no separate promises.
+  { symbol: "BTC-USD", name: "Bitcoin", sector: "Digital assets", assetClass: "crypto" },
+  { symbol: "ETH-USD", name: "Ethereum", sector: "Digital assets", assetClass: "crypto" },
+  { symbol: "SOL-USD", name: "Solana", sector: "Digital assets", assetClass: "crypto" },
 ];
+
+/** Everything defaults to an ordinary equity unless it says otherwise. */
+export function assetClassOf(symbol: string): AssetClass {
+  return BY_SYMBOL.get(symbol.toUpperCase())?.assetClass ?? "stock";
+}
 
 const BY_SYMBOL = new Map(UNIVERSE.map((s) => [s.symbol, s]));
 
@@ -58,9 +86,20 @@ export function getStockInfo(symbol: string): StockInfo | null {
 export function searchStocks(query: string, limit = 8): StockInfo[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return UNIVERSE.filter(
-    (s) => s.symbol.toLowerCase().startsWith(q) || s.name.toLowerCase().includes(q),
-  ).slice(0, limit);
+  const matches = UNIVERSE.filter(
+    (s) =>
+      s.symbol.toLowerCase().startsWith(q) ||
+      s.name.toLowerCase().includes(q) ||
+      s.sector.toLowerCase().startsWith(q),
+  );
+  // A symbol match is what the user typed; a name or sector match is a guess.
+  // Ranking them together buries "V" under "Vanguard" and "VanEck".
+  matches.sort((a, b) => {
+    const aSym = a.symbol.toLowerCase().startsWith(q) ? 0 : 1;
+    const bSym = b.symbol.toLowerCase().startsWith(q) ? 0 : 1;
+    return aSym - bSym || a.symbol.length - b.symbol.length;
+  });
+  return matches.slice(0, limit);
 }
 
 // ---------- deterministic PRNG ----------

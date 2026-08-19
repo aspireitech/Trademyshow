@@ -3,13 +3,52 @@ export type Timeframe = (typeof TIMEFRAMES)[number];
 
 export type Plan = "free" | "pro" | "premium";
 
+export type UserRole = "user" | "admin";
+
 export interface User {
   id: number;
   email: string;
   name: string;
   plan: Plan;
+  role: UserRole;
   /** ISO timestamp; while in the future the account gets Pro limits. */
   trialEndsAt: string | null;
+  emailVerifiedAt: string | null;
+  totpEnabledAt: string | null;
+  referralCode: string | null;
+  emailOptIn: boolean;
+  stripeCustomerId: string | null;
+  lastDigestSentAt: string | null;
+  createdAt: string;
+}
+
+export interface UserSession {
+  id: number;
+  jti: string;
+  userAgent: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+  revokedAt: string | null;
+  current: boolean;
+}
+
+export interface Alert {
+  id: number;
+  userId: number;
+  symbol: string;
+  direction: "above" | "below";
+  threshold: number;
+  lastFiredAt: string | null;
+  createdAt: string;
+}
+
+export interface Notification {
+  id: number;
+  kind: string;
+  title: string;
+  body: string | null;
+  href: string | null;
+  readAt: string | null;
   createdAt: string;
 }
 
@@ -28,10 +67,14 @@ export interface Holding {
   addedAt: string;
 }
 
+/** Broad instrument type. Absent means an ordinary listed equity. */
+export type AssetClass = "stock" | "etf" | "crypto" | "index";
+
 export interface StockInfo {
   symbol: string;
   name: string;
   sector: string;
+  assetClass?: AssetClass;
 }
 
 export interface Quote {

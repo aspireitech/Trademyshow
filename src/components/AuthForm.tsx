@@ -1,10 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
+  const params = useSearchParams();
+  const refCode = params.get("ref") ?? undefined;
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -15,10 +19,11 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/auth/${mode}`, {
+    const res = await apiFetch(`/api/auth/${mode}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(mode === "register" ? { email, name, password } : { email, password }),
+      body: JSON.stringify(
+        mode === "register" ? { email, name, password, ref: refCode } : { email, password },
+      ),
     });
     setBusy(false);
     if (!res.ok) {
@@ -31,7 +36,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   }
 
   return (
-    <form onSubmit={submit} className="card" style={{ maxWidth: 400, margin: "60px auto" }}>
+    <form onSubmit={submit} className="card" style={{ maxWidth: 400, margin: "0 auto 60px" }}>
       <h3>{mode === "login" ? "Welcome back" : "Create your account"}</h3>
       {mode === "register" && (
         <div className="field">
@@ -51,7 +56,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         />
       </div>
       <div className="field">
-        <label htmlFor="password">Password {mode === "register" && <span className="dim">(min 8 chars)</span>}</label>
+        <label htmlFor="password">Password {mode === "register" && <span className="dim">(min 10 chars, mixed case, a number or symbol)</span>}</label>
         <input
           id="password"
           type="password"
@@ -59,13 +64,20 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={mode === "register" ? 8 : undefined}
+          minLength={mode === "register" ? 10 : undefined}
         />
       </div>
       <button className="btn" disabled={busy} style={{ width: "100%" }}>
         {busy ? "…" : mode === "login" ? "Log in" : "Sign up free"}
       </button>
       {error && <p className="error">{error}</p>}
+      {mode === "login" && (
+        <p style={{ marginTop: 14, fontSize: 13 }}>
+          <Link href="/reset-password" className="dim">
+            Forgot your password?
+          </Link>
+        </p>
+      )}
     </form>
   );
 }

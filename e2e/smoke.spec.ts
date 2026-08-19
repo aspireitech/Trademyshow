@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 /**
  * End-to-end smoke test against the production build:
@@ -15,7 +15,7 @@ test("full user journey: signup to AI digest", async ({ page }) => {
   await page.getByRole("link", { name: /Start .*free trial/ }).first().click();
   await page.getByLabel("Name").fill("E2E Tester");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel(/Password/).fill("password123");
+  await page.getByLabel(/Password/).fill("Str0ng!Pass2026");
   await page.getByRole("button", { name: "Sign up free" }).click();
 
   // Dashboard: create a group
@@ -60,7 +60,7 @@ test("look up any stock directly from the dashboard", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("Name").fill("Lookup Tester");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel(/Password/).fill("password123");
+  await page.getByLabel(/Password/).fill("Str0ng!Pass2026");
   await page.getByRole("button", { name: "Sign up free" }).click();
 
   // No group needed — search and open a single stock

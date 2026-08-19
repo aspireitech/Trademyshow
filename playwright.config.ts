@@ -5,9 +5,14 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: "http://localhost:3111",
-    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH
-      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH }
-      : undefined,
+    launchOptions: {
+      ...(process.env.PLAYWRIGHT_CHROMIUM_PATH
+        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH }
+        : {}),
+      // CI containers run as root, where Chromium refuses to start its sandbox.
+      // The sandbox is redundant here: the container is the isolation boundary.
+      args: ["--no-sandbox"],
+    },
   },
   webServer: {
     command: "npx next start -p 3111",

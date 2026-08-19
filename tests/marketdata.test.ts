@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getHistory, getQuote, rangeChangePct, searchStocks, UNIVERSE } from "@/lib/marketdata";
+import {
+  assetClassOf,
+  getHistory,
+  getQuote,
+  rangeChangePct,
+  searchStocks,
+  UNIVERSE,
+} from "@/lib/marketdata";
 import { TIMEFRAMES } from "@/lib/types";
 
 const asOf = new Date("2026-08-07T16:00:00Z");
@@ -59,5 +66,42 @@ describe("mock market data provider", () => {
   it("universe has no duplicate symbols", () => {
     const symbols = UNIVERSE.map((s) => s.symbol);
     expect(new Set(symbols).size).toBe(symbols.length);
+  });
+});
+
+describe("multi-asset coverage", () => {
+  it("covers funds and crypto, not only single stocks", () => {
+    // A first watchlist is usually an index tracker plus a few names; a
+    // universe of pure single stocks feels broken on day one.
+    const classes = new Set(UNIVERSE.map((s) => s.assetClass ?? "stock"));
+    expect(classes.has("etf")).toBe(true);
+    expect(classes.has("crypto")).toBe(true);
+  });
+
+  it("defaults an ordinary equity to the stock class", () => {
+    expect(assetClassOf("AAPL")).toBe("stock");
+    expect(assetClassOf("SPY")).toBe("etf");
+    expect(assetClassOf("BTC-USD")).toBe("crypto");
+  });
+
+  it("treats an unknown symbol as a stock rather than throwing", () => {
+    expect(assetClassOf("NOPE")).toBe("stock");
+  });
+
+  it("prices and scores crypto through the same path as equities", () => {
+    // One model, one set of promises — a separate crypto model would be a
+    // second thing to defend in front of a regulator.
+    const q = getQuote("BTC-USD");
+    expect(q).not.toBeNull();
+    expect(q!.price).toBeGreaterThan(0);
+  });
+
+  it("ranks an exact symbol match above a name match", () => {
+    // "V" must find Visa, not be buried under Vanguard and VanEck.
+    expect(searchStocks("V")[0].symbol).toBe("V");
+  });
+
+  it("finds funds by sector name", () => {
+    expect(searchStocks("bonds").some((s) => s.symbol === "AGG")).toBe(true);
   });
 });

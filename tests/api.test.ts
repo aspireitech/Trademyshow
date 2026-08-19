@@ -66,7 +66,7 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
 
   it("registers a user and sets a session", async () => {
     const res = await register.POST(
-      jsonReq("/api/auth/register", { email: "alice@example.com", name: "Alice", password: "password123" }),
+      jsonReq("/api/auth/register", { email: "alice@example.com", name: "Alice", password: "Str0ng!Pass2026" }),
     );
     expect(res.status).toBe(201);
     expect(jar.has("tms_session")).toBe(true);
@@ -92,10 +92,10 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
 
   it("rejects duplicate email and wrong password", async () => {
     const dup = await register.POST(
-      jsonReq("/api/auth/register", { email: "alice@example.com", name: "A", password: "password123" }),
+      jsonReq("/api/auth/register", { email: "alice@example.com", name: "A", password: "Str0ng!Pass2026" }),
     );
     expect(dup.status).toBe(409);
-    const bad = await login.POST(jsonReq("/api/auth/login", { email: "alice@example.com", password: "wrongpass1" }));
+    const bad = await login.POST(jsonReq("/api/auth/login", { email: "alice@example.com", password: "Wr0ng!Pass2026" }));
     expect(bad.status).toBe(401);
   });
 

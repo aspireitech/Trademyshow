@@ -157,7 +157,7 @@ export default async function TrackRecordPage({
 
       <footer className="site">
         <div className="container">
-          TradeMyShow provides analytics and educational content only.
+          TradeMyShow provides analytics and educational content only. <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link>
         </div>
       </footer>
     </div>

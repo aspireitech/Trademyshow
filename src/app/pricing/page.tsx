@@ -171,7 +171,7 @@ export default function PricingPage() {
 
       <footer className="site">
         <div className="container">
-          Analytics and educational content only — never investment advice. Prices in USD.
+          Analytics and educational content only — never investment advice. Prices in USD. <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link>
         </div>
       </footer>
     </>
