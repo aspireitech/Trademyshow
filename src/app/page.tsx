@@ -1,10 +1,97 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
+import { buildTrackRecord } from "@/lib/insight/trackrecord";
+import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
+
+export const metadata: Metadata = {
+  title: "TradeMyShow — Know why your stocks moved, and what usually happens next",
+  description:
+    "Daily and weekly stock insights that show their working. Every score breaks into parts you can check, every past call is published with what actually happened. Free 14-day trial, no card.",
+  keywords: [
+    "stock analysis",
+    "portfolio insights",
+    "daily stock digest",
+    "stock score",
+    "watchlist analysis",
+    "explainable stock analytics",
+    "stock news impact",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Know why your stocks moved — and what usually happens next",
+    description:
+      "Explainable daily and weekly stock insights with a published track record. Free 14-day trial, no card required.",
+    type: "website",
+    siteName: "TradeMyShow",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Know why your stocks moved — and what usually happens next",
+    description: "Explainable stock insights with a published track record.",
+  },
+};
+
+const FAQS = [
+  {
+    q: "Is this investment advice?",
+    a: "No. TradeMyShow publishes analysis and education — scores, explanations and historical base rates. It never tells you what to buy or sell, and it does not manage money or hold funds.",
+  },
+  {
+    q: "How is the Insight Score calculated?",
+    a: "It is a weighted composite of four measured components: news sentiment (30%), trend consistency across timeframes (30%), momentum relative to the longer-term pace (25%) and price stability (15%). Every component is shown with its value, weight and a plain-language reason, so you can reconstruct the number yourself.",
+  },
+  {
+    q: "Do you predict prices?",
+    a: "No. Instead of a forecast we publish a base rate — how stocks with comparable signals actually behaved afterwards, with the sample size attached. When there is too little history to say anything useful, we say that instead of quoting a number.",
+  },
+  {
+    q: "What happens when the free trial ends?",
+    a: `Nothing breaks. After ${TRIAL_DAYS} days the account moves to the Free plan and keeps every watchlist and insight already created. No card is required to start, so there is nothing to cancel.`,
+  },
+  {
+    q: "Where does the data come from?",
+    a: "Market prices and company news come from licensed market-data providers. Analysis is computed from that data by our own engine; the AI writes the explanation but never produces the numbers.",
+  },
+];
 
 export default async function LandingPage() {
   const user = await currentUser();
+  const record = buildTrackRecord(30);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: "TradeMyShow",
+        applicationCategory: "FinanceApplication",
+        operatingSystem: "Web",
+        description: metadata.description,
+        offers: {
+          "@type": "Offer",
+          price: PLAN_PRICING.pro.monthlyUsd,
+          priceCurrency: "USD",
+        },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: FAQS.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <div className="container">
         <nav className="nav">
           <Link href="/" className="brand">
@@ -15,83 +102,268 @@ export default async function LandingPage() {
             <Link href="/pricing">Pricing</Link>
             {user ? (
               <Link href="/dashboard" className="btn">
-                Dashboard
+                Open dashboard
               </Link>
             ) : (
               <>
                 <Link href="/login">Log in</Link>
                 <Link href="/register" className="btn">
-                  Get started
+                  Start free
                 </Link>
               </>
             )}
           </div>
         </nav>
 
-        <section className="hero">
-          <h1>
-            Know exactly <em>why</em> your portfolio moved today
-          </h1>
-          <p className="sub">
-            Group your favorite stocks, and every day our AI explains the move in plain language —
-            which holdings drove it, by how much, and which news was behind it. Trends across 1D to
-            all-time. Analytics and education, never advice.
+        <header className="hero">
+          <p className="pill rise" style={{ marginBottom: 18 }}>
+            <span className="live-dot" aria-hidden="true" />
+            Insights refresh every market day
           </p>
-          <div className="cta">
-            <Link href="/register" className="btn">
-              Create your free group
+          <h1 className="rise d1">
+            Know why your stocks moved —{" "}
+            <span className="sweep">and what usually happens next</span>
+          </h1>
+          <p className="sub rise d2">
+            Most tools hand you a number and expect you to trust it. We show the working:
+            every score breaks into parts you can check, and every call we have made is
+            published alongside what actually happened.
+          </p>
+          <div className="cta rise d3">
+            <Link href="/register" className="btn" style={{ padding: "12px 24px", fontSize: 15 }}>
+              Start {TRIAL_DAYS}-day free trial
             </Link>
-            <Link href="/pricing" className="btn secondary">
-              See plans
+            <Link href="/track-record" className="btn secondary" style={{ padding: "12px 24px", fontSize: 15 }}>
+              See our track record
             </Link>
           </div>
+          <p className="dim rise d3" style={{ fontSize: 13, marginTop: 12 }}>
+            No credit card. Full access for {TRIAL_DAYS} days, then a free plan forever.
+          </p>
 
-          <div className="card digest-preview">
-            <span className="badge">Today&apos;s digest — example</span>
-            <p className="headline" style={{ marginTop: 10 }}>
-              Your &quot;AI &amp; Chips&quot; group is up +1.4% today, led by NVDA
+          <div className="card digest-preview rise d4 draw">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+              <span className="badge">
+                <span className="live-dot" aria-hidden="true" />
+                Today&apos;s insight
+              </span>
+              <span className="dim" style={{ fontSize: 12 }}>Your watchlist · 6 stocks</span>
+            </div>
+            <p className="headline" style={{ marginTop: 12 }}>
+              Semiconductors led your watchlist up <span className="gain">+1.42%</span> today
             </p>
             <p className="dim">
-              NVIDIA rose +3.2%, contributing +1.1% of the group&apos;s move (34% of the portfolio).
-              Likely driver: NVIDIA tops quarterly earnings estimates, raises full-year guidance
-              (MarketWire). Meanwhile TSM slipped −0.8% on sector-wide softness, costing the group
-              −0.2%…
+              One holding did most of the work: it rose 3.21% and, at 34% of the watchlist,
+              added <span className="gain">+1.08%</span> on its own. The likely driver was a
+              guidance raise reported this morning. Two holdings drifted lower and together
+              cost <span className="loss">−0.22%</span>.
             </p>
+            <svg viewBox="0 0 600 60" width="100%" height="52" style={{ marginTop: 10 }} aria-hidden="true">
+              <path
+                className="line"
+                d="M0,45 L60,42 L120,46 L180,33 L240,36 L300,25 L360,28 L420,18 L480,20 L540,10 L600,6"
+                fill="none"
+                stroke="var(--gain)"
+                strokeWidth="2"
+              />
+            </svg>
+          </div>
+        </header>
+
+        <div className="trustbar">
+          <span>✓ Every score fully itemised</span>
+          <span>✓ Past calls published, hits and misses</span>
+          <span>✓ Analytics only — never investment advice</span>
+        </div>
+
+        <section className="section">
+          <h2>Three things the category gets wrong</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div className="gap-row">
+              <div className="bad">
+                <h4>Everyone else</h4>
+                <p className="dim" style={{ fontSize: 14 }}>
+                  A single AI score appears with no explanation. You cannot tell whether it
+                  read the news, the chart, or nothing at all.
+                </p>
+              </div>
+              <div className="good">
+                <h4>Here</h4>
+                <p style={{ fontSize: 14 }}>
+                  The score splits into four weighted components, each with its own number
+                  and a sentence explaining it. Add them up and you get the score back.
+                </p>
+              </div>
+            </div>
+            <div className="gap-row">
+              <div className="bad">
+                <h4>Everyone else</h4>
+                <p className="dim" style={{ fontSize: 14 }}>
+                  Accuracy claims with nothing behind them. No record of past calls, so no
+                  way to check whether the score has ever worked.
+                </p>
+              </div>
+              <div className="good">
+                <h4>Here</h4>
+                <p style={{ fontSize: 14 }}>
+                  Every past score is graded against what the stock actually did, and the
+                  results are public — including the ones we got wrong.
+                </p>
+              </div>
+            </div>
+            <div className="gap-row">
+              <div className="bad">
+                <h4>Everyone else</h4>
+                <p className="dim" style={{ fontSize: 14 }}>
+                  Generic market commentary that says nothing about the stocks you actually
+                  hold.
+                </p>
+              </div>
+              <div className="good">
+                <h4>Here</h4>
+                <p style={{ fontSize: 14 }}>
+                  Insights are computed on your watchlist: what each holding contributed to
+                  your move, ranked by impact, with the news behind it.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="section">
-          <h2>How it works</h2>
+          <h2>What you get, every market day</h2>
           <div className="grid cols-3">
-            <div className="card">
-              <h3>1 · Build a group</h3>
-              <p className="dim">
-                Pick your favorite stocks and organize them into groups — a &quot;Chips&quot;
-                watchlist, your real holdings, a theme you&apos;re researching.
+            <div className="card lift">
+              <h3>Daily &amp; weekly insight</h3>
+              <p className="dim" style={{ fontSize: 14 }}>
+                A plain-language read on your watchlist each morning, and a wider view each
+                week — what moved, how much each holding contributed, and the news behind it.
               </p>
             </div>
-            <div className="card">
-              <h3>2 · We do the math</h3>
-              <p className="dim">
-                Every holding&apos;s day move, portfolio weight, and exact contribution to the
-                group&apos;s change — computed, not guessed. Trends across 1D, 1W, 1M, 3M, 6M, 1Y,
-                5Y, YTD and all-time.
+            <div className="card lift">
+              <h3>The Insight Score</h3>
+              <p className="dim" style={{ fontSize: 14 }}>
+                A 0–100 read on signal strength for any stock, itemised into news, trend,
+                momentum and stability so you can see exactly what is driving it.
               </p>
             </div>
-            <div className="card">
-              <h3>3 · AI explains it</h3>
-              <p className="dim">
-                A daily plain-language digest connects the numbers to the day&apos;s news. No
-                predictions, no jargon — just what happened and why.
+            <div className="card lift">
+              <h3>What usually happens next</h3>
+              <p className="dim" style={{ fontSize: 14 }}>
+                Not a forecast — a base rate. How stocks with comparable signals actually
+                behaved over the following 7, 30 and 90 days, with the sample size shown.
               </p>
             </div>
           </div>
         </section>
+
+        <section className="section">
+          <h2>We publish our record. All of it.</h2>
+          <p className="dim" style={{ maxWidth: "64ch", marginBottom: 20 }}>
+            These numbers are generated from the same engine that scores your stocks — not a
+            marketing claim, and not curated. If the score stops working, this is where you
+            will see it first.
+          </p>
+          <div className="grid cols-3">
+            <div className="card lift">
+              <p className="dim" style={{ fontSize: 13 }}>Scores graded</p>
+              <p className="mono" style={{ fontSize: 30, fontWeight: 700 }}>
+                {record.totalSamples.toLocaleString()}
+              </p>
+            </div>
+            <div className="card lift">
+              <p className="dim" style={{ fontSize: 13 }}>Directional hit rate · 30d</p>
+              <p className="mono" style={{ fontSize: 30, fontWeight: 700 }}>
+                {record.overallHitRate.toFixed(1)}%
+              </p>
+            </div>
+            <div className="card lift">
+              <p className="dim" style={{ fontSize: 13 }}>Updated</p>
+              <p className="mono" style={{ fontSize: 30, fontWeight: 700 }}>
+                {record.generatedAt}
+              </p>
+            </div>
+          </div>
+          <p style={{ marginTop: 18 }}>
+            <Link href="/track-record">See the full breakdown by score band →</Link>
+          </p>
+        </section>
+
+        <section className="section">
+          <h2>Straightforward pricing</h2>
+          <p className="dim" style={{ marginBottom: 20 }}>
+            Start with {TRIAL_DAYS} days of Pro, no card. Keep a free plan afterwards.
+          </p>
+          <div className="grid cols-3">
+            <div className="card lift">
+              <span className="badge">Free</span>
+              <p className="price" style={{ marginTop: 10 }}>
+                $0 <small>forever</small>
+              </p>
+              <ul className="features">
+                <li>1 watchlist, 5 stocks</li>
+                <li>Daily insight</li>
+                <li>Score band for any stock</li>
+                <li>All nine timeframes</li>
+              </ul>
+            </div>
+            <div className="card lift" style={{ borderColor: "var(--accent)" }}>
+              <span className="badge">Pro · most popular</span>
+              <p className="price" style={{ marginTop: 10 }}>
+                ${PLAN_PRICING.pro.monthlyUsd} <small>/ month</small>
+              </p>
+              <ul className="features">
+                <li>10 watchlists, 30 stocks each</li>
+                <li>Daily + weekly insight</li>
+                <li>Exact scores with full breakdown</li>
+                <li>Historical base rates</li>
+                <li>Email delivery</li>
+              </ul>
+            </div>
+            <div className="card lift">
+              <span className="badge">Premium</span>
+              <p className="price" style={{ marginTop: 10 }}>
+                ${PLAN_PRICING.premium.monthlyUsd} <small>/ month</small>
+              </p>
+              <ul className="features">
+                <li>Effectively unlimited watchlists</li>
+                <li>Everything in Pro</li>
+                <li>Deepest per-holding analysis</li>
+                <li>Priority processing</li>
+              </ul>
+            </div>
+          </div>
+          <p style={{ marginTop: 18 }}>
+            <Link href="/pricing">Compare plans in detail →</Link>
+          </p>
+        </section>
+
+        <section className="section faq">
+          <h2>Questions</h2>
+          {FAQS.map((f) => (
+            <details key={f.q}>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </section>
+
+        <section className="section" style={{ textAlign: "center" }}>
+          <h2 style={{ marginBottom: 10 }}>See tomorrow&apos;s insight on your own watchlist</h2>
+          <p className="dim" style={{ marginBottom: 22 }}>
+            Add a few stocks and your first insight is ready in under a minute.
+          </p>
+          <Link href="/register" className="btn" style={{ padding: "12px 26px", fontSize: 15 }}>
+            Start {TRIAL_DAYS}-day free trial
+          </Link>
+        </section>
       </div>
+
       <footer className="site">
         <div className="container">
-          TradeMyShow provides analytics and educational content only. Nothing here is investment
-          advice, and past performance does not predict future results.
+          TradeMyShow provides analytics and educational content only. Nothing here is
+          investment advice or a recommendation to buy or sell any security. Past performance
+          does not predict future results.
         </div>
       </footer>
     </>

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import type { InsightScore } from "@/lib/insight/score";
+import type { Expectation } from "@/lib/insight/expectation";
 
 /**
  * The Insight Score, shown with its full component breakdown.
@@ -8,7 +10,13 @@ import type { InsightScore } from "@/lib/insight/score";
  * Every part of the number is visible on purpose: a score a user cannot
  * audit is a score they have no reason to trust.
  */
-export default function ScoreCard({ score }: { score: InsightScore }) {
+export default function ScoreCard({
+  score,
+  expectations,
+}: {
+  score: InsightScore & { masked?: boolean };
+  expectations: Expectation[] | null;
+}) {
   const hue =
     score.score >= 60 ? "var(--gain)" : score.score >= 40 ? "var(--warn)" : "var(--loss)";
 
@@ -30,6 +38,13 @@ export default function ScoreCard({ score }: { score: InsightScore }) {
         </div>
       </div>
 
+      {score.masked && (
+        <p className="dim" style={{ fontSize: 13, marginTop: 14 }}>
+          The exact score and its four-part breakdown are part of Pro.{" "}
+          <Link href="/pricing">See plans →</Link>
+        </p>
+      )}
+
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
         {score.components.map((c) => (
           <div key={c.key}>
@@ -48,6 +63,37 @@ export default function ScoreCard({ score }: { score: InsightScore }) {
           </div>
         ))}
       </div>
+
+      {expectations && expectations.length > 0 && (
+        <div style={{ marginTop: 20, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+          <h3 style={{ marginBottom: 4 }}>What usually happened next</h3>
+          <p className="dim" style={{ fontSize: 12, marginBottom: 10 }}>
+            Measured base rates from past cases with {score.band} signals — history, not a
+            forecast.
+          </p>
+          <div className="tf-grid">
+            {expectations.map((e) => (
+              <div key={e.horizonDays} className="tf-cell" style={{ cursor: "default" }}>
+                <span className="dim">{e.horizonDays}d</span>
+                {e.reliable ? (
+                  <strong className={`mono ${e.avgReturnPct >= 0 ? "gain" : "loss"}`}>
+                    {e.avgReturnPct >= 0 ? "+" : ""}
+                    {e.avgReturnPct.toFixed(2)}%
+                  </strong>
+                ) : (
+                  <strong className="dim mono">n/a</strong>
+                )}
+                <span className="dim" style={{ fontSize: 10 }}>
+                  {e.samples} case{e.samples === 1 ? "" : "s"}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="dim" style={{ fontSize: 12, marginTop: 8 }}>
+            {expectations.find((e) => e.horizonDays === 30)?.summary}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

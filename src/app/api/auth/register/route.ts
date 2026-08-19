@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createUser, getUserByEmail } from "@/lib/db";
 import { hashPassword, setSessionCookie } from "@/lib/auth";
+import { TRIAL_DAYS } from "@/lib/plans";
 
 export async function POST(req: Request) {
   const { email, name, password } = (await req.json().catch(() => ({}))) as {
@@ -20,7 +21,9 @@ export async function POST(req: Request) {
   if (getUserByEmail(email)) {
     return NextResponse.json({ error: "an account with this email already exists" }, { status: 409 });
   }
-  const user = createUser(email, name, await hashPassword(password));
+  // Every account starts on a no-card Pro trial.
+  const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 86_400_000).toISOString();
+  const user = createUser(email, name, await hashPassword(password), trialEndsAt);
   await setSessionCookie(user.id);
   return NextResponse.json({ user }, { status: 201 });
 }

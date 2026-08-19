@@ -400,3 +400,139 @@ footer.site {
   background: var(--accent);
   border-radius: 3px;
 }
+
+/* ================= motion =================
+   Entrance animation runs on load with a stagger — no scroll observer, no
+   JavaScript, so the landing page ships zero client JS and still feels alive. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes sweep {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
+}
+@keyframes drawIn {
+  from { stroke-dashoffset: 1000; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.rise { animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.d1 { animation-delay: 0.08s; }
+.d2 { animation-delay: 0.16s; }
+.d3 { animation-delay: 0.24s; }
+.d4 { animation-delay: 0.32s; }
+.d5 { animation-delay: 0.42s; }
+
+/* Live indicator dot */
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gain);
+  margin-right: 7px;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* Headline gradient sweep — draws the eye to the value proposition */
+.sweep {
+  background: linear-gradient(
+    90deg,
+    var(--text) 30%,
+    var(--accent) 50%,
+    var(--text) 70%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sweep 6s linear infinite;
+}
+
+/* Chart line draws itself once */
+.draw path.line {
+  stroke-dasharray: 1000;
+  animation: drawIn 2s ease-out both;
+  animation-delay: 0.5s;
+}
+
+/* Card hover lift */
+.lift {
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+.lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .live-dot, .sweep, .draw path.line { animation: none; }
+  .sweep { color: var(--accent); background: none; -webkit-text-fill-color: currentColor; }
+  .lift { transition: none; }
+  .lift:hover { transform: none; }
+}
+
+/* ================= landing extras ================= */
+.trustbar {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.gap-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.gap-row > div { padding: 18px 20px; }
+.gap-row .bad { border-right: 1px solid var(--border); }
+.gap-row .bad h4 { color: var(--loss); font-size: 13px; margin-bottom: 6px; }
+.gap-row .good h4 { color: var(--gain); font-size: 13px; margin-bottom: 6px; }
+@media (max-width: 640px) {
+  .gap-row { grid-template-columns: 1fr; }
+  .gap-row .bad { border-right: none; border-bottom: 1px solid var(--border); }
+  .hero h1 { font-size: 32px; }
+}
+
+.faq details {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::before { content: "+ "; color: var(--accent); font-weight: 700; }
+.faq details[open] summary::before { content: "− "; }
+.faq p { color: var(--text-dim); font-size: 14px; margin-top: 8px; max-width: 68ch; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text-dim);
+}

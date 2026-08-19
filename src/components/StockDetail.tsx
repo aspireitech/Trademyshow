@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import PriceChart from "./PriceChart";
 import ScoreCard from "./ScoreCard";
 import type { InsightScore } from "@/lib/insight/score";
+import type { Expectation } from "@/lib/insight/expectation";
 import { TIMEFRAMES, type NewsItem, type Quote, type StockInfo, type Timeframe } from "@/lib/types";
 
 interface StockResponse {
@@ -13,7 +14,8 @@ interface StockResponse {
   history: { t: string; price: number }[];
   trends: Record<Timeframe, number>;
   news: NewsItem[];
-  score: InsightScore | null;
+  score: (InsightScore & { masked?: boolean }) | null;
+  expectations: Expectation[] | null;
 }
 
 /** Plain-language read of the trend table — descriptive, never predictive. */
@@ -53,7 +55,7 @@ export default function StockDetail({ symbol }: { symbol: string }) {
   }
   if (!data) return <p className="dim">Loading {symbol}…</p>;
 
-  const { info, quote, history, trends, news, score } = data;
+  const { info, quote, history, trends, news, score, expectations } = data;
   const up = quote.changePct >= 0;
 
   return (
@@ -84,7 +86,7 @@ export default function StockDetail({ symbol }: { symbol: string }) {
       {/* Insight Score */}
       {score && (
         <div style={{ marginTop: 16 }}>
-          <ScoreCard score={score} />
+          <ScoreCard score={score} expectations={expectations} />
         </div>
       )}
 

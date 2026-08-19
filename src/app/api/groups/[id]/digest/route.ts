@@ -3,7 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { getGroup, latestDigest, listHoldings, saveDigest } from "@/lib/db";
 import { computeGroupFacts } from "@/lib/digest/engine";
 import { writeDigest } from "@/lib/digest/writer";
-import { limitsFor } from "@/lib/plans";
+import { effectiveLimits } from "@/lib/plans";
 import type { DigestPeriod } from "@/lib/types";
 
 function periodOf(url: string): DigestPeriod {
@@ -35,7 +35,14 @@ export async function POST(req: Request, { params }: Params) {
 
   const period = periodOf(req.url);
   const facts = computeGroupFacts(group.name, holdings, new Date(), period);
-  const deep = limitsFor(user.plan).deepDigest;
+  const limits = effectiveLimits(user);
+  if (period === "weekly" && !limits.weeklyInsight) {
+    return NextResponse.json(
+      { error: "Weekly insights are a Pro feature. Start a free trial to unlock them." },
+      { status: 403 },
+    );
+  }
+  const deep = limits.deepDigest;
   const written = await writeDigest(facts, deep);
   const digest = saveDigest(
     group.id,

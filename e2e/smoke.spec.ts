@@ -12,15 +12,15 @@ test("full user journey: signup to AI digest", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("why");
 
   // Register
-  await page.getByRole("link", { name: "Get started" }).click();
+  await page.getByRole("link", { name: /Start .*free trial/ }).first().click();
   await page.getByLabel("Name").fill("E2E Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel(/Password/).fill("password123");
   await page.getByRole("button", { name: "Sign up free" }).click();
 
   // Dashboard: create a group
-  await expect(page.getByRole("heading", { name: "Your groups" })).toBeVisible();
-  await page.getByPlaceholder(/New group name/).fill("AI & Chips");
+  await expect(page.getByRole("heading", { name: "Your watchlists" })).toBeVisible();
+  await page.getByPlaceholder(/New watchlist name/).fill("AI & Chips");
   await page.getByRole("button", { name: "Create" }).click();
   await page.getByRole("heading", { name: "AI & Chips" }).click();
 
@@ -47,11 +47,12 @@ test("full user journey: signup to AI digest", async ({ page }) => {
   await page.getByRole("button", { name: "Show 1Y chart" }).click();
   await expect(page.getByText(/over 1Y/)).toBeVisible();
 
-  // Free plan gate: a second group must be rejected
+  // New accounts are on a Pro trial, so a second watchlist is allowed.
   await page.getByRole("link", { name: "← Dashboard" }).click();
-  await page.getByPlaceholder(/New group name/).fill("Second Group");
+  await expect(page.getByText(/days of Pro left/)).toBeVisible();
+  await page.getByPlaceholder(/New watchlist name/).fill("Second Watchlist");
   await page.getByRole("button", { name: "Create" }).click();
-  await expect(page.getByText(/Upgrade to Pro/i).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Second Watchlist" })).toBeVisible();
 });
 
 test("look up any stock directly from the dashboard", async ({ page }) => {

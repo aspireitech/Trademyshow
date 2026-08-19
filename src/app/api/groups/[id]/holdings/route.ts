@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { addHolding, getGroup, listHoldings, removeHolding } from "@/lib/db";
 import { getStockInfo } from "@/lib/marketdata";
-import { limitsFor } from "@/lib/plans";
+import { effectiveLimits, effectivePlan } from "@/lib/plans";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,10 +26,10 @@ export async function POST(req: Request, { params }: Params) {
   if (existing.some((h) => h.symbol === symbol.toUpperCase())) {
     return NextResponse.json({ error: "symbol already in group" }, { status: 409 });
   }
-  const limits = limitsFor(user.plan);
+  const limits = effectiveLimits(user);
   if (existing.length >= limits.maxHoldingsPerGroup) {
     return NextResponse.json(
-      { error: `The ${user.plan} plan allows up to ${limits.maxHoldingsPerGroup} stocks per group. Upgrade to Pro for more.` },
+      { error: `The ${effectivePlan(user)} plan allows up to ${limits.maxHoldingsPerGroup} stocks per watchlist. Upgrade for more.` },
       { status: 403 },
     );
   }

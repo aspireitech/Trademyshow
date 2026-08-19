@@ -47,12 +47,12 @@ export default function GroupsPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 18 }}>Your groups</h2>
+      <h2 style={{ marginBottom: 18 }}>Your watchlists</h2>
 
       <form onSubmit={createGroup} style={{ display: "flex", gap: 10, marginBottom: 22, maxWidth: 460 }}>
         <input
           className="input"
-          placeholder='New group name, e.g. "AI & Chips"'
+          placeholder='New watchlist name, e.g. "AI & Chips"'
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -65,10 +65,10 @@ export default function GroupsPanel() {
         <p className="dim">Loading…</p>
       ) : groups.length === 0 ? (
         <div className="card">
-          <h3>Create your first group</h3>
+          <h3>Create your first watchlist</h3>
           <p className="dim">
-            A group is a set of stocks you care about — your holdings, a watchlist, or a theme.
-            Once it has stocks, you&apos;ll get a daily AI digest explaining every move.
+            A watchlist is a set of stocks you care about — your holdings, or a theme you are
+            following. Once it has stocks, you get a daily insight explaining every move.
           </p>
         </div>
       ) : (

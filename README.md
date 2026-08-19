@@ -8,6 +8,19 @@ plain-language AI digest explaining the group's move: which holdings drove it, b
 1D / 1W / 1M / 3M / 6M / 1Y / 5Y / YTD / all-time. Analytics and education only — never
 investment advice, never price predictions.
 
+## Commercial model
+
+| Plan | Price | Key limits |
+|---|---|---|
+| **Free** | $0 forever | 1 watchlist, 5 stocks, daily insight, score band only |
+| **Pro** | $12/mo · $120/yr | 10 watchlists, 30 stocks each, weekly insight, exact scores + breakdown, base rates, email |
+| **Premium** | $29/mo · $290/yr | Effectively unlimited watchlists, priority processing |
+
+Every account starts on a **14-day Pro trial with no card**. When it lapses the account
+falls back to Free and keeps all its data — nothing is locked away, and there is nothing
+to cancel. Trial state is computed (`effectivePlan`), never a stored duplicate, so it
+cannot drift out of sync.
+
 ## Features
 
 - **Auth** — email/password accounts, bcrypt-hashed, JWT session cookie (httpOnly).
@@ -22,6 +35,14 @@ investment advice, never price predictions.
 - **AI writer with automatic failover** — Gemini primary, Anthropic and OpenAI as
   automatic backups, plus a deterministic template fallback. See below.
 - **News mapping** — related headlines per holding, aligned to the day's move.
+- **Insight Score** — explainable 0–100 signal strength per stock, itemised into news
+  sentiment, trend consistency, momentum and stability with weights shown.
+- **Base-rate expectations** — "what usually happened next" answered from graded history
+  with sample sizes, never a forecast. Suppressed when the sample is too thin.
+- **Published track record** — every past score graded against realised returns at 7/30/90
+  days, public and unauthenticated.
+- **SEO + conversion** — server-rendered landing with JSON-LD (SoftwareApplication +
+  FAQPage), sitemap, robots, OG/Twitter metadata, and CSS-only motion (zero client JS).
 - **Freemium plans** — Free (1 group, 3 stocks, summary digest) vs Pro (10 groups, 30
   stocks, deep per-holding digest). Billing route ships as a stub with the Stripe
   integration point documented.

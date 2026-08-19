@@ -1,13 +1,15 @@
 export const TIMEFRAMES = ["1D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD", "ALL"] as const;
 export type Timeframe = (typeof TIMEFRAMES)[number];
 
-export type Plan = "free" | "pro";
+export type Plan = "free" | "pro" | "premium";
 
 export interface User {
   id: number;
   email: string;
   name: string;
   plan: Plan;
+  /** ISO timestamp; while in the future the account gets Pro limits. */
+  trialEndsAt: string | null;
   createdAt: string;
 }
 
@@ -102,5 +104,12 @@ export interface Digest {
 export interface PlanLimits {
   maxGroups: number;
   maxHoldingsPerGroup: number;
+  /** Per-holding detail rather than just the top movers. */
   deepDigest: boolean;
+  weeklyInsight: boolean;
+  /** Free tier sees the band ("strong"), paid tiers see the exact number. */
+  exactScore: boolean;
+  /** Historical base rates for a score band. */
+  expectations: boolean;
+  emailDelivery: boolean;
 }

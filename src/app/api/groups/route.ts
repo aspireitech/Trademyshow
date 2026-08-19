@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { createGroup, listGroups, listHoldings } from "@/lib/db";
-import { limitsFor } from "@/lib/plans";
+import { effectiveLimits, effectivePlan } from "@/lib/plans";
 import { computeGroupFacts } from "@/lib/digest/engine";
 
 export async function GET() {
@@ -26,10 +26,10 @@ export async function POST(req: Request) {
   const { name } = (await req.json().catch(() => ({}))) as { name?: string };
   if (!name?.trim()) return NextResponse.json({ error: "name is required" }, { status: 400 });
 
-  const limits = limitsFor(user.plan);
+  const limits = effectiveLimits(user);
   if (listGroups(user.id).length >= limits.maxGroups) {
     return NextResponse.json(
-      { error: `The ${user.plan} plan allows up to ${limits.maxGroups} group(s). Upgrade to Pro for more.` },
+      { error: `The ${effectivePlan(user)} plan allows up to ${limits.maxGroups} watchlist(s). Upgrade for more.` },
       { status: 403 },
     );
   }

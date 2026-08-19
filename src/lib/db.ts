@@ -28,6 +28,7 @@ function open(): Database.Database {
       name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       plan TEXT NOT NULL DEFAULT 'free',
+      trial_ends_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS groups (
@@ -56,7 +57,11 @@ function open(): Database.Database {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
-  // Additive migration for databases created before digests carried a period.
+  // Additive migrations for databases created before these columns existed.
+  const userCols = conn.prepare("PRAGMA table_info(users)").all() as { name: string }[];
+  if (!userCols.some((c) => c.name === "trial_ends_at")) {
+    conn.exec("ALTER TABLE users ADD COLUMN trial_ends_at TEXT");
+  }
   const cols = conn.prepare("PRAGMA table_info(digests)").all() as { name: string }[];
   if (!cols.some((c) => c.name === "period")) {
     conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");
@@ -83,17 +88,30 @@ interface UserRow {
   name: string;
   password_hash: string;
   plan: Plan;
+  trial_ends_at: string | null;
   created_at: string;
 }
 
 function toUser(r: UserRow): User {
-  return { id: r.id, email: r.email, name: r.name, plan: r.plan, createdAt: r.created_at };
+  return {
+    id: r.id,
+    email: r.email,
+    name: r.name,
+    plan: r.plan,
+    trialEndsAt: r.trial_ends_at,
+    createdAt: r.created_at,
+  };
 }
 
-export function createUser(email: string, name: string, passwordHash: string): User {
+export function createUser(
+  email: string,
+  name: string,
+  passwordHash: string,
+  trialEndsAt: string | null = null,
+): User {
   const info = getDb()
-    .prepare("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)")
-    .run(email.toLowerCase(), name, passwordHash);
+    .prepare("INSERT INTO users (email, name, password_hash, trial_ends_at) VALUES (?, ?, ?, ?)")
+    .run(email.toLowerCase(), name, passwordHash, trialEndsAt);
   return getUserById(Number(info.lastInsertRowid))!;
 }
 

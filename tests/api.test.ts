@@ -27,6 +27,7 @@ import * as digest from "@/app/api/groups/[id]/digest/route";
 import * as search from "@/app/api/stocks/search/route";
 import * as stock from "@/app/api/stocks/[symbol]/route";
 import * as upgrade from "@/app/api/billing/upgrade/route";
+import { getDb } from "@/lib/db";
 
 function jsonReq(url: string, body?: unknown, method = "POST"): Request {
   return new Request(`http://localhost${url}`, {
@@ -39,6 +40,13 @@ function jsonReq(url: string, body?: unknown, method = "POST"): Request {
 const p = (id: number | string) => ({ params: Promise.resolve({ id: String(id) }) });
 
 let groupId: number;
+
+/** Move the signed-in account's trial into the past to test free-plan limits. */
+function expireTrial(email: string): void {
+  getDb()
+    .prepare("UPDATE users SET trial_ends_at = ? WHERE email = ?")
+    .run(new Date(Date.now() - 86_400_000).toISOString(), email);
+}
 
 describe("API flow: register → group → holdings → digest → upgrade", () => {
   beforeAll(() => {
@@ -68,6 +76,20 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     expect(data.user.plan).toBe("free");
   });
 
+  it("starts every new account on a no-card Pro trial", async () => {
+    const res = await me.GET();
+    const data = (await res.json()) as {
+      trialing: boolean;
+      effectivePlan: string;
+      trialDaysRemaining: number;
+      limits: { maxGroups: number };
+    };
+    expect(data.trialing).toBe(true);
+    expect(data.effectivePlan).toBe("pro");
+    expect(data.trialDaysRemaining).toBeGreaterThan(12);
+    expect(data.limits.maxGroups).toBe(10);
+  });
+
   it("rejects duplicate email and wrong password", async () => {
     const dup = await register.POST(
       jsonReq("/api/auth/register", { email: "alice@example.com", name: "A", password: "password123" }),
@@ -85,9 +107,22 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     expect(data.group.name).toBe("AI & Chips");
   });
 
-  it("enforces the free-plan group limit", async () => {
+  it("allows extra watchlists while the trial is active", async () => {
     const res = await groups.POST(jsonReq("/api/groups", { name: "Second" }));
+    expect(res.status).toBe(201);
+  });
+
+  it("falls back to free limits once the trial lapses", async () => {
+    expireTrial("alice@example.com");
+    const meRes = await me.GET();
+    const meData = (await meRes.json()) as { trialing: boolean; effectivePlan: string };
+    expect(meData.trialing).toBe(false);
+    expect(meData.effectivePlan).toBe("free");
+
+    const res = await groups.POST(jsonReq("/api/groups", { name: "Third" }));
     expect(res.status).toBe(403);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toMatch(/watchlist/i);
   });
 
   it("searches stocks and adds holdings", async () => {
@@ -106,8 +141,18 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
       (await holdings.POST(jsonReq(`/x`, { symbol: "NVDA" }), p(groupId))).status,
     ).toBe(409);
     expect((await holdings.POST(jsonReq(`/x`, { symbol: "NOPE" }), p(groupId))).status).toBe(400);
-    // 3 holdings already = free cap
-    expect((await holdings.POST(jsonReq(`/x`, { symbol: "AAPL" }), p(groupId))).status).toBe(403);
+    // Free cap is 5; three are already held, so two more fit and the sixth fails.
+    expect((await holdings.POST(jsonReq(`/x`, { symbol: "AAPL" }), p(groupId))).status).toBe(201);
+    expect((await holdings.POST(jsonReq(`/x`, { symbol: "MSFT" }), p(groupId))).status).toBe(201);
+    expect((await holdings.POST(jsonReq(`/x`, { symbol: "GOOGL" }), p(groupId))).status).toBe(403);
+  });
+
+  it("gates weekly insight behind a paid plan", async () => {
+    const res = await digest.POST(
+      new Request("http://localhost/x?period=weekly", { method: "POST" }),
+      p(groupId),
+    );
+    expect(res.status).toBe(403);
   });
 
   it("returns group facts with weights and contributions", async () => {
@@ -116,7 +161,7 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     const data = (await res.json()) as {
       facts: { holdings: { weight: number; contributionPct: number }[]; changePct: number };
     };
-    expect(data.facts.holdings).toHaveLength(3);
+    expect(data.facts.holdings).toHaveLength(5);
     const weightSum = data.facts.holdings.reduce((a, h) => a + h.weight, 0);
     expect(weightSum).toBeCloseTo(1, 2);
     const contribSum = data.facts.holdings.reduce((a, h) => a + h.contributionPct, 0);
@@ -148,13 +193,23 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     expect(stored.digest.headline).toBe(data.digest.headline);
   });
 
+  it("rejects an unknown billing plan", async () => {
+    const res = await upgrade.POST(jsonReq("/api/billing/upgrade", { plan: "platinum" }));
+    expect(res.status).toBe(400);
+  });
+
   it("upgrades to pro and lifts limits", async () => {
-    const res = await upgrade.POST();
+    const res = await upgrade.POST(jsonReq("/api/billing/upgrade", { plan: "pro" }));
     expect(res.status).toBe(200);
-    const g2 = await groups.POST(jsonReq("/api/groups", { name: "Second" }));
+    const g2 = await groups.POST(jsonReq("/api/groups", { name: "Third" }));
     expect(g2.status).toBe(201);
-    const add = await holdings.POST(jsonReq(`/x`, { symbol: "AAPL" }), p(groupId));
+    const add = await holdings.POST(jsonReq(`/x`, { symbol: "GOOGL" }), p(groupId));
     expect(add.status).toBe(201);
+    const weekly = await digest.POST(
+      new Request("http://localhost/x?period=weekly", { method: "POST" }),
+      p(groupId),
+    );
+    expect(weekly.status).toBe(201);
   });
 
   it("blocks all API access without a session", async () => {
@@ -162,5 +217,6 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     expect((await groups.GET()).status).toBe(401);
     expect((await me.GET()).status).toBe(401);
     expect((await digest.POST(new Request("http://localhost/x", { method: "POST" }), p(groupId))).status).toBe(401);
+    expect((await upgrade.POST(jsonReq("/api/billing/upgrade", { plan: "pro" }))).status).toBe(401);
   });
 });
