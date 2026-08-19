@@ -8,7 +8,7 @@ interface GroupSummary {
   name: string;
   holdingsCount: number;
   totalValue: number;
-  dayChangePct: number;
+  changePct: number;
 }
 
 export default function GroupsPanel() {
@@ -81,9 +81,9 @@ export default function GroupsPanel() {
                   ${g.totalValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                 </p>
                 <p>
-                  <span className={g.dayChangePct >= 0 ? "gain" : "loss"}>
-                    {g.dayChangePct >= 0 ? "+" : ""}
-                    {g.dayChangePct.toFixed(2)}% today
+                  <span className={g.changePct >= 0 ? "gain" : "loss"}>
+                    {g.changePct >= 0 ? "+" : ""}
+                    {g.changePct.toFixed(2)}% today
                   </span>{" "}
                   <span className="dim">· {g.holdingsCount} stocks</span>
                 </p>

@@ -1,7 +1,16 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import type { Digest, DigestFacts, DigestWriter, Group, Holding, Plan, User } from "./types";
+import type {
+  Digest,
+  DigestFacts,
+  DigestPeriod,
+  DigestWriter,
+  Group,
+  Holding,
+  Plan,
+  User,
+} from "./types";
 
 let db: Database.Database | null = null;
 
@@ -43,9 +52,15 @@ function open(): Database.Database {
       body TEXT NOT NULL,
       facts_json TEXT NOT NULL,
       writer TEXT NOT NULL,
+      period TEXT NOT NULL DEFAULT 'daily',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+  // Additive migration for databases created before digests carried a period.
+  const cols = conn.prepare("PRAGMA table_info(digests)").all() as { name: string }[];
+  if (!cols.some((c) => c.name === "period")) {
+    conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");
+  }
   return conn;
 }
 
@@ -178,6 +193,7 @@ interface DigestRow {
   body: string;
   facts_json: string;
   writer: DigestWriter;
+  period: DigestPeriod;
   created_at: string;
 }
 
@@ -190,6 +206,7 @@ function toDigest(r: DigestRow): Digest {
     body: r.body,
     facts: JSON.parse(r.facts_json) as DigestFacts,
     writer: r.writer,
+    period: r.period,
     createdAt: r.created_at,
   };
 }
@@ -201,17 +218,20 @@ export function saveDigest(
   body: string,
   facts: DigestFacts,
   writer: DigestWriter,
+  period: DigestPeriod = "daily",
 ): Digest {
   const info = getDb()
-    .prepare("INSERT INTO digests (group_id, as_of, headline, body, facts_json, writer) VALUES (?, ?, ?, ?, ?, ?)")
-    .run(groupId, asOf, headline, body, JSON.stringify(facts), writer);
+    .prepare(
+      "INSERT INTO digests (group_id, as_of, headline, body, facts_json, writer, period) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(groupId, asOf, headline, body, JSON.stringify(facts), writer, period);
   const r = getDb().prepare("SELECT * FROM digests WHERE id = ?").get(Number(info.lastInsertRowid)) as DigestRow;
   return toDigest(r);
 }
 
-export function latestDigest(groupId: number): Digest | null {
+export function latestDigest(groupId: number, period: DigestPeriod = "daily"): Digest | null {
   const r = getDb()
-    .prepare("SELECT * FROM digests WHERE group_id = ? ORDER BY id DESC LIMIT 1")
-    .get(groupId) as DigestRow | undefined;
+    .prepare("SELECT * FROM digests WHERE group_id = ? AND period = ? ORDER BY id DESC LIMIT 1")
+    .get(groupId, period) as DigestRow | undefined;
   return r ? toDigest(r) : null;
 }

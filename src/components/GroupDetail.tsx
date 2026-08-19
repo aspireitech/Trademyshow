@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Sparkline from "./Sparkline";
-import type { Digest, DigestFacts, Holding, StockInfo, Timeframe } from "@/lib/types";
+import type { Digest, DigestFacts, DigestPeriod, Holding, StockInfo, Timeframe } from "@/lib/types";
 import { TIMEFRAMES } from "@/lib/types";
 
 interface GroupResponse {
@@ -31,6 +31,7 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
   const [details, setDetails] = useState<Record<string, StockDetail>>({});
   const [digest, setDigest] = useState<Digest | null>(null);
   const [digestBusy, setDigestBusy] = useState(false);
+  const [period, setPeriod] = useState<DigestPeriod>("daily");
   const [error, setError] = useState<string | null>(null);
 
   // search state
@@ -48,10 +49,15 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
 
   useEffect(() => {
     void load();
-    void fetch(`/api/groups/${groupId}/digest`)
+  }, [groupId, load]);
+
+  // Load whichever cadence the user is viewing.
+  useEffect(() => {
+    setDigest(null);
+    void fetch(`/api/groups/${groupId}/digest?period=${period}`)
       .then((r) => (r.ok ? r.json() : { digest: null }))
       .then((d: { digest: Digest | null }) => setDigest(d.digest));
-  }, [groupId, load]);
+  }, [groupId, period]);
 
   // Load per-symbol history whenever holdings or timeframe change.
   useEffect(() => {
@@ -111,7 +117,7 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
   async function generateDigest() {
     setDigestBusy(true);
     setError(null);
-    const res = await fetch(`/api/groups/${groupId}/digest`, { method: "POST" });
+    const res = await fetch(`/api/groups/${groupId}/digest?period=${period}`, { method: "POST" });
     setDigestBusy(false);
     if (!res.ok) {
       const d = (await res.json().catch(() => ({}))) as { error?: string };
@@ -144,9 +150,9 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
         <h2>{group.name}</h2>
         <p className="mono" style={{ fontSize: 20, fontWeight: 700 }}>
           ${facts.totalValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}{" "}
-          <span className={facts.dayChangePct >= 0 ? "gain" : "loss"} style={{ fontSize: 15 }}>
-            {facts.dayChangePct >= 0 ? "+" : ""}
-            {facts.dayChangePct.toFixed(2)}% today
+          <span className={facts.changePct >= 0 ? "gain" : "loss"} style={{ fontSize: 15 }}>
+            {facts.changePct >= 0 ? "+" : ""}
+            {facts.changePct.toFixed(2)}% today
           </span>
         </p>
       </div>
@@ -154,7 +160,14 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
       {/* Digest */}
       <div className="card" style={{ margin: "18px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <h3 style={{ margin: 0 }}>Daily AI digest</h3>
+          <h3 style={{ margin: 0 }}>AI insight</h3>
+          <div className="tf-tabs">
+            {(["daily", "weekly"] as DigestPeriod[]).map((p) => (
+              <button key={p} className={p === period ? "active" : ""} onClick={() => setPeriod(p)}>
+                {p === "daily" ? "Daily" : "Weekly"}
+              </button>
+            ))}
+          </div>
           <button className="btn small" onClick={generateDigest} disabled={digestBusy || data.holdings.length === 0}>
             {digestBusy ? "Analyzing…" : digest ? "Refresh digest" : "Generate digest"}
           </button>
@@ -171,8 +184,8 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
           </div>
         ) : (
           <p className="dim" style={{ marginTop: 10, fontSize: 14 }}>
-            Generate a digest to get a plain-language explanation of what moved this group today and
-            why.
+            Generate a {period} insight to get a plain-language explanation of what moved this
+            group and why.
           </p>
         )}
       </div>
@@ -245,9 +258,9 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
                         </span>
                       </td>
                       <td className="mono">${h.price.toFixed(2)}</td>
-                      <td className={`mono ${h.dayChangePct >= 0 ? "gain" : "loss"}`}>
-                        {h.dayChangePct >= 0 ? "+" : ""}
-                        {h.dayChangePct.toFixed(2)}%
+                      <td className={`mono ${h.changePct >= 0 ? "gain" : "loss"}`}>
+                        {h.changePct >= 0 ? "+" : ""}
+                        {h.changePct.toFixed(2)}%
                       </td>
                       <td>
                         {det ? (

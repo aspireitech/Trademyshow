@@ -9,6 +9,11 @@ function quote(symbol: string, price: number, prevClose: number): Quote {
   return { symbol, price, prevClose, changePct: ((price - prevClose) / prevClose) * 100 };
 }
 
+/** Daily digests use the previous close as each holding's baseline. */
+function baselinesFrom(quotes: Map<string, Quote>): Map<string, number> {
+  return new Map([...quotes].map(([sym, q]) => [sym, q.prevClose]));
+}
+
 describe("digest engine", () => {
   it("computes portfolio day change from holding values", () => {
     const quotes = new Map([
@@ -21,13 +26,15 @@ describe("digest engine", () => {
         { symbol: "AAA", quantity: 1 },
         { symbol: "BBB", quantity: 1 },
       ],
+      baselines: baselinesFrom(quotes),
+      period: "daily",
       quotes,
       newsBySymbol: new Map(),
       asOf,
     });
     // prev value 200 -> now 205 = +2.5%
     expect(facts.totalValue).toBeCloseTo(205, 2);
-    expect(facts.dayChangePct).toBeCloseTo(2.5, 2);
+    expect(facts.changePct).toBeCloseTo(2.5, 2);
   });
 
   it("contributions sum to the portfolio day change", () => {
@@ -43,12 +50,14 @@ describe("digest engine", () => {
         { symbol: "BBB", quantity: 5 },
         { symbol: "CCC", quantity: 1 },
       ],
+      baselines: baselinesFrom(quotes),
+      period: "daily",
       quotes,
       newsBySymbol: new Map(),
       asOf,
     });
     const sum = facts.holdings.reduce((acc, h) => acc + h.contributionPct, 0);
-    expect(sum).toBeCloseTo(facts.dayChangePct, 1);
+    expect(sum).toBeCloseTo(facts.changePct, 1);
   });
 
   it("weights sum to 1", () => {
@@ -75,14 +84,16 @@ describe("digest engine", () => {
     const facts = buildDigestFacts({
       groupName: "Rank",
       holdings: ["UP1", "UP2", "DN1", "DN2"].map((s) => ({ symbol: s, quantity: 1 })),
+      baselines: baselinesFrom(quotes),
+      period: "daily",
       quotes,
       newsBySymbol: new Map(),
       asOf,
     });
     expect(facts.topGainers[0].symbol).toBe("UP1");
     expect(facts.topLosers[0].symbol).toBe("DN1"); // worst first
-    expect(facts.topGainers.every((h) => h.dayChangePct > 0)).toBe(true);
-    expect(facts.topLosers.every((h) => h.dayChangePct < 0)).toBe(true);
+    expect(facts.topGainers.every((h) => h.changePct > 0)).toBe(true);
+    expect(facts.topLosers.every((h) => h.changePct < 0)).toBe(true);
   });
 
   it("attaches news to the right holding", () => {
@@ -102,6 +113,8 @@ describe("digest engine", () => {
       groupName: "News",
       holdings: [{ symbol: "AAA", quantity: 1 }],
       quotes: new Map([["AAA", quote("AAA", 110, 100)]]),
+      baselines: new Map([["AAA", 100]]),
+      period: "daily",
       newsBySymbol: new Map([["AAA", news]]),
       asOf,
     });

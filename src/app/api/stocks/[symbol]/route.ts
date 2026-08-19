@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { getHistory, getQuote, getStockInfo, rangeChangePct } from "@/lib/marketdata";
 import { getNews } from "@/lib/news";
+import { scoreStock } from "@/lib/insight/score";
 import { TIMEFRAMES, type Timeframe } from "@/lib/types";
 
 type Params = { params: Promise<{ symbol: string }> };
@@ -21,5 +22,6 @@ export async function GET(req: Request, { params }: Params) {
   const trends = Object.fromEntries(TIMEFRAMES.map((tf) => [tf, rangeChangePct(info.symbol, tf)]));
   const news = getNews(info.symbol, quote.changePct);
 
-  return NextResponse.json({ info, quote, range, history, trends, news });
+  const score = scoreStock(info.symbol);
+  return NextResponse.json({ info, quote, range, history, trends, news, score });
 }

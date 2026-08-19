@@ -11,6 +11,7 @@ export default async function LandingPage() {
             Trade<span>MyShow</span>
           </Link>
           <div className="links">
+            <Link href="/track-record">Track record</Link>
             <Link href="/pricing">Pricing</Link>
             {user ? (
               <Link href="/dashboard" className="btn">

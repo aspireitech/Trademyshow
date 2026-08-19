@@ -4,19 +4,24 @@ import { getGroup, latestDigest, listHoldings, saveDigest } from "@/lib/db";
 import { computeGroupFacts } from "@/lib/digest/engine";
 import { writeDigest } from "@/lib/digest/writer";
 import { limitsFor } from "@/lib/plans";
+import type { DigestPeriod } from "@/lib/types";
+
+function periodOf(url: string): DigestPeriod {
+  return new URL(url).searchParams.get("period") === "weekly" ? "weekly" : "daily";
+}
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(req: Request, { params }: Params) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
   const group = getGroup(Number(id), user.id);
   if (!group) return NextResponse.json({ error: "group not found" }, { status: 404 });
-  return NextResponse.json({ digest: latestDigest(group.id) });
+  return NextResponse.json({ digest: latestDigest(group.id, periodOf(req.url)) });
 }
 
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(req: Request, { params }: Params) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
@@ -28,9 +33,18 @@ export async function POST(_req: Request, { params }: Params) {
     return NextResponse.json({ error: "add at least one stock to generate a digest" }, { status: 400 });
   }
 
-  const facts = computeGroupFacts(group.name, holdings);
+  const period = periodOf(req.url);
+  const facts = computeGroupFacts(group.name, holdings, new Date(), period);
   const deep = limitsFor(user.plan).deepDigest;
   const written = await writeDigest(facts, deep);
-  const digest = saveDigest(group.id, facts.asOf, written.headline, written.body, facts, written.writer);
+  const digest = saveDigest(
+    group.id,
+    facts.asOf,
+    written.headline,
+    written.body,
+    facts,
+    written.writer,
+    period,
+  );
   return NextResponse.json({ digest }, { status: 201 });
 }

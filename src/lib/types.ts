@@ -36,7 +36,7 @@ export interface Quote {
   symbol: string;
   price: number;
   prevClose: number;
-  changePct: number; // day change, percent
+  changePct: number; // change over the digest period, percent
 }
 
 export interface PricePoint {
@@ -63,18 +63,21 @@ export interface HoldingSnapshot {
   quantity: number;
   price: number;
   value: number;
-  dayChangePct: number;
+  changePct: number;
   weight: number; // share of portfolio value, 0..1
-  contributionPct: number; // weight * dayChangePct — what this holding did to the portfolio
+  contributionPct: number; // baseline weight * changePct — what this holding did to the portfolio
   news: NewsItem[];
 }
 
 /** Structured facts handed to the digest writer (LLM or template). */
+export type DigestPeriod = "daily" | "weekly";
+
 export interface DigestFacts {
   groupName: string;
+  period: DigestPeriod;
   asOf: string;
   totalValue: number;
-  dayChangePct: number;
+  changePct: number;
   holdings: HoldingSnapshot[];
   topGainers: HoldingSnapshot[];
   topLosers: HoldingSnapshot[];
@@ -92,6 +95,7 @@ export interface Digest {
   body: string;
   facts: DigestFacts;
   writer: DigestWriter;
+  period: DigestPeriod;
   createdAt: string;
 }
 

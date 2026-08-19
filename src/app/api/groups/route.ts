@@ -14,7 +14,7 @@ export async function GET() {
       ...g,
       holdingsCount: holdings.length,
       totalValue: facts.totalValue,
-      dayChangePct: facts.dayChangePct,
+      changePct: facts.changePct,
     };
   });
   return NextResponse.json({ groups });

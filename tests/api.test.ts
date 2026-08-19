@@ -114,13 +114,13 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     const res = await groupById.GET(new Request("http://localhost/x"), p(groupId));
     expect(res.status).toBe(200);
     const data = (await res.json()) as {
-      facts: { holdings: { weight: number; contributionPct: number }[]; dayChangePct: number };
+      facts: { holdings: { weight: number; contributionPct: number }[]; changePct: number };
     };
     expect(data.facts.holdings).toHaveLength(3);
     const weightSum = data.facts.holdings.reduce((a, h) => a + h.weight, 0);
     expect(weightSum).toBeCloseTo(1, 2);
     const contribSum = data.facts.holdings.reduce((a, h) => a + h.contributionPct, 0);
-    expect(contribSum).toBeCloseTo(data.facts.dayChangePct, 1);
+    expect(contribSum).toBeCloseTo(data.facts.changePct, 1);
   });
 
   it("serves stock detail with trends for all timeframes", async () => {

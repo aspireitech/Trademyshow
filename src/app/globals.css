@@ -368,3 +368,35 @@ footer.site {
   font-size: 13px;
   color: var(--text-dim);
 }
+
+/* ---------- insight score ---------- */
+.score-dial {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.score-dial span {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  display: grid;
+  place-items: center;
+  font-size: 21px;
+  font-weight: 700;
+}
+.bar {
+  height: 5px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
