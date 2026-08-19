@@ -3,9 +3,13 @@
  * (register -> login -> groups -> holdings -> digest -> billing) against an
  * in-memory SQLite DB, with next/headers mocked by an in-memory cookie jar.
  */
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 process.env.DB_PATH = ":memory:";
+process.env.CONTRACTS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "tms-api-"));
 delete process.env.ANTHROPIC_API_KEY; // force the deterministic template writer
 
 const jar = new Map<string, string>();
@@ -27,7 +31,9 @@ import * as digest from "@/app/api/groups/[id]/digest/route";
 import * as search from "@/app/api/stocks/search/route";
 import * as stock from "@/app/api/stocks/[symbol]/route";
 import * as upgrade from "@/app/api/billing/upgrade/route";
-import { getDb } from "@/lib/db";
+import { getDb, getUserById } from "@/lib/db";
+import { listContracts } from "@/lib/contracts";
+import { TERMS_VERSION } from "@/lib/legal";
 
 function jsonReq(url: string, body?: unknown, method = "POST"): Request {
   return new Request(`http://localhost${url}`, {
@@ -58,7 +64,7 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     expect(
       (
         await register.POST(
-          jsonReq("/api/auth/register", { email: "a@b.co", name: "A", password: "short" }),
+          jsonReq("/api/auth/register", { email: "a@b.co", name: "A", password: "short", acceptTerms: true }),
         )
       ).status,
     ).toBe(400);
@@ -66,7 +72,10 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
 
   it("registers a user and sets a session", async () => {
     const res = await register.POST(
-      jsonReq("/api/auth/register", { email: "alice@example.com", name: "Alice", password: "Str0ng!Pass2026" }),
+      jsonReq("/api/auth/register", {
+        email: "alice@example.com", name: "Alice", password: "Str0ng!Pass2026",
+        acceptTerms: true,
+      }),
     );
     expect(res.status).toBe(201);
     expect(jar.has("tms_session")).toBe(true);
@@ -92,7 +101,9 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
 
   it("rejects duplicate email and wrong password", async () => {
     const dup = await register.POST(
-      jsonReq("/api/auth/register", { email: "alice@example.com", name: "A", password: "Str0ng!Pass2026" }),
+      jsonReq("/api/auth/register", {
+        email: "alice@example.com", name: "A", password: "Str0ng!Pass2026", acceptTerms: true,
+      }),
     );
     expect(dup.status).toBe(409);
     const bad = await login.POST(jsonReq("/api/auth/login", { email: "alice@example.com", password: "Wr0ng!Pass2026" }));
@@ -218,5 +229,55 @@ describe("API flow: register → group → holdings → digest → upgrade", () 
     expect((await me.GET()).status).toBe(401);
     expect((await digest.POST(new Request("http://localhost/x", { method: "POST" }), p(groupId))).status).toBe(401);
     expect((await upgrade.POST(jsonReq("/api/billing/upgrade", { plan: "pro" }))).status).toBe(401);
+  });
+});
+
+describe("terms acceptance is a precondition of an account existing", () => {
+  const base = { email: "consent@example.com", name: "Consent", password: "Str0ng!Pass2026" };
+
+  /**
+   * Registration is rate limited per source address, and this block makes more
+   * attempts than one address is allowed. Varying the address exercises the
+   * real limiter instead of switching it off for tests.
+   */
+  let n = 0;
+  const from = (body: unknown): Request =>
+    new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-real-ip": `203.0.113.${++n}` },
+      body: JSON.stringify(body),
+    });
+
+  it("refuses registration without acceptance", async () => {
+    const res = await register.POST(from(base));
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toMatch(/Terms of Service/i);
+  });
+
+  it("refuses a falsy acceptance rather than coercing it", async () => {
+    // "false", 0 and "" must not pass; only a real boolean true does.
+    for (const acceptTerms of [false, 0, "true", null]) {
+      const res = await register.POST(from({ ...base, acceptTerms }));
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it("refuses acceptance of a superseded version of the terms", async () => {
+    // A tab left open across a terms update must not silently record the user
+    // as having accepted wording they never saw.
+    const res = await register.POST(from({ ...base, acceptTerms: true, termsVersion: "1999-01-01.1" }));
+    expect(res.status).toBe(409);
+  });
+
+  it("creates the account, the acceptance stamp and the contract together", async () => {
+    const res = await register.POST(from({ ...base, acceptTerms: true, termsVersion: TERMS_VERSION }));
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { user: { id: number }; contractId: string | null };
+    expect(body.contractId).toMatch(/^TMS-/);
+
+    const stored = getUserById(body.user.id)!;
+    expect(stored.termsAcceptedAt).not.toBeNull();
+    expect(stored.termsVersion).toBe(TERMS_VERSION);
+    expect(listContracts(body.user.id)).toHaveLength(1);
   });
 });

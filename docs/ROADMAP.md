@@ -15,11 +15,11 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 | Data & AI | 2 | 3 | 2 | 2 |
 | Auth & security | 15 | 0 | 2 | 1 |
 | Billing & growth | 8 | 2 | 0 | 1 |
-| Legal & compliance | 4 | 0 | 2 | 2 |
+| Legal & compliance | 8 | 0 | 4 | 4 |
 | Infrastructure | 9 | 1 | 2 | 1 |
-| **Total** | **55** | **7** | **9** | **7** |
+| **Total** | **59** | **7** | **11** | **9** |
 
-**55 of 71 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
+**59 of 77 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -111,6 +111,12 @@ decisions and purchases, not tickets.
 | Terms of Service | ✅ | Published, flagged as unreviewed | — |
 | Privacy Policy | ✅ | Published, flagged as unreviewed | — |
 | Cookie consent | ✅ | Gates analytics only; `track()` checks it, so declining is real | — |
+| Clickwrap acceptance at signup | ✅ | Required checkbox, versioned, refused server-side; gates social signup too | — |
+| Executed agreement records | ✅ | Dated PDF per acceptance, SHA-256 in the DB, tamper-evident, user-downloadable | — |
+| Liability cap & arbitration clause | ✅ | Capped with a floor, class-action waiver, carve-outs kept so the clause survives | — |
+| Copy audit for advice language | ✅ | Forbidden-phrase test over all shipped copy and generated digests | — |
+| E&O / professional indemnity insurance | ⬜ | **Not a code task.** ~$1–3k/yr. See `docs/COSTS.md` §6b | **Yes** |
+| Legal entity details configured | ⬜ | `LEGAL_*` env vars; Terms page warns while unset | **Yes** |
 | Lawyer review of disclaimers | ⬜ | **Not a code task.** Publisher-exemption posture needs confirming | **Yes** |
 | Market-data licence review | ⬜ | **Not a code task.** Redistribution terms vary sharply | **Yes** |
 

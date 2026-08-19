@@ -13,7 +13,8 @@ async function signUp(page: import("@playwright/test").Page, tag: string) {
   await page.getByLabel("Name").fill("Settings Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel(/Password/).fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign up free" }).click();
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Your watchlists" })).toBeVisible();
   return email;
 }
@@ -109,4 +110,49 @@ test("analytics consent is asked for and honoured", async ({ page }) => {
   // The decision sticks across a reload rather than nagging every page view.
   await page.reload();
   await expect(page.getByRole("region", { name: "Analytics consent" })).toBeHidden();
+});
+
+test("an account cannot be created without accepting the terms", async ({ page }) => {
+  await page.goto("/register");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Name").fill("Refusenik");
+  await page.getByLabel("Email").fill(`e2e-refuse-${Date.now()}@example.com`);
+  await page.getByLabel(/Password/).fill(PASSWORD);
+
+  // The button is disabled until the box is ticked — the gate is visible,
+  // not a surprise error after submitting.
+  await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
+  await expect(page).toHaveURL(/\/register/);
+
+  await page.getByRole("checkbox").check();
+  await expect(page.getByRole("button", { name: "Create account" })).toBeEnabled();
+});
+
+test("the signed agreement is downloadable from settings", async ({ page }) => {
+  await signUp(page, "contract");
+  await page.getByRole("link", { name: "Settings" }).click();
+
+  await expect(page.getByRole("heading", { name: "Your agreement" })).toBeVisible();
+  const row = page.locator("text=/^TMS-\\d{4}-/").first();
+  await expect(row).toBeVisible();
+
+  const link = page.getByRole("link", { name: "Download PDF" }).first();
+  const href = await link.getAttribute("href");
+  expect(href).toContain("/api/account/contract?id=TMS-");
+
+  // Fetch it through the browser session so auth and headers are exercised.
+  const res = await page.request.get(href!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("application/pdf");
+  expect(res.headers()["x-contract-integrity"]).toBe("verified");
+  expect((await res.body()).subarray(0, 5).toString()).toBe("%PDF-");
+});
+
+test("the terms page states the liability cap and the arbitration clause", async ({ page }) => {
+  await page.goto("/terms");
+  await expect(page.getByRole("heading", { name: "Terms of Service" })).toBeVisible();
+  await expect(page.getByText(/US\$1000/).first()).toBeVisible();
+  await expect(page.getByText(/CLASS ACTION WAIVER/)).toBeVisible();
+  await expect(page.getByText(/binding individual arbitration/)).toBeVisible();
+  await expect(page.getByText(/no fiduciary/i).first()).toBeVisible();
 });

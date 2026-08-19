@@ -7,6 +7,9 @@ import { exchangeCode, verifyState, type OAuthProvider } from "@/lib/oauth";
 import { TRIAL_DAYS } from "@/lib/plans";
 import { audit, limitRequest, tooManyRequests } from "@/lib/security";
 import { siteUrl } from "@/lib/site";
+import { recordAcceptance } from "@/lib/contracts";
+import { hashIp, clientIp } from "@/lib/security";
+import { TERMS_VERSION } from "@/lib/legal";
 
 function back(path: string): NextResponse {
   return NextResponse.redirect(`${siteUrl()}${path}`);
@@ -48,6 +51,14 @@ async function handle(req: Request, providerParam: string, code: string | null, 
     return back("/dashboard");
   }
 
+  // Signing in an existing account is fine without acceptance — they accepted
+  // when they registered. Creating a new one is not: every account must carry
+  // a record of what it agreed to, whichever door it came through.
+  if (verified.terms !== TERMS_VERSION) {
+    audit(null, "oauth.terms_not_accepted", providerParam, req);
+    return back("/register?error=terms_required");
+  }
+
   // A social signup has a provider-verified address and no password of its
   // own; the password field holds an unusable random hash so the password
   // login path can never match it.
@@ -60,6 +71,10 @@ async function handle(req: Request, providerParam: string, code: string | null, 
   );
   setReferralCode(user.id, crypto.randomBytes(4).toString("hex").toUpperCase());
   markEmailVerified(user.id);
+  recordAcceptance(user, {
+    ipHash: hashIp(clientIp(req)),
+    userAgent: req.headers.get("user-agent"),
+  });
   if (verified.ref) attachReferral(user.id, verified.ref);
 
   await setSessionCookie(user.id, req);

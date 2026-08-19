@@ -200,6 +200,31 @@ only fires on an actual quota error. They are insurance, not a running expense.
 
 ---
 
+## 6b · Insurance — the layer that actually caps your downside
+
+Disclaimers reduce the chance a claim succeeds. **Insurance pays when one succeeds anyway.**
+That distinction is the whole reason this section exists: no drafting makes an owner
+liability-free, and the contractual cap in the Terms only binds users who agreed to it — it does
+nothing about a regulator, and nothing about a claim that falls outside the cap's carve-outs
+(fraud, wilful misconduct, non-excludable consumer rights).
+
+| Cover | Typical annual premium | What it is for |
+|---|---|---|
+| **Errors & Omissions / Professional Indemnity** | **$1,000 – $3,000** | A user claims your analysis caused loss. The core policy for this product. |
+| Cyber / data breach | $500 – $2,000 | Breach response, notification costs, regulatory defence |
+| General liability | $400 – $800 | Usually bundled; rarely the relevant one here |
+| Directors & Officers | $1,500 – $5,000 | Only once you take outside investment |
+
+**Buy E&O before the first paying customer.** It is cheaper than a single hour of defending a
+claim, and most insurers will ask to see your Terms — which is a useful free review of whether
+the limitation and arbitration clauses read as competent.
+
+Tell the insurer plainly what the product does: publishes algorithmic analysis, no personalised
+advice, no execution, no custody. Understating the activity to get a lower premium is the
+reliable way to have a claim denied at exactly the wrong moment.
+
+---
+
 ## 7 · Summary
 
 **To publish, you must spend:** the lawyer (~$2,000–$8,000) and a data licence (~$50–$150/mo).
@@ -208,7 +233,9 @@ Everything else has a free or near-free tier that is genuinely adequate at launc
 **To publish responsibly, add:** a freelance security review (~$1,500–$5,000) before you accept
 the first payment.
 
-**Total to be live and defensible: roughly $4,000–$13,000 one-time, plus $50–$200/month.**
+**Total to be live and defensible: roughly $4,000–$13,000 one-time, plus $50–$200/month**, plus
+**$1,000–$3,000/year for E&O insurance** — which is the only item on this page that actually caps
+your personal downside, as opposed to reducing the odds of reaching it.
 
 The largest cost on this page is the one with no invoice attached: the weeks of lead time on the
 lawyer and the data contract. Start both this week.

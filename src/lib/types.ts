@@ -19,6 +19,9 @@ export interface User {
   emailOptIn: boolean;
   stripeCustomerId: string | null;
   lastDigestSentAt: string | null;
+  /** When this account accepted the Terms, and which version. */
+  termsAcceptedAt: string | null;
+  termsVersion: string | null;
   createdAt: string;
 }
 

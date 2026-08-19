@@ -79,7 +79,10 @@ function stateSecret(): string {
  * it needs no storage, cannot be forged, and expires on its own. The `ref`
  * rides along so a referral survives the round trip to the provider.
  */
-export function signState(payload: { provider: OAuthProvider; ref?: string }, now = Date.now()): string {
+export function signState(
+  payload: { provider: OAuthProvider; ref?: string; terms?: string },
+  now = Date.now(),
+): string {
   const body = Buffer.from(
     JSON.stringify({ ...payload, exp: now + STATE_TTL_MS, n: crypto.randomBytes(8).toString("hex") }),
   ).toString("base64url");
@@ -90,7 +93,7 @@ export function signState(payload: { provider: OAuthProvider; ref?: string }, no
 export function verifyState(
   state: string | null,
   now = Date.now(),
-): { provider: OAuthProvider; ref?: string } | null {
+): { provider: OAuthProvider; ref?: string; terms?: string } | null {
   if (!state) return null;
   const [body, mac] = state.split(".");
   if (!body || !mac) return null;
@@ -104,16 +107,27 @@ export function verifyState(
     const parsed = JSON.parse(Buffer.from(body, "base64url").toString()) as {
       provider: OAuthProvider;
       ref?: string;
+      terms?: string;
       exp: number;
     };
     if (parsed.exp < now) return null;
-    return { provider: parsed.provider, ref: parsed.ref };
+    return { provider: parsed.provider, ref: parsed.ref, terms: parsed.terms };
   } catch {
     return null;
   }
 }
 
-export function authorizeUrl(provider: OAuthProvider, ref?: string): string | null {
+/**
+ * The accepted terms version rides inside the signed state, so a social signup
+ * carries the same proof of acceptance as a password signup. It cannot be
+ * forged or added by hand: the state is HMAC'd, so the only way it is present
+ * is that the user ticked the box on our page before being redirected.
+ */
+export function authorizeUrl(
+  provider: OAuthProvider,
+  ref?: string,
+  terms?: string,
+): string | null {
   const cfg = providerConfig(provider);
   if (!cfg) return null;
 
@@ -122,7 +136,7 @@ export function authorizeUrl(provider: OAuthProvider, ref?: string): string | nu
     redirect_uri: redirectUri(provider),
     response_type: "code",
     scope: cfg.scope,
-    state: signState({ provider, ref }),
+    state: signState({ provider, ref, terms }),
   });
   // Apple only returns the name on the first authorization, and only in a form
   // POST, which is why it needs response_mode set explicitly.

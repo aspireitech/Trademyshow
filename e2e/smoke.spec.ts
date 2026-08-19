@@ -16,7 +16,8 @@ test("full user journey: signup to AI digest", async ({ page }) => {
   await page.getByLabel("Name").fill("E2E Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel(/Password/).fill("Str0ng!Pass2026");
-  await page.getByRole("button", { name: "Sign up free" }).click();
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
 
   // Dashboard: create a group
   await expect(page.getByRole("heading", { name: "Your watchlists" })).toBeVisible();
@@ -61,7 +62,8 @@ test("look up any stock directly from the dashboard", async ({ page }) => {
   await page.getByLabel("Name").fill("Lookup Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel(/Password/).fill("Str0ng!Pass2026");
-  await page.getByRole("button", { name: "Sign up free" }).click();
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
 
   // No group needed — search and open a single stock
   await page.getByPlaceholder(/Look up any stock/).fill("TSLA");

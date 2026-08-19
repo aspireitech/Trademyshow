@@ -8,8 +8,10 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> },
 ) {
   const { provider } = await params;
-  const ref = new URL(req.url).searchParams.get("ref") ?? undefined;
-  const url = authorizeUrl(provider as OAuthProvider, ref);
+  const query = new URL(req.url).searchParams;
+  const ref = query.get("ref") ?? undefined;
+  const terms = query.get("terms") ?? undefined;
+  const url = authorizeUrl(provider as OAuthProvider, ref, terms);
   if (!url) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.redirect(url);
 }

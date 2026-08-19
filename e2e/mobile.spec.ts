@@ -40,7 +40,8 @@ test("the holdings table scrolls inside its own container, not the page", async 
   await page.getByLabel("Name").fill("Mobile Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel(/Password/).fill("Str0ng!Pass2026");
-  await page.getByRole("button", { name: "Sign up free" }).click();
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
 
   await page.getByPlaceholder(/New watchlist name/).fill("Phone list");
   await page.getByRole("button", { name: "Create" }).click();

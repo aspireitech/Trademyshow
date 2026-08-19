@@ -17,6 +17,7 @@ export default function SettingsPanel(props: Props) {
   return (
     <div style={{ display: "grid", gap: 18 }}>
       <AccountSection {...props} />
+      <AgreementSection />
       <EmailSection />
       <TwoFactorSection />
       <SessionsSection />
@@ -89,6 +90,74 @@ function AccountSection({ name, email, plan, emailVerified, createdAt }: Props) 
               </button>
             )}
           </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ---------- executed agreements ----------
+
+interface ContractRow {
+  contractId: string;
+  termsVersion: string;
+  acceptedAt: string;
+  sha256: string;
+}
+
+function AgreementSection() {
+  const [contracts, setContracts] = useState<ContractRow[] | null>(null);
+
+  useEffect(() => {
+    void apiFetch("/api/account/contract")
+      .then((r) => (r.ok ? r.json() : { contracts: [] }))
+      .then((d: { contracts: ContractRow[] }) => setContracts(d.contracts));
+  }, []);
+
+  return (
+    <section className="card">
+      <h3>Your agreement</h3>
+      <p className="dim" style={{ fontSize: 14 }}>
+        A dated PDF of the terms you accepted, exactly as they were worded at the time. Yours to
+        keep — we hold the same copy.
+      </p>
+      {contracts === null ? (
+        <p className="dim" style={{ marginTop: 12 }}>Loading…</p>
+      ) : contracts.length === 0 ? (
+        <p className="dim" style={{ marginTop: 12, fontSize: 14 }}>
+          No agreement on file for this account.
+        </p>
+      ) : (
+        <div style={{ overflowX: "auto", marginTop: 12 }}>
+          <table className="holdings">
+            <thead>
+              <tr>
+                <th>Contract</th>
+                <th>Terms version</th>
+                <th>Accepted</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {contracts.map((c) => (
+                <tr key={c.contractId}>
+                  <td className="mono" style={{ fontSize: 12 }}>{c.contractId}</td>
+                  <td className="mono dim" style={{ fontSize: 12 }}>{c.termsVersion}</td>
+                  <td className="dim mono" style={{ fontSize: 12 }}>
+                    {new Date(c.acceptedAt).toLocaleString()}
+                  </td>
+                  <td>
+                    <a
+                      className="btn small secondary"
+                      href={`/api/account/contract?id=${encodeURIComponent(c.contractId)}`}
+                    >
+                      Download PDF
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>

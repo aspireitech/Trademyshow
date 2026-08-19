@@ -56,6 +56,11 @@ from the same scheduler:
 Restore is a file move. Test it at least once before you need it; an untested
 backup is a hypothesis, not a backup.
 
+**Back up `CONTRACTS_DIR` as well as the database.** The executed agreement PDFs live on disk
+while their SHA-256 digests live in SQLite, and the pair is what makes the record tamper-evident.
+Losing the files leaves you with hashes of documents you no longer hold — which is to say, no
+evidence that anyone accepted anything.
+
 ## 4. Scaling: the path off SQLite
 
 SQLite is the right call today. It is a single file, needs no server, survives

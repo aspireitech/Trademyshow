@@ -782,3 +782,37 @@ footer.site {
   height: 1px;
   background: var(--border);
 }
+
+/* ---------- consent checkbox ---------- */
+
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.consent input[type="checkbox"] {
+  /* Large enough to hit on a phone; a consent nobody can tick is not one. */
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.consent a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.consent strong {
+  color: var(--text);
+}
+.btn.disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

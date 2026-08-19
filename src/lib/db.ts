@@ -155,6 +155,27 @@ function open(): Database.Database {
   addUserCol("role", "role TEXT NOT NULL DEFAULT 'user'");
   addUserCol("stripe_customer_id", "stripe_customer_id TEXT");
   addUserCol("last_digest_sent_at", "last_digest_sent_at TEXT");
+  addUserCol("terms_accepted_at", "terms_accepted_at TEXT");
+  addUserCol("terms_version", "terms_version TEXT");
+
+  // Executed agreements. Append-only: a new acceptance adds a row, it never
+  // rewrites an old one, so the record of what was agreed and when survives
+  // every later change to the terms.
+  conn.exec(`
+    CREATE TABLE IF NOT EXISTS contracts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      contract_id TEXT NOT NULL UNIQUE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      terms_version TEXT NOT NULL,
+      privacy_version TEXT NOT NULL,
+      accepted_at TEXT NOT NULL,
+      sha256 TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      ip_hash TEXT,
+      user_agent TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_contracts_user ON contracts(user_id);
+  `);
   const cols = conn.prepare("PRAGMA table_info(digests)").all() as { name: string }[];
   if (!cols.some((c) => c.name === "period")) {
     conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");
@@ -190,6 +211,8 @@ interface UserRow {
   email_opt_in: number;
   stripe_customer_id: string | null;
   last_digest_sent_at: string | null;
+  terms_accepted_at: string | null;
+  terms_version: string | null;
   created_at: string;
 }
 
@@ -207,6 +230,8 @@ function toUser(r: UserRow): User {
     emailOptIn: r.email_opt_in !== 0,
     stripeCustomerId: r.stripe_customer_id,
     lastDigestSentAt: r.last_digest_sent_at,
+    termsAcceptedAt: r.terms_accepted_at ?? null,
+    termsVersion: r.terms_version ?? null,
     createdAt: r.created_at,
   };
 }
@@ -488,5 +513,10 @@ export function exportUserData(userId: number): Record<string, unknown> {
     notifications: one("SELECT * FROM notifications WHERE user_id = ?"),
     sessions: one("SELECT id, user_agent, created_at, last_seen_at, revoked_at FROM sessions WHERE user_id = ?"),
     auditLog: one("SELECT id, action, detail, created_at FROM audit_log WHERE user_id = ?"),
+    // The executed agreements, so an export answers "what did I agree to, and
+    // when" without the user having to ask us.
+    contracts: one(
+      "SELECT contract_id, terms_version, privacy_version, accepted_at, sha256 FROM contracts WHERE user_id = ?",
+    ),
   };
 }
