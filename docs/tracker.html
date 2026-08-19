@@ -1,0 +1,508 @@
+<title>TradeMyShow Launch Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+  /* Palette inherited from the product's own token file, so the tracker reads
+     as part of TradeMyShow rather than a separate document. Neutrals carry a
+     cool bias toward the blue accent. */
+  :root {
+    --ground: #f6f8fc;
+    --surface: #ffffff;
+    --surface-sunk: #eef2f9;
+    --line: #dae1ed;
+    --ink: #101a2c;
+    --ink-dim: #56657f;
+    --accent: #2563eb;
+    --accent-soft: rgba(37, 99, 235, 0.09);
+    --done: #15803d;
+    --done-soft: rgba(21, 128, 61, 0.11);
+    --partial: #b45309;
+    --partial-soft: rgba(180, 83, 9, 0.12);
+    --blocked: #c62828;
+    --blocked-soft: rgba(198, 40, 40, 0.1);
+    --shadow: 0 1px 2px rgba(16, 26, 44, 0.06), 0 4px 16px rgba(16, 26, 44, 0.05);
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b0f17;
+      --surface: #121826;
+      --surface-sunk: #0e1420;
+      --line: #232d42;
+      --ink: #e8edf6;
+      --ink-dim: #93a0b8;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.15);
+      --done: #2fbf71;
+      --done-soft: rgba(47, 191, 113, 0.15);
+      --partial: #e8a33d;
+      --partial-soft: rgba(232, 163, 61, 0.15);
+      --blocked: #e5534b;
+      --blocked-soft: rgba(229, 83, 75, 0.15);
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0b0f17;
+    --surface: #121826;
+    --surface-sunk: #0e1420;
+    --line: #232d42;
+    --ink: #e8edf6;
+    --ink-dim: #93a0b8;
+    --accent: #4f8cff;
+    --accent-soft: rgba(79, 140, 255, 0.15);
+    --done: #2fbf71;
+    --done-soft: rgba(47, 191, 113, 0.15);
+    --partial: #e8a33d;
+    --partial-soft: rgba(232, 163, 61, 0.15);
+    --blocked: #e5534b;
+    --blocked-soft: rgba(229, 83, 75, 0.15);
+    --shadow: none;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 44px 20px 80px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.025em; text-wrap: balance; }
+  h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+  h3 { font-size: 15px; font-weight: 600; }
+  .lede { color: var(--ink-dim); max-width: 66ch; margin-top: 10px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- readiness meter ---- */
+  .meter { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--surface-sunk); }
+  .meter i { display: block; height: 100%; }
+  .meter-key { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; }
+  .meter-key span { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-dim); }
+  .dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .stat { border-left: 3px solid var(--accent); padding-left: 13px; }
+  .stat.done { border-color: var(--done); }
+  .stat.partial { border-color: var(--partial); }
+  .stat.blocked { border-color: var(--blocked); }
+  .stat .n { font-family: var(--mono); font-size: 27px; font-weight: 600; line-height: 1.2; }
+  .stat .l { font-size: 12.5px; color: var(--ink-dim); }
+
+  /* ---- side-by-side columns ---- */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+  .col-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    padding-bottom: 10px; margin-bottom: 12px; border-bottom: 2px solid var(--line);
+  }
+  .col-head .count { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+  .col.shipped .col-head { border-bottom-color: var(--done); }
+  .col.shipped .count { color: var(--done); }
+  .col.remaining .col-head { border-bottom-color: var(--partial); }
+  .col.remaining .count { color: var(--partial); }
+
+  .grp { margin-bottom: 16px; }
+  .grp-label {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--ink-dim); margin-bottom: 6px;
+  }
+  ul.items { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  ul.items li {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 13.5px; line-height: 1.45;
+  }
+  ul.items li::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-top: 7px; flex-shrink: 0;
+    background: var(--done);
+  }
+  .remaining ul.items li::before { background: var(--partial); }
+  .remaining ul.items li.blocks::before { background: var(--blocked); }
+  li.blocks .flag {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em;
+    color: var(--blocked); border: 1px solid var(--blocked); border-radius: 3px;
+    padding: 0 4px; margin-left: 5px; white-space: nowrap; text-transform: uppercase;
+  }
+  li .part {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em;
+    color: var(--partial); border: 1px solid var(--partial); border-radius: 3px;
+    padding: 0 4px; margin-left: 5px; white-space: nowrap; text-transform: uppercase;
+  }
+
+  /* ---- blockers ---- */
+  .blockers { border-left: 3px solid var(--blocked); background: var(--blocked-soft); }
+  .blocker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 22px; margin-top: 14px; }
+  .blocker-grid div { font-size: 13.5px; display: flex; gap: 8px; }
+  .blocker-grid .k { font-family: var(--mono); font-size: 11px; color: var(--blocked); padding-top: 3px; }
+
+  /* ---- tables ---- */
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    text-align: left; font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim);
+    padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .chip {
+    display: inline-block; font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  }
+  .chip.done { background: var(--done-soft); color: var(--done); }
+  .chip.partial { background: var(--partial-soft); color: var(--partial); }
+  .chip.todo { background: var(--surface-sunk); color: var(--ink-dim); }
+  .yes { color: var(--blocked); font-weight: 600; }
+
+  /* ---- phases ---- */
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .phase { border-top: 3px solid var(--accent); padding-top: 12px; }
+  .phase:nth-child(2) { border-color: var(--blocked); }
+  .phase:nth-child(3) { border-color: var(--partial); }
+  .phase:nth-child(4) { border-color: var(--done); }
+  .phase .when { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+  .phase p { font-size: 13.5px; color: var(--ink-dim); margin-top: 6px; }
+
+  .note { font-size: 13.5px; color: var(--ink-dim); }
+  .note strong { color: var(--ink); }
+  footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 12.5px; color: var(--ink-dim); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Build tracker · 19 Aug 2026</p>
+    <h1>TradeMyShow launch readiness</h1>
+    <p class="lede">
+      Every component, its real state, and whether it stands between you and taking real
+      money from real users. Counted honestly — partial means it runs but is not
+      production-grade.
+    </p>
+  </header>
+
+  <section class="card">
+    <div class="stats" style="margin-bottom:22px">
+      <div class="stat done"><div class="n">24</div><div class="l">Shipped &amp; tested</div></div>
+      <div class="stat partial"><div class="n">8</div><div class="l">Partially built</div></div>
+      <div class="stat"><div class="n">35</div><div class="l">Not started</div></div>
+      <div class="stat blocked"><div class="n">20</div><div class="l">Block launch</div></div>
+    </div>
+
+    <div class="meter" role="img" aria-label="24 shipped, 8 partial, 35 not started, of 67 components">
+      <i style="width:35.8%;background:var(--done)"></i>
+      <i style="width:11.9%;background:var(--partial)"></i>
+      <i style="width:52.3%;background:var(--surface-sunk)"></i>
+    </div>
+    <div class="meter-key">
+      <span><i class="dot" style="background:var(--done)"></i> Shipped 36%</span>
+      <span><i class="dot" style="background:var(--partial)"></i> Partial 12%</span>
+      <span><i class="dot" style="background:var(--surface-sunk);border:1px solid var(--line)"></i> Remaining 52%</span>
+      <span class="mono">24 / 67 components</span>
+    </div>
+  </section>
+
+  <section class="card blockers">
+    <h2>The 20 things that block launch</h2>
+    <p class="note" style="margin-top:6px">
+      Everything here must exist before you charge anyone or accept real accounts. Most of it
+      is unglamorous, and none of it is optional.
+    </p>
+    <div class="blocker-grid">
+      <div><span class="k">SEC</span><span>Password reset — users have no way to recover an account today</span></div>
+      <div><span class="k">SEC</span><span>Email verification (OTP)</span></div>
+      <div><span class="k">SEC</span><span>Rate limiting on login, signup and AI routes</span></div>
+      <div><span class="k">SEC</span><span>Security headers (CSP, HSTS)</span></div>
+      <div><span class="k">SEC</span><span>CSRF protection</span></div>
+      <div><span class="k">SEC</span><span>Account deletion &amp; data export (GDPR)</span></div>
+      <div><span class="k">DATA</span><span>Real market-data feed</span></div>
+      <div><span class="k">DATA</span><span>Real news feed — 30% of every score</span></div>
+      <div><span class="k">PAY</span><span>Stripe checkout (currently a stub)</span></div>
+      <div><span class="k">PAY</span><span>Stripe webhooks — renewals, failures, cancellations</span></div>
+      <div><span class="k">LEGAL</span><span>Terms of Service</span></div>
+      <div><span class="k">LEGAL</span><span>Privacy Policy</span></div>
+      <div><span class="k">LEGAL</span><span>Lawyer review of the not-advice posture</span></div>
+      <div><span class="k">LEGAL</span><span>Market-data redistribution licence check</span></div>
+      <div><span class="k">INFRA</span><span>Hosting &amp; deployment</span></div>
+      <div><span class="k">INFRA</span><span>CI running tests on every push</span></div>
+      <div><span class="k">INFRA</span><span>Backups with a tested restore</span></div>
+      <div><span class="k">INFRA</span><span>Error tracking</span></div>
+      <div><span class="k">PROD</span><span>Scheduled email delivery — the retention loop</span></div>
+      <div><span class="k">PROD</span><span>Mobile testing on real devices</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom:16px">Shipped vs remaining, side by side</h2>
+    <div class="split">
+
+      <div class="col shipped card">
+        <div class="col-head"><h3>Shipped &amp; tested</h3><span class="count">24</span></div>
+
+        <div class="grp">
+          <p class="grp-label">Core product · 12</p>
+          <ul class="items">
+            <li>Watchlists — create, delete, per-user isolation</li>
+            <li>Add / remove stocks with search</li>
+            <li>Attribution engine — contributions sum to the total</li>
+            <li>Daily insight</li>
+            <li>Weekly insight</li>
+            <li>Insight Score, itemised into four components</li>
+            <li>Base-rate expectations (7 / 30 / 90 day)</li>
+            <li>Published track record, misses included</li>
+            <li>Single-stock analysis page</li>
+            <li>Nine timeframes with sparklines</li>
+            <li>Light &amp; dark themes, AA contrast both ways</li>
+            <li>Colour-coded insight data</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Data &amp; AI · 2</p>
+          <ul class="items">
+            <li>Multi-provider LLM router with quota failover</li>
+            <li>Template fallback — never hard-fails</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Auth · 3</p>
+          <ul class="items">
+            <li>Email &amp; password with bcrypt</li>
+            <li>httpOnly JWT sessions</li>
+            <li>Server-side ownership checks on every route</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Billing · 2</p>
+          <ul class="items">
+            <li>Three tiers, limits enforced server-side</li>
+            <li>14-day no-card trial</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Legal · 1</p>
+          <ul class="items">
+            <li>Not-advice posture across prompt, copy and disclaimers</li>
+          </ul>
+        </div>
+
+        <div class="grp" style="margin-bottom:0">
+          <p class="grp-label">Infrastructure · 4</p>
+          <ul class="items">
+            <li>88 unit &amp; integration tests, 2 e2e journeys</li>
+            <li>Typecheck and production build clean</li>
+            <li>SEO — JSON-LD, sitemap, robots, OG</li>
+            <li>Deterministic test data</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col remaining card">
+        <div class="col-head"><h3>Remaining</h3><span class="count">43</span></div>
+
+        <div class="grp">
+          <p class="grp-label">Auth &amp; security · 13</p>
+          <ul class="items">
+            <li class="blocks">Password reset<span class="flag">blocks</span></li>
+            <li class="blocks">Email verification OTP<span class="flag">blocks</span></li>
+            <li class="blocks">Rate limiting<span class="flag">blocks</span></li>
+            <li class="blocks">Security headers<span class="flag">blocks</span></li>
+            <li class="blocks">CSRF protection<span class="flag">blocks</span></li>
+            <li class="blocks">Account deletion &amp; export<span class="flag">blocks</span></li>
+            <li>Social login — Google, Apple</li>
+            <li>Two-factor (TOTP before SMS)</li>
+            <li>Password strength &amp; breach check<span class="part">partial</span></li>
+            <li>Session revocation, device list</li>
+            <li>Audit log</li>
+            <li>Dependency scanning</li>
+            <li>Penetration test</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Data &amp; AI · 5</p>
+          <ul class="items">
+            <li class="blocks">Real market data<span class="flag">blocks</span></li>
+            <li class="blocks">Real news feed<span class="flag">blocks</span></li>
+            <li>Live AI narration — needs a key<span class="part">partial</span></li>
+            <li>Real-time / intraday prices</li>
+            <li>Earnings calendar</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Core product · 6</p>
+          <ul class="items">
+            <li class="blocks">Scheduled email delivery<span class="flag">blocks</span></li>
+            <li class="blocks">Mobile device testing<span class="flag">blocks</span></li>
+            <li>Guided onboarding<span class="part">partial</span></li>
+            <li>Score-threshold alerts</li>
+            <li>Multi-asset — ETFs, crypto</li>
+            <li>In-app notification centre</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Billing &amp; growth · 6</p>
+          <ul class="items">
+            <li class="blocks">Stripe checkout<span class="flag">blocks</span></li>
+            <li class="blocks">Stripe webhooks<span class="flag">blocks</span></li>
+            <li>Referral programme with payouts</li>
+            <li>Promo codes</li>
+            <li>Admin panel</li>
+            <li>Product analytics</li>
+          </ul>
+        </div>
+
+        <div class="grp">
+          <p class="grp-label">Legal · 5</p>
+          <ul class="items">
+            <li class="blocks">Terms of Service<span class="flag">blocks</span></li>
+            <li class="blocks">Privacy Policy<span class="flag">blocks</span></li>
+            <li class="blocks">Lawyer review<span class="flag">blocks</span></li>
+            <li class="blocks">Data licence check<span class="flag">blocks</span></li>
+            <li>Cookie consent</li>
+          </ul>
+        </div>
+
+        <div class="grp" style="margin-bottom:0">
+          <p class="grp-label">Infrastructure · 8</p>
+          <ul class="items">
+            <li class="blocks">Hosting &amp; deployment<span class="flag">blocks</span></li>
+            <li class="blocks">CI pipeline<span class="flag">blocks</span></li>
+            <li class="blocks">Backups &amp; restore drill<span class="flag">blocks</span></li>
+            <li class="blocks">Error tracking<span class="flag">blocks</span></li>
+            <li>Postgres migration<span class="part">partial</span></li>
+            <li>Uptime monitoring</li>
+            <li>Staging environment</li>
+            <li>Log aggregation</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Do you need to pay for AI?</h2>
+    <p class="note" style="margin:8px 0 16px">
+      No subscription is required, and the product runs with no AI key at all — the template
+      writer produces the insight instead. Keys buy better prose, not the numbers, which are
+      always computed by your own engine.
+    </p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Provider</th><th>Free tier</th><th>Role here</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Google Gemini</strong></td>
+            <td>Yes — free tier with rate limits</td>
+            <td>Primary</td>
+            <td class="mono" style="color:var(--done)">Start here</td>
+          </tr>
+          <tr>
+            <td><strong>Anthropic Claude</strong></td>
+            <td>No — pay-as-you-go credits</td>
+            <td>First backup</td>
+            <td class="mono" style="color:var(--ink-dim)">Optional</td>
+          </tr>
+          <tr>
+            <td><strong>OpenAI</strong></td>
+            <td>No — pay-as-you-go credits</td>
+            <td>Second backup</td>
+            <td class="mono" style="color:var(--ink-dim)">Optional</td>
+          </tr>
+          <tr>
+            <td><strong>No key at all</strong></td>
+            <td>Free</td>
+            <td>Template writer</td>
+            <td class="mono" style="color:var(--done)">Works today</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:14px">
+      <strong>Failover only fires on failure.</strong> Gemini serves every request until it
+      returns a quota error; that provider then goes into cooldown and the next key takes
+      over. Backups cost nothing while the primary is healthy — so adding a paid key is
+      insurance, not a running expense.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Does it use the latest news?</h2>
+    <p class="note" style="margin-top:8px">
+      The pipeline is built and news carries <strong>30% of every Insight Score</strong> —
+      headlines are matched to each holding, weighted by estimated impact, and fed into both
+      the score and the written explanation. What is <em>not</em> real yet is the feed: today
+      it is a deterministic mock so the app runs and tests without API keys. Connecting a
+      live provider is a contained change behind an existing adapter, and it is on the
+      blocker list above.
+    </p>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom:16px">Suggested order</h2>
+    <div class="phases">
+      <div class="phase">
+        <p class="when">Phase 1 · 2–3 weeks</p>
+        <h3>Make it real</h3>
+        <p>Live market and news feeds, Stripe checkout and webhooks, hosting, CI. Without these there is nothing to sell.</p>
+      </div>
+      <div class="phase">
+        <p class="when">Phase 2 · 1–2 weeks</p>
+        <h3>Make it safe</h3>
+        <p>Password reset, email verification, rate limiting, headers, CSRF, deletion, Terms and Privacy.</p>
+      </div>
+      <div class="phase">
+        <p class="when">Phase 3 · ~2 weeks</p>
+        <h3>Make it stick</h3>
+        <p>Scheduled email digests, alerts, onboarding polish, admin panel. The daily habit is the product.</p>
+      </div>
+      <div class="phase">
+        <p class="when">Phase 4</p>
+        <h3>Make it grow</h3>
+        <p>Referrals, promo codes, multi-asset coverage, analytics, social login.</p>
+      </div>
+    </div>
+    <p class="note" style="margin-top:18px">
+      Two items are routinely underestimated. <strong>Password reset</strong> — someone will
+      lock themselves out on day one, and there is currently no recovery path.
+      <strong>Scheduled email</strong> — without it people simply forget to return, which is
+      exactly the churn pattern visible in the competitor numbers you shared.
+    </p>
+  </section>
+
+  <footer>
+    Source of truth: <span class="mono">docs/ROADMAP.md</span> on branch
+    <span class="mono">claude/stock-analytics-ai-portal-j7ftsb</span>. Counts reflect the
+    repository at commit <span class="mono">914c779</span>.
+  </footer>
+
+</div>

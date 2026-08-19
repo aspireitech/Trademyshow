@@ -11,15 +11,15 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 
 | Area | Done | Partial | Not started | Blocks launch |
 |---|---|---|---|---|
-| Core product | 11 | 2 | 3 | 2 |
+| Core product | 12 | 2 | 4 | 2 |
 | Data & AI | 2 | 3 | 2 | 2 |
-| Auth & security | 3 | 1 | 10 | 6 |
-| Billing & growth | 2 | 1 | 4 | 1 |
+| Auth & security | 3 | 1 | 12 | 6 |
+| Billing & growth | 2 | 1 | 5 | 2 |
 | Legal & compliance | 1 | 0 | 5 | 4 |
 | Infrastructure | 4 | 1 | 7 | 4 |
-| **Total** | **23** | **8** | **31** | **19** |
+| **Total** | **24** | **8** | **35** | **20** |
 
-Roughly **40% built**. What exists is genuinely solid — 88 automated tests, typecheck and
+**24 of 67 components complete (36%).** What exists is genuinely solid — 88 automated tests, typecheck and
 build clean. What's missing is mostly the boring, unavoidable production work: real data,
 payments, account security, and the legal pages.
 
