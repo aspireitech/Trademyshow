@@ -24,8 +24,8 @@ cannot drift out of sync.
 ## Features
 
 - **Auth** — email/password accounts, bcrypt-hashed, JWT session cookie (httpOnly).
-- **Group analysis** — organize favorite stocks into named groups (watchlists/portfolios)
-  and see what each holding contributed to the group's move.
+- **Watchlist analysis** — organise favourite stocks into named watchlists and see what
+  each holding contributed to the overall move.
 - **Individual stock analysis** — look up any stock directly for price, a chart, every
   timeframe at a glance, a plain-language trend read, and its latest news.
 - **Multi-timeframe trends** — sparklines and % change across 9 timeframes (1D → all-time).
@@ -43,8 +43,8 @@ cannot drift out of sync.
   days, public and unauthenticated.
 - **SEO + conversion** — server-rendered landing with JSON-LD (SoftwareApplication +
   FAQPage), sitemap, robots, OG/Twitter metadata, and CSS-only motion (zero client JS).
-- **Freemium plans** — Free (1 group, 3 stocks, summary digest) vs Pro (10 groups, 30
-  stocks, deep per-holding digest). Billing route ships as a stub with the Stripe
+- **Freemium with trial** — see the commercial model above. Plan gating is enforced
+  server-side in every route; the billing route ships as a stub with the Stripe
   integration point documented.
 
 ## Lightweight by design
