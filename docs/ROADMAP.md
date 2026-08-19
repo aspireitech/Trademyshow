@@ -14,12 +14,12 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 | Core product | 17 | 1 | 1 | 0 |
 | Data & AI | 2 | 3 | 2 | 2 |
 | Auth & security | 15 | 0 | 2 | 1 |
-| Billing & growth | 8 | 1 | 0 | 1 |
+| Billing & growth | 8 | 2 | 0 | 1 |
 | Legal & compliance | 4 | 0 | 2 | 2 |
 | Infrastructure | 9 | 1 | 2 | 1 |
-| **Total** | **55** | **6** | **9** | **7** |
+| **Total** | **55** | **7** | **9** | **7** |
 
-**55 of 70 components complete (79%).** 199 automated tests plus 18 end-to-end journeys;
+**55 of 71 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -101,6 +101,7 @@ decisions and purchases, not tickets.
 | Admin panel | ✅ | MRR, ARPU, conversion, verified share, usage | — |
 | Product analytics | ✅ | Event capture, gated on consent | — |
 | Live Stripe keys + payout account | 🔨 | **Not a code task.** Code is ready; the account is not | **Yes** |
+| LLM API key | 🔨 | **Not a blocker** — template writer ships without one. See `docs/COSTS.md` §6 | — |
 
 ## 5 · Legal & compliance
 
@@ -133,6 +134,9 @@ decisions and purchases, not tickets.
 ---
 
 ## What to do next, in order
+
+Costs for all of it — the lawyer, the pen test, the data licence, the AI keys — are broken
+down in **`docs/COSTS.md`**.
 
 **1 — Buy the two feeds (blocks everything).** A market-data provider and a news provider.
 Both have adapter seams waiting; the code change is small, the licence reading is not. Check
