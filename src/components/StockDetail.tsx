@@ -135,6 +135,7 @@ export default function StockDetail({ symbol }: { symbol: string }) {
           <h3>Latest news</h3>
           {news.map((n) => (
             <p key={n.id} style={{ marginTop: 10, fontSize: 14 }}>
+              <span className={`sent ${n.sentiment}`} title={`${n.sentiment} sentiment`} />
               <strong>{n.headline}</strong>
               <br />
               <span className="dim">

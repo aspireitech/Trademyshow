@@ -607,3 +607,53 @@ footer.site {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ---------- insight colour coding ---------- */
+.band-chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.bar-fill {
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Sentiment marker on news items */
+.sent {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+.sent.positive { background: var(--gain); }
+.sent.negative { background: var(--loss); }
+.sent.neutral  { background: var(--text-dim); }
+
+/* Stat tiles read at a glance: a severity stripe beats a bare number */
+.stat {
+  position: relative;
+  padding-left: 16px;
+}
+.stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.stat.good::before { background: var(--gain); }
+.stat.warn::before { background: var(--warn); }
+.stat.bad::before  { background: var(--loss); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill { transition: none; }
+}

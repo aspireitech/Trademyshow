@@ -82,7 +82,7 @@ export default async function TrackRecordPage({
             </p>
           </div>
           <div className="card">
-            <p className="dim" style={{ fontSize: 13 }}>
+            <p className="dim stat" style={{ fontSize: 13 }}>
               Overall hit rate
             </p>
             <p className="mono" style={{ fontSize: 26, fontWeight: 700 }}>
@@ -93,7 +93,7 @@ export default async function TrackRecordPage({
             </p>
           </div>
           <div className="card">
-            <p className="dim" style={{ fontSize: 13 }}>
+            <p className={`dim stat ${record.monotonic ? "good" : "warn"}`} style={{ fontSize: 13 }}>
               Higher score = better outcome?
             </p>
             <p

@@ -10,6 +10,13 @@ import type { Expectation } from "@/lib/insight/expectation";
  * Every part of the number is visible on purpose: a score a user cannot
  * audit is a score they have no reason to trust.
  */
+/** Semantic colour for a 0-100 component, matching the band thresholds. */
+function toneFor(value: number): string {
+  if (value >= 60) return "var(--gain)";
+  if (value >= 40) return "var(--warn)";
+  return "var(--loss)";
+}
+
 export default function ScoreCard({
   score,
   expectations,
@@ -31,7 +38,14 @@ export default function ScoreCard({
         </div>
         <div>
           <h3 style={{ margin: 0 }}>Insight Score</h3>
-          <p style={{ color: hue, fontWeight: 700, textTransform: "capitalize" }}>{score.band} signals</p>
+          <p style={{ marginBottom: 2 }}>
+            <span
+              className="band-chip"
+              style={{ color: hue, borderColor: hue, background: `color-mix(in srgb, ${hue} 12%, transparent)` }}
+            >
+              {score.band} signals
+            </span>
+          </p>
           <p className="dim" style={{ fontSize: 12 }}>
             A measure of current signal strength — not a buy or sell recommendation.
           </p>
@@ -52,10 +66,16 @@ export default function ScoreCard({
               <span>
                 {c.label} <span className="dim">· {(c.weight * 100).toFixed(0)}% weight</span>
               </span>
-              <span className="mono">{c.value.toFixed(0)}/100</span>
+              <span className="mono" style={{ color: toneFor(c.value), fontWeight: 700 }}>
+                {c.value.toFixed(0)}
+                <span className="dim" style={{ fontWeight: 400 }}>/100</span>
+              </span>
             </div>
             <div className="bar" aria-hidden="true">
-              <div className="bar-fill" style={{ width: `${c.value}%` }} />
+              <div
+                className="bar-fill"
+                style={{ width: `${c.value}%`, background: toneFor(c.value) }}
+              />
             </div>
             <p className="dim" style={{ fontSize: 12, marginTop: 2 }}>
               {c.detail}
