@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buildTrackRecord, HORIZONS, type Horizon } from "@/lib/insight/trackrecord";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata = {
   title: "Track record — TradeMyShow",
@@ -30,6 +31,7 @@ export default async function TrackRecordPage({
           Trade<span>MyShow</span>
         </Link>
         <div className="links">
+          <ThemeToggle />
           <Link href="/pricing">Pricing</Link>
           <Link href="/register" className="btn">
             Get started

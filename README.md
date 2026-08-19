@@ -47,6 +47,18 @@ cannot drift out of sync.
   server-side in every route; the billing route ships as a stub with the Stripe
   integration point documented.
 
+## Theming
+
+**Light is the default.** This product is read, not monitored: the daily insight is prose,
+and long-form text is easier on a light ground. It also matches the publisher-style tools
+this audience already trusts, and keeps the web app consistent with email delivery.
+
+Dark is a first-class alternative, not an afterthought — the toggle cycles
+light → dark → follow-the-system, the OS preference is honoured when no explicit choice is
+stored, and an inline head script applies a stored choice before first paint so dark never
+flashes light. Every colour is a token; the green and red used on light are darkened well
+past their dark-theme values, which would otherwise fail AA contrast on white.
+
 ## Lightweight by design
 
 No charting library, no CSS framework, no state-management library. Charts are hand-rolled

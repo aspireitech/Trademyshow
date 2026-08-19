@@ -14,7 +14,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Applies a stored theme choice before first paint, so an explicit
+            dark preference never flashes light. Absent a choice, the CSS
+            follows prefers-color-scheme on its own. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}}catch(e){}",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

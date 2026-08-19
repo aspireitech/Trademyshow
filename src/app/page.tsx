@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { buildTrackRecord } from "@/lib/insight/trackrecord";
 import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "TradeMyShow — Know why your stocks moved, and what usually happens next",
@@ -98,6 +99,7 @@ export default async function LandingPage() {
             Trade<span>MyShow</span>
           </Link>
           <div className="links">
+          <ThemeToggle />
             <Link href="/track-record">Track record</Link>
             <Link href="/pricing">Pricing</Link>
             {user ? (

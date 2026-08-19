@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PLAN_LIMITS, PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -45,6 +46,7 @@ export default function PricingPage() {
             Trade<span>MyShow</span>
           </Link>
           <div className="links">
+          <ThemeToggle />
             <Link href="/track-record">Track record</Link>
             <Link href="/login">Log in</Link>
             <Link href="/register" className="btn">

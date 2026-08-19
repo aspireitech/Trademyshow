@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   return (
@@ -9,6 +10,7 @@ export default function LoginPage() {
           Trade<span>MyShow</span>
         </Link>
         <div className="links">
+          <ThemeToggle />
           <Link href="/register">Need an account? Sign up</Link>
         </div>
       </nav>

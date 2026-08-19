@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { effectivePlan, isTrialing, trialDaysRemaining } from "@/lib/plans";
 import DashboardNavActions from "@/components/DashboardNavActions";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
@@ -18,6 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           Trade<span>MyShow</span>
         </Link>
         <div className="links">
+          <ThemeToggle />
           <span className="dim">{user.name}</span>
           <span className={`badge ${plan !== "free" ? "pro" : ""}`}>
             {trialing ? "Pro trial" : plan}

@@ -1,4 +1,53 @@
+/* ================= theme tokens =================
+   Light is the default: this product is read, not monitored. Long-form prose
+   is easier on a light ground, and it matches the publisher-style tools this
+   audience already trusts. Dark is available for anyone who prefers it, and
+   the OS preference is honoured unless the reader picks explicitly.
+
+   Contrast note: the green/red used on light are darkened well past their
+   dark-theme values — the dark-theme green on white would fail AA. */
 :root {
+  color-scheme: light;
+  --bg: #f6f8fc;
+  --bg-raised: #ffffff;
+  --bg-hover: #eef2f9;
+  --border: #dae1ed;
+  --text: #101a2c;
+  --text-dim: #56657f;
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.09);
+  --gain: #15803d;
+  --gain-soft: rgba(21, 128, 61, 0.1);
+  --loss: #c62828;
+  --warn: #b45309;
+  --shadow: 0 1px 2px rgba(16, 26, 44, 0.06), 0 4px 14px rgba(16, 26, 44, 0.05);
+  --radius: 10px;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+/* Reader has expressed no preference: follow the OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0b0f17;
+    --bg-raised: #121826;
+    --bg-hover: #1a2234;
+    --border: #232d42;
+    --text: #e8edf6;
+    --text-dim: #93a0b8;
+    --accent: #4f8cff;
+    --accent-soft: rgba(79, 140, 255, 0.14);
+    --gain: #2fbf71;
+    --gain-soft: rgba(47, 191, 113, 0.15);
+    --loss: #e5534b;
+    --warn: #e8a33d;
+    --shadow: none;
+  }
+}
+
+/* Reader picked dark explicitly: honour it over the OS. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0b0f17;
   --bg-raised: #121826;
   --bg-hover: #1a2234;
@@ -8,10 +57,10 @@
   --accent: #4f8cff;
   --accent-soft: rgba(79, 140, 255, 0.14);
   --gain: #2fbf71;
+  --gain-soft: rgba(47, 191, 113, 0.15);
   --loss: #e5534b;
   --warn: #e8a33d;
-  --radius: 10px;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --shadow: none;
 }
 
 * {
@@ -127,6 +176,7 @@ label {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
+  box-shadow: var(--shadow);
 }
 .card + .card {
   margin-top: 16px;
@@ -175,7 +225,7 @@ label {
   color: var(--accent);
 }
 .badge.pro {
-  background: rgba(47, 191, 113, 0.15);
+  background: var(--gain-soft);
   color: var(--gain);
 }
 
@@ -535,4 +585,25 @@ footer.site {
   border: 1px solid var(--border);
   background: var(--bg-raised);
   color: var(--text-dim);
+}
+
+/* ---------- theme toggle ---------- */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
 }
