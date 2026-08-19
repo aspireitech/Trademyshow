@@ -152,6 +152,10 @@ is missing — it reports it in `/api/health` instead.
 
 ## Platform notes
 
+**Azure** — step-by-step in [`DEPLOY-AZURE.md`](./DEPLOY-AZURE.md), including
+the SQLite-on-SMB trap that makes App Service's persistent `/home` and Container
+Apps' Azure Files volumes the wrong storage for this app.
+
 **Fly.io / Render / Railway** — a persistent volume at `/data` makes SQLite
 viable well past early traction. Cheapest and simplest; what the Dockerfile
 assumes.

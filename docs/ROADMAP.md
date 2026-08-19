@@ -16,10 +16,10 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 | Auth & security | 15 | 0 | 2 | 1 |
 | Billing & growth | 8 | 2 | 0 | 1 |
 | Legal & compliance | 8 | 0 | 4 | 4 |
-| Infrastructure | 13 | 2 | 2 | 1 |
-| **Total** | **63** | **8** | **11** | **9** |
+| Infrastructure | 15 | 2 | 2 | 1 |
+| **Total** | **65** | **8** | **11** | **9** |
 
-**63 of 82 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
+**65 of 84 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -138,6 +138,8 @@ decisions and purchases, not tickets.
 | Container image | ✅ | Multi-stage Dockerfile, standalone output, non-root, healthcheck | — |
 | Health / readiness endpoint | ✅ | `/api/health` reports subsystem config without leaking credentials | — |
 | Deployment guide | ✅ | `docs/DEPLOY.md` — sandbox in one command, production checklist | — |
+| Azure deployment runbook | ✅ | `docs/DEPLOY-AZURE.md` — Container Apps, jobs, TLS, cost, rollback | — |
+| HTTP seed endpoint | ✅ | Sandbox-only, secret-protected; seeds a container with no source tree | — |
 | Hosting / deployment | ⬜ | **Not a code task.** Fly/Render with a volume, or Vercel + Postgres | **Yes** |
 | Staging environment | ⬜ | Same image as sandbox with real credentials | — |
 | Dependency vulnerabilities | 🔨 | 3 high, all transitive via Next 15 (postcss, sharp). Fix needs Next 16 | — |

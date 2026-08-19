@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { refreshMarketData, runAlertJob, runDigestJob } from "@/lib/jobs";
 import { purgeExpiredTokens } from "@/lib/tokens";
+import { seedAllowed, seedSandbox } from "@/lib/seed";
 import type { DigestPeriod } from "@/lib/types";
 
 /**
@@ -28,13 +29,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ job, fired: runAlertJob().length });
     case "purge":
       return NextResponse.json({ job, purged: purgeExpiredTokens() });
+    case "seed": {
+      // Sandbox-only, and still behind CRON_SECRET: this creates accounts whose
+      // passwords are printed on the landing page.
+      const permitted = seedAllowed();
+      if (!permitted.allowed) {
+        return NextResponse.json({ error: permitted.reason }, { status: 403 });
+      }
+      return NextResponse.json({ job, report: await seedSandbox() });
+    }
     case "market-data":
       // Must run before the digest job: a digest built on yesterday's cache
       // explains yesterday's moves.
       return NextResponse.json({ job, report: await refreshMarketData() });
     default:
       return NextResponse.json(
-        { error: "job must be digest, alerts, purge or market-data" },
+        { error: "job must be digest, alerts, purge, market-data or seed" },
         { status: 400 },
       );
   }
