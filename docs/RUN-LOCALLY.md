@@ -9,7 +9,7 @@ Nothing here touches Azure, costs anything, or sends any email.
 
 | | Download | Notes |
 | --- | --- | --- |
-| **Node.js 22 LTS** | [nodejs.org](https://nodejs.org) | Take the LTS installer and click through. This is what runs the app. |
+| **Node.js 22 LTS** | [nodejs.org](https://nodejs.org) | Take the **LTS** button, not "Current". Node 23+ has no prebuilt database binary and tries to compile one, which fails on most Windows machines. |
 | **Git** | [git-scm.com/downloads](https://git-scm.com/downloads) | Click through the installer. This is what downloads the code. |
 
 Then open a terminal — **PowerShell** on Windows (press Start, type PowerShell),
@@ -23,12 +23,27 @@ git --version
 If either says "not recognised", close the terminal, open a new one, and try
 again — installers only affect terminals opened afterwards.
 
+**Windows only, one-time:** PowerShell blocks npm by default. This allows it
+for your user account only, and needs no administrator rights:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+Answer `Y`. Without it every npm command fails with
+*"running scripts is disabled on this system"*.
+
 ## 2 · Download the code
 
 ```bash
+cd ~                 # your user folder — never install into C:\Windows\System32
 git clone https://github.com/aspireitech/Trademyshow.git
 cd Trademyshow
 ```
+
+The folder you clone into matters: a project under `C:\Windows\System32`
+needs administrator rights for ordinary file writes and will fail in
+confusing ways.
 
 ## 3 · Create the settings file
 

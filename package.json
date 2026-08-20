@@ -2,7 +2,7 @@
   "name": "trademyshow",
   "version": "0.1.0",
   "private": true,
-  "description": "TradeMyShow — know exactly why your portfolio moved today. AI-explained portfolio digests.",
+  "description": "TradeMyShow \u2014 know exactly why your portfolio moved today. AI-explained portfolio digests.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -37,5 +37,8 @@
     "tsx": "^4.23.12",
     "typescript": "^5.7.2",
     "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=20.9 <23"
   }
 }
