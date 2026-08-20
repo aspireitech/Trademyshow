@@ -63,10 +63,18 @@ ok "Node $(node -v)"
 
 # ---------------------------------------------------------------- source
 say "Fetching the application"
+
+# git refuses to operate on a repository owned by another user. Earlier
+# versions of this script handed the whole tree to the service account, so an
+# update run would fail here; the exception is scoped to this one command
+# rather than written into root's global config, and the ownership is put back
+# below so it stops recurring.
+git_app() { git -c safe.directory="$APP_DIR" -C "$APP_DIR" "$@"; }
+
 if [[ -d "$APP_DIR/.git" ]]; then
-  git -C "$APP_DIR" fetch --quiet origin "$BRANCH"
-  git -C "$APP_DIR" checkout --quiet "$BRANCH"
-  git -C "$APP_DIR" reset --hard --quiet "origin/$BRANCH"
+  git_app fetch --quiet origin "$BRANCH"
+  git_app checkout --quiet "$BRANCH"
+  git_app reset --hard --quiet "origin/$BRANCH"
   ok "updated existing checkout"
 else
   rm -rf "$APP_DIR"
@@ -124,7 +132,15 @@ npm run build >/dev/null 2>&1 || die "Build failed. Run 'npm run build' in $APP_
 ok "application built"
 
 id -u "$SERVICE" &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin "$SERVICE"
-chown -R "$SERVICE":"$SERVICE" "$DATA_DIR" "$APP_DIR"
+
+# The service account reads the application and writes only its own cache and
+# data. Leaving the source root-owned means a compromised service cannot
+# rewrite its own code, keeps the secrets file readable by root alone, and
+# leaves later git operations conflict-free.
+chown -R root:root "$APP_DIR"
+chmod 600 "$APP_DIR/.env.production"
+mkdir -p "$APP_DIR/.next/cache"
+chown -R "$SERVICE":"$SERVICE" "$DATA_DIR" "$APP_DIR/.next"
 
 # ---------------------------------------------------------------- service
 say "Registering the background service"

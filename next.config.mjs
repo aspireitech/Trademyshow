@@ -3,10 +3,11 @@ const nextConfig = {
   // better-sqlite3 is a native module; bundling it breaks the .node binary.
   serverExternalPackages: ["better-sqlite3"],
 
-  // Emits .next/standalone with only the files the server actually reaches,
-  // which is what the Dockerfile's runtime stage copies. Without it the image
-  // has to carry the whole node_modules tree.
-  output: "standalone",
+  // Standalone output is for the container image only, where the runtime stage
+  // copies just the files the server reaches. It is deliberately NOT the
+  // default: `next start` warns that it does not support standalone output,
+  // and the VM deployment runs exactly that. The Dockerfile opts in.
+  ...(process.env.BUILD_STANDALONE === "true" ? { output: "standalone" } : {}),
 };
 
 export default nextConfig;

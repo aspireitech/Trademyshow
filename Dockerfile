@@ -16,7 +16,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Standalone output bundles only the files the server actually reaches.
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 BUILD_STANDALONE=true
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runner
