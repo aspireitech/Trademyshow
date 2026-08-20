@@ -23,6 +23,19 @@ export function middleware(req: NextRequest) {
   const nonce = crypto.randomUUID().replace(/-/g, "");
   const isDev = process.env.NODE_ENV !== "production";
 
+  /**
+   * Whether THIS request arrived over TLS — not whether this is a production
+   * build. The two are different, and conflating them breaks the page: over
+   * plain HTTP, `upgrade-insecure-requests` rewrites every stylesheet and
+   * script URL to https://, and on a deployment with no TLS listener every one
+   * of those fetches fails. The HTML arrives and nothing else does.
+   *
+   * Behind nginx the original scheme only survives in x-forwarded-proto, which
+   * is why that is checked before the request's own protocol.
+   */
+  const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const isHttps = (forwardedProto ?? req.nextUrl.protocol.replace(":", "")) === "https";
+
   const csp = [
     "default-src 'self'",
     // 'strict-dynamic' lets the nonced bootstrap load the rest of the bundle
@@ -37,7 +50,7 @@ export function middleware(req: NextRequest) {
     "form-action 'self'",
     "base-uri 'self'",
     "object-src 'none'",
-    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+    ...(isHttps && !isDev ? ["upgrade-insecure-requests"] : []),
   ].join("; ");
 
   // Next parses the nonce out of this request header and stamps it on every
@@ -57,8 +70,10 @@ export function middleware(req: NextRequest) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   );
-  if (!isDev) {
-    // Two years, preload-eligible. Only meaningful over HTTPS.
+  if (isHttps && !isDev) {
+    // Two years, preload-eligible. Sent only on TLS: over plain HTTP browsers
+    // ignore it anyway, and asserting it from an origin that cannot serve
+    // HTTPS would lock users out the moment they believed it.
     res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
   }
 
