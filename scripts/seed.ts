@@ -3,6 +3,7 @@
  * same seeding is reachable over HTTP on a deployed container, which has no
  * source tree to run this file from.
  */
+import "./load-env";
 import { seedSandbox } from "../src/lib/seed";
 import { DEMO_ACCOUNT, DEMO_ADMIN } from "../src/lib/sandbox";
 import { getDb } from "../src/lib/db";
