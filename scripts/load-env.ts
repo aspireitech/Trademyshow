@@ -16,7 +16,12 @@ for (const file of [".env.local", ".env.production", ".env"]) {
   const full = path.join(process.cwd(), file);
   if (!fs.existsSync(full)) continue;
 
-  for (const line of fs.readFileSync(full, "utf8").split("\n")) {
+  // Strip a UTF-8 byte-order mark. PowerShell's `Out-File -Encoding utf8`
+  // writes one, and it would silently swallow the first variable in the file —
+  // the setting appears present and is simply never read.
+  const contents = fs.readFileSync(full, "utf8").replace(/^\uFEFF/, "");
+
+  for (const line of contents.split("\n")) {
     const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
     if (!match) continue;
     const value = match[2].trim().replace(/^["']|["']$/g, "");

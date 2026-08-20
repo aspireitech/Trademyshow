@@ -37,8 +37,16 @@ One file, three lines. It tells the app to run in demo mode.
 **Windows (PowerShell):**
 
 ```powershell
-"SANDBOX=true`nAUTH_SECRET=local-only-secret`nSITE_URL=http://localhost:3000" | Out-File -Encoding utf8 .env.local
+Set-Content -Path .env.local -Encoding ascii -Value @(
+  "SANDBOX=true"
+  "AUTH_SECRET=local-only-secret"
+  "SITE_URL=http://localhost:3000"
+)
 ```
+
+Use `-Encoding ascii`, not `utf8`. Windows PowerShell writes a byte-order mark
+with `utf8`, and that invisible character makes the first line of the file
+unreadable — the setting looks present and is simply never applied.
 
 **Mac or Linux:**
 
