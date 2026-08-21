@@ -18,6 +18,10 @@ better-sqlite3 (needs Node 22 — there is no Node 24 prebuild).
 ## Working agreements
 
 - Branch: `claude/stock-analytics-ai-portal-j7ftsb`. Also push `main`.
+- **Always commit and push before the session ends.** The owner has asked for
+  GitHub to be current at all times, and this sandbox is discarded when the
+  session closes — anything unpushed is lost, not merely delayed. Push even for
+  work in progress; an honest commit message beats a lost afternoon.
 - Run `npx vitest run` and `npx next build` before pushing. Both must be clean.
 - Market data is simulated and must always be labelled as such in the UI.
 - Never write copy that promises, forecasts or guarantees a price move. The legal
