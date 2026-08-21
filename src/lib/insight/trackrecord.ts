@@ -99,15 +99,33 @@ export function isHit(score: number, forwardReturnPct: number): boolean | null {
  * Build the published record by grading every symbol at regular past dates.
  * `samplesPerSymbol` back-tests one score per week per symbol.
  */
+const recordMemo = new Map<string, TrackRecord>();
+
 export function buildTrackRecord(
   horizonDays: Horizon,
   now: Date = new Date(),
   samplesPerSymbol = 12,
-  symbols: string[] = UNIVERSE.map((s) => s.symbol),
+  symbols?: string[],
 ): TrackRecord {
+  // Grading the whole universe at twelve past dates is thousands of price
+  // reconstructions. The inputs are deterministic and only change when the
+  // day rolls over, so the result is memoised per (horizon, sample depth,
+  // day). Callers that pass an explicit symbol list get a fresh computation:
+  // that path is for tests and one-off analyses, and caching it would need a
+  // key built from the whole list.
+  const explicit = symbols !== undefined;
+  const universe = symbols ?? UNIVERSE.map((s) => s.symbol);
+  const day = now.toISOString().slice(0, 10);
+  const key = `${horizonDays}:${samplesPerSymbol}:${day}`;
+
+  if (!explicit) {
+    const hit = recordMemo.get(key);
+    if (hit) return hit;
+  }
+
   const outcomes: ScoredOutcome[] = [];
 
-  for (const symbol of symbols) {
+  for (const symbol of universe) {
     for (let i = 1; i <= samplesPerSymbol; i++) {
       // One sample per week, far enough back that the horizon has elapsed.
       const scoredAt = new Date(now.getTime() - (horizonDays + i * 7) * DAY_MS);
@@ -142,9 +160,9 @@ export function buildTrackRecord(
     (b, i) => i === 0 || ordered[i - 1].avgReturnPct >= b.avgReturnPct,
   );
 
-  return {
+  const record: TrackRecord = {
     horizonDays,
-    generatedAt: now.toISOString().slice(0, 10),
+    generatedAt: day,
     totalSamples: graded.length,
     pending,
     overallHitRate: graded.length
@@ -153,6 +171,14 @@ export function buildTrackRecord(
     buckets,
     monotonic,
   };
+
+  if (!explicit) {
+    recordMemo.set(key, record);
+    // Keep yesterday and today; anything older is dead weight.
+    if (recordMemo.size > 8) recordMemo.delete(recordMemo.keys().next().value!);
+  }
+
+  return record;
 }
 
 /** Top-scoring stocks right now, for the "what looks strong today" view. */

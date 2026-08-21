@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { buildTrackRecord } from "@/lib/insight/trackrecord";
 import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
-import LandingBoard from "@/components/LandingBoard";
+import { UNIVERSE } from "@/lib/marketdata";
+import MarketsDashboard from "@/components/MarketsDashboard";
+import SiteSidebar from "@/components/SiteSidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -94,7 +96,9 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="container">
+      <div className="shell">
+        <SiteSidebar active="home" />
+        <div className="shell-main">
         <nav className="nav">
           <Link href="/" className="brand">
             Trade<span>MyShow</span>
@@ -119,64 +123,61 @@ export default async function LandingPage() {
           </div>
         </nav>
 
-        <header className="hero">
-          <p className="pill rise" style={{ marginBottom: 18 }}>
-            <span className="live-dot" aria-hidden="true" />
-            Insights refresh every market day
-          </p>
-          <h1 className="rise d1">
-            Know why your stocks moved —{" "}
-            <span className="sweep">and what usually happens next</span>
-          </h1>
-          <p className="sub rise d2">
-            Most tools hand you a number and expect you to trust it. We show the working:
-            every score breaks into parts you can check, and every call we have made is
-            published alongside what actually happened.
-          </p>
-          <div className="cta rise d3">
-            <Link href="/register" className="btn" style={{ padding: "12px 24px", fontSize: 15 }}>
-              Start {TRIAL_DAYS}-day free trial
-            </Link>
-            <Link href="/track-record" className="btn secondary" style={{ padding: "12px 24px", fontSize: 15 }}>
-              See our track record
-            </Link>
-          </div>
-          <p className="dim rise d3" style={{ fontSize: 13, marginTop: 12 }}>
-            No credit card. Full access for {TRIAL_DAYS} days, then a free plan forever.
-          </p>
-
-          <div className="board-wrap rise d4">
-            <LandingBoard />
-          </div>
-
-          <div className="card digest-preview rise d5 draw">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-              <span className="badge">
-                <span className="live-dot" aria-hidden="true" />
-                Today&apos;s insight
-              </span>
-              <span className="dim" style={{ fontSize: 12 }}>Your watchlist · 6 stocks</span>
+        {/* A compact band, not a full screen of headline. Someone landing here
+            came to look at the market; the pitch has to earn its space beside
+            the data rather than push it below the fold. */}
+        <header className="hero hero-band">
+          <div className="hero-copy rise">
+            <p className="pill">
+              <span className="live-dot" aria-hidden="true" />
+              Insights refresh every market day
+            </p>
+            <h1>
+              Know why your stocks moved —{" "}
+              <span className="sweep">and what usually happens next</span>
+            </h1>
+            <p className="sub">
+              Every score breaks into parts you can check, and every call we have made is
+              published alongside what actually happened.
+            </p>
+            <div className="cta">
+              <Link href="/register" className="btn">
+                Start {TRIAL_DAYS}-day free trial
+              </Link>
+              <Link href="/track-record" className="btn secondary">
+                See the track record
+              </Link>
             </div>
-            <p className="headline" style={{ marginTop: 12 }}>
-              Semiconductors led your watchlist up <span className="gain">+1.42%</span> today
+            <p className="dim hero-fine">
+              No credit card. Full access for {TRIAL_DAYS} days, then a free plan forever.
             </p>
-            <p className="dim">
-              One holding did most of the work: it rose 3.21% and, at 34% of the watchlist,
-              added <span className="gain">+1.08%</span> on its own. The likely driver was a
-              guidance raise reported this morning. Two holdings drifted lower and together
-              cost <span className="loss">−0.22%</span>.
-            </p>
-            <svg viewBox="0 0 600 60" width="100%" height="52" style={{ marginTop: 10 }} aria-hidden="true">
-              <path
-                className="line"
-                d="M0,45 L60,42 L120,46 L180,33 L240,36 L300,25 L360,28 L420,18 L480,20 L540,10 L600,6"
-                fill="none"
-                stroke="var(--gain)"
-                strokeWidth="2"
-              />
-            </svg>
           </div>
+
+          <dl className="hero-proof rise d2">
+            <div>
+              <dt>Instruments tracked</dt>
+              <dd>{UNIVERSE.length}</dd>
+            </div>
+            <div>
+              <dt>Scores graded so far</dt>
+              <dd>{record.totalSamples.toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt>30-day hit rate</dt>
+              <dd className={record.overallHitRate >= 50 ? "gain" : "loss"}>
+                {record.overallHitRate}%
+              </dd>
+            </div>
+            <div>
+              <dt>Score components shown</dt>
+              <dd>4 of 4</dd>
+            </div>
+          </dl>
         </header>
+
+        <div className="mkt-wrap rise d3">
+          <MarketsDashboard view="gainers" />
+        </div>
 
         <div className="trustbar">
           <span>✓ Every score fully itemised</span>
@@ -365,6 +366,7 @@ export default async function LandingPage() {
             Start {TRIAL_DAYS}-day free trial
           </Link>
         </section>
+      </div>
       </div>
 
       <footer className="site">

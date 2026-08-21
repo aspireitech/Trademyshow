@@ -2,46 +2,38 @@
 
 import { useEffect, useState } from "react";
 
-type Choice = "light" | "dark" | "system";
+type Choice = "light" | "dark";
 
 /**
- * Light / dark / system switch.
- *
- * The stored choice is applied by an inline script in the document head so the
- * correct theme is painted on the first frame — without it, an explicit dark
- * preference would flash light on every navigation.
+ * Light / dark switch. Light is the default for everyone — the site never
+ * follows the OS, because colourful data on a white ground is the brand and
+ * the first impression should not depend on a system setting. Dark remains
+ * one click away and is remembered.
  */
 export default function ThemeToggle() {
-  const [choice, setChoice] = useState<Choice>("system");
+  const [choice, setChoice] = useState<Choice>("light");
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark") setChoice(stored);
+    if (localStorage.getItem("theme") === "dark") setChoice("dark");
   }, []);
 
   function apply(next: Choice) {
     setChoice(next);
-    const root = document.documentElement;
-    if (next === "system") {
-      root.removeAttribute("data-theme");
-      localStorage.removeItem("theme");
+    if (next === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("theme", "dark");
     } else {
-      root.setAttribute("data-theme", next);
-      localStorage.setItem("theme", next);
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.removeItem("theme");
     }
   }
 
-  // Cycles light -> dark -> follow the system -> light.
-  const next: Choice = choice === "light" ? "dark" : choice === "dark" ? "system" : "light";
-  const icon = choice === "light" ? "☀" : choice === "dark" ? "☾" : "◐";
-  const label =
-    choice === "system"
-      ? "Theme: following your system. Switch to light."
-      : `Theme: ${choice}. Switch to ${next === "system" ? "system default" : next}.`;
+  const next: Choice = choice === "light" ? "dark" : "light";
+  const label = `Theme: ${choice}. Switch to ${next}.`;
 
   return (
     <button className="theme-toggle" onClick={() => apply(next)} title={label} aria-label={label}>
-      <span aria-hidden="true">{icon}</span>
+      <span aria-hidden="true">{choice === "light" ? "☀" : "☾"}</span>
     </button>
   );
 }

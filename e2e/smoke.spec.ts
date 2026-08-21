@@ -80,15 +80,21 @@ test("the landing page shows a live board before any JavaScript runs", async ({ 
   });
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: "Today's board" })).toBeVisible();
-  const rows = page.locator(".board-row");
+  const rows = page.locator(".mkt-table .board-row");
   await expect(rows.first()).toBeVisible();
-  expect(await rows.count()).toBeGreaterThanOrEqual(4);
+  // A full screen, not a teaser: the gainers view fills up to 50 rows.
+  expect(await rows.count()).toBeGreaterThanOrEqual(30);
 
   // Each row carries the three things the page claims to deliver.
   await expect(rows.first().locator(".board-change")).toBeVisible();
   await expect(rows.first().locator(".board-spark")).toBeAttached();
   await expect(page.locator(".board-band").first()).toBeVisible();
+
+  // The reference indexes and the market screens are reachable from here.
+  await expect(page.locator(".mkt-index").first()).toBeVisible();
+  await page.getByRole("link", { name: "Top losers" }).first().click();
+  await expect(page).toHaveURL(/markets\/losers/);
+  await expect(page.locator(".mkt-table .board-row .loss").first()).toBeVisible();
 
   await expect(page.getByText(/never a list of what to buy/)).toBeVisible();
 });
