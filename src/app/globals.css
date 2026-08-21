@@ -1106,3 +1106,166 @@ footer.site {
   .settings-content > section,
   .activity-feed li { animation: none; }
 }
+
+/* ---------- help centre ---------- */
+
+.help-cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 34px;
+}
+.help-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 15px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+.help-cat:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.help-cat strong { font-size: 15px; }
+.help-cat .dim { font-size: 13px; line-height: 1.4; }
+.help-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+.help-section { margin-bottom: 30px; scroll-margin-top: 20px; }
+.help-section h2 {
+  font-size: 19px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 6px;
+}
+.help-item { border-bottom: 1px solid var(--border); }
+.help-item summary {
+  cursor: pointer;
+  padding: 13px 30px 13px 0;
+  font-size: 15px;
+  font-weight: 500;
+  position: relative;
+  list-style: none;
+}
+.help-item summary::-webkit-details-marker { display: none; }
+.help-item summary::after {
+  content: "+";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-dim);
+  line-height: 1;
+}
+.help-item[open] summary::after { content: "−"; }
+.help-item summary:hover { color: var(--accent); }
+.help-answer { padding: 0 0 15px; max-width: 68ch; }
+.help-answer p { font-size: 14.5px; color: var(--text-dim); margin-bottom: 9px; line-height: 1.62; }
+.help-answer p:last-child { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .help-cat { transition: none; }
+  .help-cat:hover { transform: none; }
+}
+
+/* ---------- purchase assurances ---------- */
+
+.assurances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.assurances > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  /* A left rule rather than a tick icon: three claims of equal weight, and a
+     row of green ticks reads as marketing rather than as terms. */
+  border-left: 3px solid var(--gain);
+}
+.assurances strong { font-size: 15px; }
+.assurances .dim { font-size: 13px; line-height: 1.5; }
+
+/* ---------- comparison ---------- */
+
+.compare-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+.compare-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px 5px 10px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-raised);
+}
+.compare-chip button {
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 3px;
+  line-height: 1;
+}
+.compare-chip button:hover { color: var(--loss); }
+.compare-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: baseline;
+}
+.compare-svg { width: 100%; min-width: 560px; height: auto; }
+.compare-axis { font-size: 10px; fill: var(--text-dim); font-family: var(--font-mono); }
+.compare-label { font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+
+/* ---------- benchmark strip ---------- */
+
+.index-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+  margin-bottom: 26px;
+}
+.index-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.16s ease;
+}
+.index-tile:hover { border-color: var(--accent); }
+.index-label { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.index-label strong { font-size: 13px; }
+.index-label .dim { font-size: 11px; white-space: nowrap; }
+.index-tile svg { flex: 1; min-width: 0; }
+.index-change { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .index-tile { transition: none; } }

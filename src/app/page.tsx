@@ -101,6 +101,7 @@ export default async function LandingPage() {
           <div className="links">
           <ThemeToggle />
             <Link href="/track-record">Track record</Link>
+            <Link href="/help">Help</Link>
             <Link href="/pricing">Pricing</Link>
             {user ? (
               <Link href="/dashboard" className="btn">

@@ -15,6 +15,17 @@ import type { Plan, PlanLimits, User } from "./types";
 
 export const TRIAL_DAYS = 14;
 
+/**
+ * Days within which a charge is refunded on request, no questions asked.
+ *
+ * Offered because the objection this product has to overcome is "how do I know
+ * the analysis is any good" — and a guarantee answers it more cheaply than any
+ * amount of marketing copy. Deliberately not a permanent "discount": a price
+ * that is always struck through is not a discount, it is a fake anchor, and
+ * consumer regulators in the UK, EU and US all treat it as one.
+ */
+export const REFUND_DAYS = 30;
+
 export interface PlanPricing {
   monthlyUsd: number;
   annualUsd: number;

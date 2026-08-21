@@ -11,15 +11,15 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 
 | Area | Done | Partial | Not started | Blocks launch |
 |---|---|---|---|---|
-| Core product | 20 | 1 | 1 | 0 |
-| Data & AI | 2 | 3 | 2 | 2 |
+| Core product | 24 | 1 | 1 | 0 |
+| Data & AI | 3 | 3 | 1 | 2 |
 | Auth & security | 17 | 0 | 1 | 1 |
 | Billing & growth | 10 | 2 | 0 | 1 |
 | Legal & compliance | 8 | 0 | 4 | 4 |
 | Infrastructure | 15 | 2 | 2 | 1 |
-| **Total** | **72** | **8** | **10** | **9** |
+| **Total** | **77** | **8** | **9** | **9** |
 
-**72 of 90 components complete (80%).** 199 automated tests plus 18 end-to-end journeys;
+**77 of 94 components complete (82%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -52,6 +52,10 @@ decisions and purchases, not tickets.
 | Account settings with sections | ✅ | Sidebar: profile, security, billing, activity, data | — |
 | User-visible activity log | ✅ | Every account event in plain language, filterable | — |
 | Contrast & tap-target audit | ✅ | Measured in-browser; every page passes AA | — |
+| Market movers & breadth | ✅ | Risers, fallers, biggest moves; never sorted by our own score | — |
+| Benchmark strip | ✅ | S&P, Nasdaq, small cap, bonds always in view for context | — |
+| Help centre | ✅ | 22 answers, advice question first, server-rendered with FAQ schema | — |
+| Purchase assurances | ✅ | No card, 30-day refund, pause — stated where the price is | — |
 | Multi-asset (ETFs, crypto) | ✅ | 17 funds and 3 coins alongside 35 equities, one scoring model | — |
 | Mobile responsive audit | ✅ | Playwright at iPhone viewport; asserts no horizontal page scroll | — |
 | Onboarding flow | 🔨 | Empty states now suggest starting points; no guided tour yet | — |
@@ -67,7 +71,7 @@ decisions and purchases, not tickets.
 | Market data provider | 🔨 | Finnhub adapter + cache built and tested; needs a key + licence review | **Yes** |
 | AI narration | 🔨 | Works; needs a real API key to produce non-template prose | — |
 | Earnings calendar | ⬜ | Strong signal source, not yet ingested | — |
-| Sector/peer comparison | ⬜ | "Is this move the stock or the sector?" | — |
+| Sector/peer comparison | ✅ | Rebased multi-series chart, up to 4 instruments, shareable by URL | — |
 
 ## 3 · Auth & security
 

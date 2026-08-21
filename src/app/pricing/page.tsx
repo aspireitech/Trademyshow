@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { PLAN_LIMITS, PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
+import { PLAN_LIMITS, PLAN_PRICING, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plans";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -158,6 +158,34 @@ export default function PricingPage() {
           </p>
         </section>
 
+        {/* The three objections that stop a signup, answered where the price
+            is — not buried in a FAQ nobody opens. */}
+        <section className="section">
+          <div className="assurances">
+            <div>
+              <strong>No card to start</strong>
+              <span className="dim">
+                {TRIAL_DAYS} days of Pro with nothing to enter and nothing to cancel. When it ends
+                you drop to the free plan — there is no card on file to charge.
+              </span>
+            </div>
+            <div>
+              <strong>{REFUND_DAYS}-day money back</strong>
+              <span className="dim">
+                If it is not what you expected, email us within {REFUND_DAYS} days of a charge and
+                we refund it. No form, no argument.
+              </span>
+            </div>
+            <div>
+              <strong>Pause instead of cancelling</strong>
+              <span className="dim">
+                Stop billing for up to three months and keep every watchlist, insight and record
+                exactly where it is.
+              </span>
+            </div>
+          </div>
+        </section>
+
         <section className="section" style={{ textAlign: "center" }}>
           <h2 style={{ marginBottom: 10 }}>Check the record before you pay</h2>
           <p className="dim" style={{ marginBottom: 20 }}>
@@ -166,6 +194,10 @@ export default function PricingPage() {
           <Link href="/track-record" className="btn secondary">
             See the track record
           </Link>
+          <p className="dim" style={{ fontSize: 13, marginTop: 18 }}>
+            Questions first? The <Link href="/help">help centre</Link> answers what the score is,
+            where the data comes from, and why none of this is investment advice.
+          </p>
         </section>
       </div>
 

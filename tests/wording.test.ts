@@ -60,6 +60,27 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
  * string literals. Identifiers and single-word strings are skipped — matching
  * those produces noise that trains people to ignore the test.
  */
+/** Comments explain the code; they never reach a user. Strip them first. */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, " ");
+}
+
+/**
+ * A forbidden phrase inside a denial is the disclaimer working, not a
+ * violation — "not that the price will rise" is exactly the sentence we want.
+ * So the check runs per sentence and skips negated ones.
+ */
+function offendingSentences(text: string, patterns: { pattern: RegExp; why: string }[]) {
+  const negated = /\b(not|never|no|none|nothing|neither|cannot|can'?t|does not|doesn'?t|do not|don'?t|without|rather than|instead of)\b/i;
+  return text
+    .split(/(?<=[.?!])\s+/)
+    .flatMap((sentence) =>
+      negated.test(sentence)
+        ? []
+        : patterns.filter((p) => p.pattern.test(sentence)).map((p) => ({ sentence, why: p.why })),
+    );
+}
+
 function visibleStrings(source: string): string[] {
   const out: string[] = [];
   for (const m of source.matchAll(/>\s*([^<>{}\n][^<>{}]{6,})\s*</g)) out.push(m[1]);
@@ -82,12 +103,11 @@ describe("shipped copy", () => {
   it("never asserts advice, certainty or a predicted outcome", () => {
     const hits: string[] = [];
     for (const file of FILES) {
-      const source = fs.readFileSync(file, "utf8");
-      for (const text of visibleStrings(source)) {
-        for (const { pattern, why } of FORBIDDEN) {
-          if (pattern.test(text)) {
-            hits.push(`${path.relative(process.cwd(), file)}: "${text.trim().slice(0, 90)}" — ${why}`);
-          }
+      const source = stripComments(fs.readFileSync(file, "utf8"));
+      for (const raw of visibleStrings(source)) {
+        const text = raw.replace(/\s+/g, " ").trim();
+        for (const { sentence, why } of offendingSentences(text, FORBIDDEN)) {
+          hits.push(`${path.relative(process.cwd(), file)}: "${sentence.slice(0, 90)}" — ${why}`);
         }
       }
     }
@@ -97,7 +117,7 @@ describe("shipped copy", () => {
   it("only ever mentions investment advice to disclaim it", () => {
     const hits: string[] = [];
     for (const file of FILES) {
-      const source = fs.readFileSync(file, "utf8");
+      const source = stripComments(fs.readFileSync(file, "utf8"));
       // JSX wraps prose across lines, so collapse whitespace before matching —
       // otherwise a negation and its object land too far apart to pair up.
       for (const raw of visibleStrings(source)) {

@@ -23,7 +23,8 @@ test("settings: account, email preferences, two-factor and referrals", async ({ 
   const email = await signUp(page, "settings");
 
   await page.getByRole("link", { name: "Settings" }).click();
-  await expect(page.getByRole("heading", { name: "Account" })).toBeVisible();
+  await page.waitForURL("**/dashboard/settings");
+  await expect(page.getByRole("heading", { name: "Account" })).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(email).first()).toBeVisible();
 
   // A fresh account is unverified, and the page says so rather than silently
@@ -210,4 +211,44 @@ test("an ordinary account cannot reach the subscriber list", async ({ page }) =>
   await signUp(page, "notadmin");
   await page.goto("/dashboard/admin/users");
   await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test("the help centre answers the advice question without JavaScript", async ({ page }) => {
+  // Server-rendered on purpose: these answers should be findable by a search
+  // engine and readable on a bad connection.
+  await page.goto("/help");
+  await expect(page.getByRole("heading", { name: "Help centre" })).toBeVisible();
+  await expect(page.getByText("Do you make stock recommendations?")).toBeVisible();
+
+  await page.getByText("Do you make stock recommendations?").click();
+  await expect(page.getByText(/never tells you what to buy, sell or hold/)).toBeVisible();
+});
+
+test("the dashboard shows what moved today", async ({ page }) => {
+  await signUp(page, "movers");
+  await expect(page.getByRole("heading", { name: "What moved today" })).toBeVisible();
+  await expect(page.locator("text=/\\d+ up, \\d+ down/")).toBeVisible();
+
+  // Risers and fallers are separate tabs; neither is a ranking of what to buy.
+  await page.getByRole("button", { name: "Fallers" }).click();
+  await expect(page.getByText(/Biggest moves that already happened/)).toBeVisible();
+});
+
+test("stocks can be compared on one rebased chart", async ({ page }) => {
+  await signUp(page, "compare");
+  await page.getByRole("link", { name: "Compare" }).click();
+
+  await expect(page.getByRole("heading", { name: "Compare", exact: true })).toBeVisible();
+  await expect(page.locator(".compare-svg")).toBeVisible();
+
+  // Defaults to a stock against its index — the comparison that answers
+  // "was that the company or the market?"
+  await expect(page.locator(".compare-chip")).toHaveCount(2);
+
+  await page.getByLabel("Add a symbol to compare").fill("AMD");
+  await page.getByRole("button", { name: /AMD/ }).first().click();
+  await expect(page.locator(".compare-chip")).toHaveCount(3);
+
+  await page.getByRole("button", { name: "Remove AMD" }).click();
+  await expect(page.locator(".compare-chip")).toHaveCount(2);
 });

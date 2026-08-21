@@ -20,6 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           Trade<span>MyShow</span>
         </Link>
         <div className="links">
+          <Link href="/dashboard/compare">Compare</Link>
           <Link href="/dashboard/settings">Settings</Link>
           {user.role === "admin" && <Link href="/dashboard/admin">Admin</Link>}
           <ThemeToggle />
