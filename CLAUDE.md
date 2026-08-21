@@ -34,3 +34,10 @@ npx next build         # production build
 npx playwright test    # e2e (needs a built app on :3000)
 npm run seed           # seed the SQLite database
 ```
+
+## Deploying an update to a running machine
+
+```
+.\scripts\update.ps1   # Windows: stop server, pull, rebuild
+sudo ./scripts/update.sh # Linux/Azure VM: pull, rebuild, restart the service
+```
