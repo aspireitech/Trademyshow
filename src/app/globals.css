@@ -20,6 +20,10 @@
   --gain-soft: rgba(21, 128, 61, 0.1);
   --loss: #c62828;
   --warn: #b45309;
+  --badge-accent: #1e40af; /* 6.77:1 on its own 15% tint */
+  --badge-gain: #14532d;   /* 7.09:1 */
+  --badge-warn: #7c3d06;   /* 6.61:1 */
+  --badge-loss: #991b1b;   /* 6.72:1 */
   --shadow: 0 1px 2px rgba(16, 26, 44, 0.06), 0 4px 14px rgba(16, 26, 44, 0.05);
   --radius: 10px;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
@@ -41,6 +45,12 @@
     --gain-soft: rgba(47, 191, 113, 0.15);
     --loss: #e5534b;
     --warn: #e8a33d;
+    --badge-accent: #8ab6ff; /* 6.45:1 */
+    --badge-gain: #4ade80;   /* 7.46:1 */
+  --badge-warn: #f0b968;   /* 7.54:1 */
+  --badge-loss: #f08a84;   /* 6.07:1 */
+    --badge-warn: #f0b968;   /* 7.54:1 */
+    --badge-loss: #f08a84;   /* 6.07:1 */
     --shadow: none;
   }
 }
@@ -60,6 +70,8 @@
   --gain-soft: rgba(47, 191, 113, 0.15);
   --loss: #e5534b;
   --warn: #e8a33d;
+  --badge-accent: #8ab6ff; /* 6.45:1 */
+  --badge-gain: #4ade80;   /* 7.46:1 */
   --shadow: none;
 }
 
@@ -227,18 +239,18 @@ label {
 }
 .badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 2px 8px;
   border-radius: 20px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--badge-accent);
 }
 .badge.pro {
   background: var(--gain-soft);
-  color: var(--gain);
+  color: var(--badge-gain);
 }
 
 /* ---------- tables ---------- */
@@ -820,7 +832,10 @@ footer.site {
 /* ---------- sandbox banner ---------- */
 
 .sandbox-banner {
-  background: var(--warn);
+  /* Fixed amber in both themes: this is a warning, and a warning that restyles
+     itself to blend in is doing the opposite of its job. Text measured against
+     this exact ground rather than inherited from the theme. */
+  background: #f5b642;
   color: #1a1204;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
@@ -841,7 +856,7 @@ footer.site {
 }
 .sandbox-tag {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   padding: 2px 7px;
@@ -854,4 +869,240 @@ footer.site {
   font-size: 11.5px;
   opacity: 0.85;
   flex-basis: 100%;
+}
+
+/* ---------- settings shell ---------- */
+
+.settings-shell {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+@media (max-width: 780px) {
+  .settings-shell { grid-template-columns: 1fr; gap: 18px; }
+}
+
+.settings-nav {
+  position: sticky;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+@media (max-width: 780px) {
+  .settings-nav { position: static; }
+}
+
+.settings-id {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.settings-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 16px;
+}
+.settings-id-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.settings-id-text strong { font-size: 14px; }
+.settings-id-text .dim {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-id-text .badge { align-self: flex-start; margin-top: 3px; }
+
+.settings-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.settings-nav a {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* 44px minimum touch target, met by padding rather than a fixed height so
+     the label can wrap on a narrow screen. */
+  padding: 9px 12px;
+  min-height: 44px;
+  justify-content: center;
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  color: var(--text);
+  text-decoration: none;
+}
+.settings-nav a:hover { background: var(--bg-hover); }
+.settings-nav a.active {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  color: var(--badge-accent);
+}
+.settings-link-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.settings-link-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+.settings-nav a.active .settings-link-hint { color: var(--badge-accent); }
+.settings-flag {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warn);
+  flex-shrink: 0;
+}
+
+.settings-content { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.settings-content > section > h3:first-child { margin-top: 0; }
+
+/* ---------- settings sections ---------- */
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sec-head h3 { margin: 0; }
+
+.inline-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.inline-form .input { max-width: 100%; }
+
+.recovery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+  font-size: 13px;
+}
+.secret-key {
+  margin: 8px 0;
+  word-break: break-all;
+  font-size: 14px;
+  padding: 8px 10px;
+  background: var(--bg-hover);
+  border-radius: 6px;
+}
+.plain-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+}
+.plan-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  align-items: center;
+}
+
+/* ---------- activity feed ---------- */
+
+.activity-feed {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.activity-feed li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.activity-feed li:last-child { border-bottom: none; }
+.activity-feed li.notable .activity-label { font-weight: 600; }
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  justify-self: center;
+  background: var(--text-dim);
+}
+/* Colour carries the category, weight carries "worth a look" — two channels,
+   so neither has to do both jobs. */
+.activity-dot.kind-security { background: var(--accent); }
+.activity-dot.kind-billing { background: var(--gain); }
+.activity-dot.kind-data { background: var(--warn); }
+.activity-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.activity-detail { font-size: 12px; word-break: break-word; }
+.activity-time { font-size: 12px; white-space: nowrap; }
+@media (max-width: 560px) {
+  .activity-feed li { grid-template-columns: 16px minmax(0, 1fr); }
+  .activity-time { grid-column: 2; }
+}
+
+/* ---------- accessibility corrections ---------- */
+
+.badge.warn {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  /* Coloured text on a tint of its own hue caps out below AA — the tint pulls
+     the ground toward the text. Every such pairing uses a strengthened token,
+     measured against the composited result. */
+  color: var(--badge-warn);
+}
+
+/* Nav links measured 23px tall; 44px is the touch-target guideline. */
+.nav .links a,
+.nav .links button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Motion: a section fading in on navigation makes the settings pages feel
+   like panels of one thing rather than separate page loads. Deliberately
+   short and only on entry — anything longer reads as latency. */
+@keyframes section-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+.settings-content > section,
+.activity-feed li {
+  animation: section-in 0.26s ease-out both;
+}
+.settings-content > section:nth-child(2) { animation-delay: 0.04s; }
+.settings-content > section:nth-child(3) { animation-delay: 0.08s; }
+.settings-content > section:nth-child(4) { animation-delay: 0.12s; }
+@media (prefers-reduced-motion: reduce) {
+  .settings-content > section,
+  .activity-feed li { animation: none; }
 }

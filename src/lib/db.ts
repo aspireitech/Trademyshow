@@ -157,6 +157,12 @@ function open(): Database.Database {
   addUserCol("last_digest_sent_at", "last_digest_sent_at TEXT");
   addUserCol("terms_accepted_at", "terms_accepted_at TEXT");
   addUserCol("terms_version", "terms_version TEXT");
+  addUserCol("phone", "phone TEXT");
+  addUserCol("phone_verified_at", "phone_verified_at TEXT");
+  // A paused subscription keeps the account and its data but stops billing and
+  // delivery. Stored as the date it resumes, so "paused" needs no second flag
+  // that could disagree with this one.
+  addUserCol("paused_until", "paused_until TEXT");
 
   // Executed agreements. Append-only: a new acceptance adds a row, it never
   // rewrites an old one, so the record of what was agreed and when survives
@@ -175,6 +181,26 @@ function open(): Database.Database {
       user_agent TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_contracts_user ON contracts(user_id);
+  `);
+
+  // Security questions. Answers are bcrypt hashes, never recoverable text:
+  // people reuse answers across sites exactly as they reuse passwords.
+  conn.exec(`
+    CREATE TABLE IF NOT EXISTS security_answers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      question_id TEXT NOT NULL,
+      answer_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (user_id, question_id)
+    );
+    CREATE TABLE IF NOT EXISTS phone_codes (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      phone TEXT NOT NULL,
+      code_hash TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0
+    );
   `);
 
   // Vendor data, fetched asynchronously and read synchronously. See
@@ -243,6 +269,9 @@ interface UserRow {
   last_digest_sent_at: string | null;
   terms_accepted_at: string | null;
   terms_version: string | null;
+  phone: string | null;
+  phone_verified_at: string | null;
+  paused_until: string | null;
   created_at: string;
 }
 
@@ -262,6 +291,9 @@ function toUser(r: UserRow): User {
     lastDigestSentAt: r.last_digest_sent_at,
     termsAcceptedAt: r.terms_accepted_at ?? null,
     termsVersion: r.terms_version ?? null,
+    phone: r.phone ?? null,
+    phoneVerifiedAt: r.phone_verified_at ?? null,
+    pausedUntil: r.paused_until ?? null,
     createdAt: r.created_at,
   };
 }

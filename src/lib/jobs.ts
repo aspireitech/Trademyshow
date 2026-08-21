@@ -3,6 +3,7 @@ import { computeGroupFacts } from "./digest/engine";
 import { writeDigest } from "./digest/writer";
 import { scoreStock } from "./insight/score";
 import { digestTemplate, sendMail } from "./mailer";
+import { subscriptionState } from "./billing";
 import { effectiveLimits } from "./plans";
 import { siteUrl } from "./site";
 import { unsubscribeToken } from "./tokens";
@@ -61,6 +62,11 @@ export async function runDigestJob(
     }
     if (!effectiveLimits(user).emailDelivery) {
       report.skipped++; note(report, "plan_excludes_email"); continue;
+    }
+    // A pause stops the charge and the mail together. Continuing to send to
+    // someone who has stopped paying is the fastest way to a spam complaint.
+    if (subscriptionState(user, now).paused) {
+      report.skipped++; note(report, "subscription_paused"); continue;
     }
     if (
       user.lastDigestSentAt &&

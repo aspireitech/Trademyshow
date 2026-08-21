@@ -26,6 +26,11 @@ export default function ScoreCard({
 }) {
   const hue =
     score.score >= 60 ? "var(--gain)" : score.score >= 40 ? "var(--warn)" : "var(--loss)";
+  // Text on a tint of its own hue never reaches AA — the tint drags the ground
+  // toward the text. The dial can use the vivid hue because it is a graphic;
+  // the chip's label cannot.
+  const chipInk =
+    score.score >= 60 ? "var(--badge-gain)" : score.score >= 40 ? "var(--badge-warn)" : "var(--badge-loss)";
 
   return (
     <div className="card">
@@ -41,7 +46,7 @@ export default function ScoreCard({
           <p style={{ marginBottom: 2 }}>
             <span
               className="band-chip"
-              style={{ color: hue, borderColor: hue, background: `color-mix(in srgb, ${hue} 12%, transparent)` }}
+              style={{ color: chipInk, borderColor: chipInk, background: `color-mix(in srgb, ${hue} 12%, transparent)` }}
             >
               {score.band} signals
             </span>

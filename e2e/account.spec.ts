@@ -23,8 +23,8 @@ test("settings: account, email preferences, two-factor and referrals", async ({ 
   const email = await signUp(page, "settings");
 
   await page.getByRole("link", { name: "Settings" }).click();
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
-  await expect(page.getByText(email)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Account" })).toBeVisible();
+  await expect(page.getByText(email).first()).toBeVisible();
 
   // A fresh account is unverified, and the page says so rather than silently
   // never sending email.
@@ -37,20 +37,25 @@ test("settings: account, email preferences, two-factor and referrals", async ({ 
   await emailToggle.click();
   await expect(emailToggle).not.toHaveText(before);
 
-  // Two-factor enrolment shows a secret before it turns anything on — enabling
-  // in one step would lock out anyone who mis-scans the code.
-  await page.getByRole("button", { name: "Set up two-factor" }).click();
+  // Two-factor lives in its own section now.
+  await page.locator(".settings-nav a", { hasText: "Security" }).first().click();
+  await expect(page.getByRole("heading", { name: "Authenticator app" })).toBeVisible();
+
+  // Enrolment shows a secret before it turns anything on — enabling in one
+  // step would lock out anyone who mis-scans the code.
+  await page.getByRole("button", { name: "Set up authenticator" }).click();
   await expect(page.getByText(/Add this key to your authenticator/)).toBeVisible();
   await page.getByLabel("Authenticator code").fill("000000");
   await page.getByRole("button", { name: "Turn on", exact: true }).click();
   await expect(page.getByText(/not valid/)).toBeVisible();
 
-  // Referral link is present and personalised.
-  await expect(page.getByRole("heading", { name: "Refer a friend" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Copy link/ })).toBeVisible();
-
   // The current session is listed and cannot sign itself out from here.
   await expect(page.getByText("this device")).toBeVisible();
+
+  // Referrals moved to the billing section.
+  await page.locator(".settings-nav a", { hasText: "Plan & billing" }).first().click();
+  await expect(page.getByRole("heading", { name: "Refer a friend" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Copy link/ })).toBeVisible();
 });
 
 test("password reset asks for an address without revealing whether it exists", async ({ page }) => {
@@ -131,6 +136,7 @@ test("an account cannot be created without accepting the terms", async ({ page }
 test("the signed agreement is downloadable from settings", async ({ page }) => {
   await signUp(page, "contract");
   await page.getByRole("link", { name: "Settings" }).click();
+  await page.locator(".settings-nav a", { hasText: "Your data" }).first().click();
 
   await expect(page.getByRole("heading", { name: "Your agreement" })).toBeVisible();
   const row = page.locator("text=/^TMS-\\d{4}-/").first();
@@ -155,4 +161,53 @@ test("the terms page states the liability cap and the arbitration clause", async
   await expect(page.getByText(/CLASS ACTION WAIVER/)).toBeVisible();
   await expect(page.getByText(/binding individual arbitration/)).toBeVisible();
   await expect(page.getByText(/no fiduciary/i).first()).toBeVisible();
+});
+
+test("settings sections are reachable from the sidebar", async ({ page }) => {
+  await signUp(page, "sidebar");
+  await page.goto("/dashboard/settings");
+
+  for (const [label, heading] of [
+    ["Profile", "Account"],
+    ["Security", "Authenticator app"],
+    ["Plan & billing", "Your plan"],
+    ["Activity", "Account activity"],
+    ["Your data", "Your agreement"],
+  ] as const) {
+    await page.locator(".settings-nav a", { hasText: label }).first().click();
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    // The sidebar has to say where you are, or the sections feel like separate
+    // pages that happen to look alike.
+    await expect(page.locator(".settings-nav a.active")).toContainText(label);
+  }
+});
+
+test("billing shows the trial, and offers no pause while nothing is charged", async ({ page }) => {
+  await signUp(page, "trial");
+  await page.goto("/dashboard/settings/billing");
+
+  // The badge here has to agree with the one in the nav. Showing "free" while
+  // the nav says "Pro trial" reads as the trial having silently ended.
+  await expect(page.getByRole("heading", { name: "Your plan" })).toBeVisible();
+  await expect(page.getByText("Pro trial").first()).toBeVisible();
+  await expect(page.getByText(/Every Pro feature is unlocked/)).toBeVisible();
+
+  // Nothing is being billed during a trial, so there is nothing to pause.
+  await expect(page.getByRole("button", { name: "Pause subscription" })).toHaveCount(0);
+});
+
+test("the activity feed records what the account did", async ({ page }) => {
+  await signUp(page, "activity");
+  await page.goto("/dashboard/settings/activity");
+
+  await expect(page.getByRole("heading", { name: "Account activity" })).toBeVisible();
+  // Registration is itself an event, so the feed is never empty.
+  await expect(page.locator(".activity-feed li").first()).toBeVisible();
+  await expect(page.getByText("Account created")).toBeVisible();
+});
+
+test("an ordinary account cannot reach the subscriber list", async ({ page }) => {
+  await signUp(page, "notadmin");
+  await page.goto("/dashboard/admin/users");
+  await expect(page).toHaveURL(/\/dashboard$/);
 });

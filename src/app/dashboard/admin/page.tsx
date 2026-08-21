@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import AdminStats from "@/components/AdminStats";
@@ -18,8 +19,13 @@ export default async function AdminPage() {
   return (
     <>
       <h2 style={{ marginBottom: 4 }}>Business metrics</h2>
-      <p className="dim" style={{ fontSize: 14, marginBottom: 20 }}>
+      <p className="dim" style={{ fontSize: 14, marginBottom: 16 }}>
         In-app view. Stripe remains the source of truth for money actually collected.
+      </p>
+      <p style={{ marginBottom: 20 }}>
+        <Link className="btn small secondary" href="/dashboard/admin/users">
+          Browse subscribers →
+        </Link>
       </p>
       <AdminStats />
     </>

@@ -235,3 +235,74 @@ export function referralSummary(userId: number, code: string | null): ReferralSu
 export function applyPaidPlan(userId: number, plan: Plan): void {
   setUserPlan(userId, plan);
 }
+
+// ---------- subscription lifecycle ----------
+
+/** How long a subscription may be paused before it must be resumed or cancelled. */
+export const MAX_PAUSE_DAYS = 90;
+
+export interface SubscriptionState {
+  plan: Plan;
+  paused: boolean;
+  pausedUntil: string | null;
+  daysRemaining: number;
+}
+
+export function subscriptionState(
+  user: { plan: Plan; pausedUntil: string | null },
+  now: Date = new Date(),
+): SubscriptionState {
+  const until = user.pausedUntil ? new Date(user.pausedUntil) : null;
+  const paused = until !== null && until.getTime() > now.getTime();
+  return {
+    plan: user.plan,
+    paused,
+    pausedUntil: paused ? user.pausedUntil : null,
+    daysRemaining: paused ? Math.ceil((until!.getTime() - now.getTime()) / 86_400_000) : 0,
+  };
+}
+
+export interface PauseResult {
+  ok: boolean;
+  error?: string;
+  resumesAt?: string;
+}
+
+/**
+ * Pause billing and delivery without losing the account.
+ *
+ * Offered because the alternative to a pause is a cancellation, and a paused
+ * subscriber returns far more often than a cancelled one. Watchlists, history
+ * and the published record all survive; only the charge and the emails stop.
+ */
+export function pauseSubscription(
+  userId: number,
+  days: number,
+  now: Date = new Date(),
+): PauseResult {
+  if (!Number.isFinite(days) || days < 7) {
+    return { ok: false, error: "A pause runs for at least 7 days." };
+  }
+  if (days > MAX_PAUSE_DAYS) {
+    return { ok: false, error: `A pause can run for at most ${MAX_PAUSE_DAYS} days.` };
+  }
+  const resumesAt = new Date(now.getTime() + days * 86_400_000).toISOString();
+  getDb().prepare("UPDATE users SET paused_until = ? WHERE id = ?").run(resumesAt, userId);
+  return { ok: true, resumesAt };
+}
+
+export function resumeSubscription(userId: number): void {
+  getDb().prepare("UPDATE users SET paused_until = NULL WHERE id = ?").run(userId);
+}
+
+/** Plans in upgrade order, so "what is next" is a property of the data. */
+export const PLAN_ORDER: Plan[] = ["free", "pro", "premium"];
+
+export function nextPlanUp(plan: Plan): Plan | null {
+  const i = PLAN_ORDER.indexOf(plan);
+  return i >= 0 && i < PLAN_ORDER.length - 1 ? PLAN_ORDER[i + 1] : null;
+}
+
+export function isDowngrade(from: Plan, to: Plan): boolean {
+  return PLAN_ORDER.indexOf(to) < PLAN_ORDER.indexOf(from);
+}

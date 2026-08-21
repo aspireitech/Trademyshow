@@ -22,6 +22,11 @@ export interface User {
   /** When this account accepted the Terms, and which version. */
   termsAcceptedAt: string | null;
   termsVersion: string | null;
+  /** E.164, only set once verified by SMS code. */
+  phone: string | null;
+  phoneVerifiedAt: string | null;
+  /** While in the future, billing and delivery are suspended. */
+  pausedUntil: string | null;
   createdAt: string;
 }
 

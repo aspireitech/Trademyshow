@@ -11,15 +11,15 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 
 | Area | Done | Partial | Not started | Blocks launch |
 |---|---|---|---|---|
-| Core product | 17 | 1 | 1 | 0 |
+| Core product | 20 | 1 | 1 | 0 |
 | Data & AI | 2 | 3 | 2 | 2 |
-| Auth & security | 15 | 0 | 2 | 1 |
-| Billing & growth | 8 | 2 | 0 | 1 |
+| Auth & security | 17 | 0 | 1 | 1 |
+| Billing & growth | 10 | 2 | 0 | 1 |
 | Legal & compliance | 8 | 0 | 4 | 4 |
 | Infrastructure | 15 | 2 | 2 | 1 |
-| **Total** | **65** | **8** | **11** | **9** |
+| **Total** | **72** | **8** | **10** | **9** |
 
-**65 of 84 components complete (77%).** 199 automated tests plus 18 end-to-end journeys;
+**72 of 90 components complete (80%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -49,6 +49,9 @@ decisions and purchases, not tickets.
 | Scheduled email delivery | ✅ | Daily + weekly jobs, three send gates, one-click unsubscribe | — |
 | Alerts (score crosses a threshold) | ✅ | 24h suppression so a hovering score cannot spam | — |
 | In-app notification centre | ✅ | Alert hits land as readable notifications | — |
+| Account settings with sections | ✅ | Sidebar: profile, security, billing, activity, data | — |
+| User-visible activity log | ✅ | Every account event in plain language, filterable | — |
+| Contrast & tap-target audit | ✅ | Measured in-browser; every page passes AA | — |
 | Multi-asset (ETFs, crypto) | ✅ | 17 funds and 3 coins alongside 35 equities, one scoring model | — |
 | Mobile responsive audit | ✅ | Playwright at iPhone viewport; asserts no horizontal page scroll | — |
 | Onboarding flow | 🔨 | Empty states now suggest starting points; no guided tour yet | — |
@@ -82,10 +85,12 @@ decisions and purchases, not tickets.
 | Security headers (CSP, HSTS) | ✅ | Nonce CSP wired the way Next actually consumes it, HSTS 2yr | — |
 | CSRF protection | ✅ | Double-submit cookie on every mutating route | — |
 | Session revocation / devices | ✅ | Device list, revoke one, "sign out everywhere else" | — |
+| Security questions | ✅ | Hashed, normalised, support-desk aid only — never an auth factor | — |
+| SMS one-time codes | ✅ | E.164 validated, rate limited, attempt-capped; Twilio-gated | — |
 | Account deletion + data export | ✅ | Password-confirmed deletion; full JSON export | — |
 | Audit log | ✅ | Security events with hashed IPs; never breaks the request it logs | — |
 | Dependency scanning | ✅ | Dependabot weekly | — |
-| SMS OTP | ⬜ | Deliberately skipped — SIM-swap makes it weaker than the TOTP above | — |
+
 | Penetration test | ⬜ | **Not a code task.** Book before taking payment | **Yes** |
 
 ## 4 · Billing & growth
@@ -99,6 +104,8 @@ decisions and purchases, not tickets.
 | Referral programme | ✅ | Codes, attribution, 20% commission ledger, self-referral blocked | — |
 | Promo codes | ✅ | Percent off, expiry, redemption cap | — |
 | Admin panel | ✅ | MRR, ARPU, conversion, verified share, usage | — |
+| Subscriber management | ✅ | Filter by tier, search, per-account detail; viewing is itself audited | — |
+| Pause / resume / change tier | ✅ | Self-serve, bounded, resumes without a job having to run | — |
 | Product analytics | ✅ | Event capture, gated on consent | — |
 | Live Stripe keys + payout account | 🔨 | **Not a code task.** Code is ready; the account is not | **Yes** |
 | LLM API key | 🔨 | **Not a blocker** — template writer ships without one. See `docs/COSTS.md` §6 | — |
