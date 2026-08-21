@@ -198,30 +198,29 @@
     <p class="lede">
       Every component, its real state, and whether it stands between you and taking real
       money from real users. Counted honestly — partial means it runs but is not
-      production-grade. <strong>The sandbox is deployable today</strong>: one command, seeded with
-      demo data, verified running. Seven blockers remain, and five of them are decisions and
-      purchases rather than code.
+      production-grade. <strong>The sandbox is deployable today</strong>, and has been run on a
+      real VM. Seven blockers remain; five of them are decisions and purchases rather than code.
     </p>
   </header>
 
   <section class="card">
     <div class="stats" style="margin-bottom:22px">
-      <div class="stat done"><div class="n">63</div><div class="l">Shipped &amp; tested</div></div>
+      <div class="stat done"><div class="n">81</div><div class="l">Shipped &amp; tested</div></div>
       <div class="stat partial"><div class="n">8</div><div class="l">Partially built</div></div>
-      <div class="stat"><div class="n">11</div><div class="l">Not started</div></div>
+      <div class="stat"><div class="n">9</div><div class="l">Not started</div></div>
       <div class="stat blocked"><div class="n">7</div><div class="l">Block launch</div></div>
     </div>
 
-    <div class="meter" role="img" aria-label="63 shipped, 8 partial, 11 not started, of 82 components">
-      <i style="width:76.8%;background:var(--done)"></i>
-      <i style="width:9.8%;background:var(--partial)"></i>
-      <i style="width:13.4%;background:var(--surface-sunk)"></i>
+    <div class="meter" role="img" aria-label="81 shipped, 8 partial, 9 not started, of 98 components">
+      <i style="width:82.7%;background:var(--done)"></i>
+      <i style="width:8.2%;background:var(--partial)"></i>
+      <i style="width:9.1%;background:var(--surface-sunk)"></i>
     </div>
     <div class="meter-key">
-      <span><i class="dot" style="background:var(--done)"></i> Shipped 77%</span>
-      <span><i class="dot" style="background:var(--partial)"></i> Partial 10%</span>
-      <span><i class="dot" style="background:var(--surface-sunk);border:1px solid var(--line)"></i> Remaining 13%</span>
-      <span class="mono">63 / 82 components</span>
+      <span><i class="dot" style="background:var(--done)"></i> Shipped 83%</span>
+      <span><i class="dot" style="background:var(--partial)"></i> Partial 8%</span>
+      <span><i class="dot" style="background:var(--surface-sunk);border:1px solid var(--line)"></i> Remaining 9%</span>
+      <span class="mono">81 / 98 components</span>
     </div>
   </section>
 
@@ -248,7 +247,7 @@
     <div class="split">
 
       <div class="col shipped card">
-        <div class="col-head"><h3>Shipped &amp; tested</h3><span class="count">63</span></div>
+        <div class="col-head"><h3>Shipped &amp; tested</h3><span class="count">81</span></div>
 
         <div class="grp">
           <p class="grp-label">Core product · 17</p>
@@ -329,7 +328,7 @@
         <div class="grp" style="margin-bottom:0">
           <p class="grp-label">Infrastructure · 9</p>
           <ul class="items">
-            <li>261 unit &amp; integration tests, 21 e2e journeys</li>
+            <li>338 unit &amp; integration tests, 30 e2e journeys</li>
             <li>Typecheck and production build clean</li>
             <li>SEO — JSON-LD, sitemap, robots, OG</li>
             <li>Deterministic test data</li>
@@ -339,6 +338,17 @@
             <li>One authenticated endpoint for all scheduled work</li>
             <li>Postgres migration path, documented</li>
             <li>Sandbox mode — banner, seeded demo, live-key refusal</li>
+            <li>Settings sidebar — profile, security, billing, activity, data</li>
+            <li>SMS codes, security questions, user activity log</li>
+            <li>Pause / resume / change tier, self-serve</li>
+            <li>Admin subscriber management by tier</li>
+            <li>Comparison chart, rebased, up to 4 instruments</li>
+            <li>Market movers, breadth and benchmark strip</li>
+            <li>Live landing board with trend lines and score bands</li>
+            <li>Help centre, 22 answers, advice question first</li>
+            <li>Plan gating enforced server-side, not just in the UI</li>
+            <li>Server-side visitor counts that cannot profile anyone</li>
+            <li>Every page measured in-browser and passing AA</li>
             <li>Container image — multi-stage, non-root, healthchecked</li>
             <li>Health endpoint reporting config without leaking secrets</li>
             <li>Deployment guide — sandbox in one command</li>
@@ -351,7 +361,7 @@
       </div>
 
       <div class="col remaining card">
-        <div class="col-head"><h3>Remaining</h3><span class="count">19</span></div>
+        <div class="col-head"><h3>Remaining</h3><span class="count">17</span></div>
 
         <div class="grp">
           <p class="grp-label">Data &amp; AI · 5</p>
