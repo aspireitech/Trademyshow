@@ -98,7 +98,41 @@ Press **Ctrl+C** in the terminal to stop it. To start it again later, just
 npm run dev        # development mode: edits appear instantly, no rebuild
 npm test           # run the test suite
 npm run verify     # typecheck + tests + build, all three
-git pull           # get the newest code, then: npm ci && npm run build
+```
+
+### Updating to the newest code
+
+**Stop the server first.** `npm ci` deletes and rebuilds `node_modules`, and on
+Windows it cannot delete a file a running process still has open — the database
+module in particular. Interrupting it half-way leaves the install broken and
+`next` missing.
+
+```powershell
+# 1. Stop it: Ctrl+C in the window running the server. Then make sure:
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# 2. Get the code
+git pull
+
+# 3. Only reinstall if the dependency list actually changed:
+git diff HEAD@{1} --name-only | Select-String "package.json|package-lock.json"
+#    …if that printed nothing, skip npm ci entirely.
+npm ci
+
+# 4. Rebuild and start
+npm run build
+npm start
+```
+
+Most pulls change no dependencies, so step 3 is usually skippable — which also
+makes the update far faster.
+
+**If `npm ci` still fails with EPERM**, something is holding a file. Close your
+editor, pause antivirus scanning of the folder, then:
+
+```powershell
+Remove-Item -Recurse -Force node_modules
+npm ci
 ```
 
 ## If something goes wrong
