@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { currentUser } from "@/lib/auth";
 import "./globals.css";
 import { THEME_BOOTSTRAP } from "@/lib/csp";
 import SandboxBanner from "@/components/SandboxBanner";
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const user = await currentUser();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -30,7 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <SandboxBanner />
         {children}
-        <SignupPrompt />
+        <SignupPrompt signedIn={Boolean(user)} />
       </body>
     </html>
   );

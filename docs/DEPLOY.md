@@ -115,25 +115,54 @@ Run `market-data` **before** `digest` — a digest built on yesterday's cache
 explains yesterday's moves. Suggested UTC schedule in `docs/OPERATIONS.md`.
 All jobs are idempotent; retrying a failed run is always safe.
 
-### 5. Live market data
+### 5. Market data
+
+**Live is the default. There is nothing to configure to get real prices.**
+
+`MARKET_DATA_PROVIDER` decides who answers:
+
+| Value | Who answers | Key needed |
+| --- | --- | --- |
+| *(unset)* or `auto` | Yahoo Finance, then Stooq, then Finnhub if a key exists | no |
+| `yahoo` | Yahoo Finance only | no |
+| `stooq` | Stooq end-of-day files only | no |
+| `finnhub` | Finnhub only | `FINNHUB_API_KEY` |
+| `mock` | Nobody — the simulation, labelled as such on every screen | no |
+
+Nothing renders straight from a vendor. A refresh job fills a local cache and
+every page reads that, synchronously, which is what keeps scoring and digest
+generation pure functions over a snapshot.
+
+**Fill the cache after install, then keep it filled:**
 
 ```
-MARKET_DATA_PROVIDER=finnhub
-FINNHUB_API_KEY=...
+npm run refresh:history     # once: quotes + five years of daily closes
+npm run refresh             # every few minutes during market hours
 ```
 
-Until then the deterministic mock serves everything and no cached vendor price
-is consulted at all. Once switched on:
+or, over HTTP, `POST /api/cron?job=market-data` with the `CRON_SECRET`. The
+landing page will also ask the server to fill an empty cache by itself on the
+first visit, so a fresh install shows real prices without anyone reading this
+file — but that is a convenience, not a substitute for the schedule.
+
+Once data is flowing:
 
 - live quotes answer "now"; **back-dated requests stay deterministic**, so a
   data refresh cannot rewrite the published track record;
-- the cache holds a 26-hour freshness window — past that it falls back to the
-  mock rather than serving a stale price as current;
-- a symbol the vendor does not cover falls back rather than rendering as zero
-  (Finnhub answers unknown symbols with zeroes, not a 404).
+- the cache holds a 26-hour freshness window — past that a quote is relabelled
+  "end-of-day close" or falls back to the simulation, never served as current;
+- a symbol no vendor covers falls back to the simulation and the page says so;
+- market cap is the vendor's where it publishes one, and otherwise our own
+  estimate (live price × stored share count), marked with an asterisk.
 
-**Read the redistribution clause before switching this on.** Several providers'
-cheap tiers permit internal analysis only, not display to end users.
+**On the keyless endpoints.** Yahoo's chart and search endpoints are the ones
+its own website calls, and Stooq publishes CSV files. Neither is a commercial
+data licence: prices are treated as delayed, nothing is redistributed as a
+feed, and the whole path degrades to the simulation if either changes. When a
+licence is bought, `src/lib/providers/` is the only place that changes.
+
+**Read the redistribution clause before paying for anything.** Several
+providers' cheap tiers permit internal analysis only, not display to end users.
 
 ### 6. Everything else
 

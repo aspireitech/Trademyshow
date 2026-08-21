@@ -25,6 +25,7 @@ checkout in stub mode, no OAuth credentials hides the social buttons.
 One endpoint drives all recurring work:
 
 ```
+POST /api/cron?job=market-data     Authorization: Bearer $CRON_SECRET
 POST /api/cron?job=daily-digest    Authorization: Bearer $CRON_SECRET
 POST /api/cron?job=weekly-digest   Authorization: Bearer $CRON_SECRET
 POST /api/cron?job=alerts          Authorization: Bearer $CRON_SECRET
@@ -34,9 +35,20 @@ Suggested cadence (UTC):
 
 | Job | Schedule | Notes |
 | --- | --- | --- |
+| `market-data` | `*/10 13-21 * * 1-5` | Every ten minutes through the US session. This is what makes the prices on the board real; without it the site falls back to the simulation and says so. |
+| `market-data` | `30 21 * * 1-5` | Once after the close, to settle the day's final prices. |
 | `daily-digest` | `0 11 * * 1-5` | ~06:00 US Eastern, before the open. Weekdays only. |
 | `weekly-digest` | `0 13 * * 6` | Saturday, when people actually read. |
 | `alerts` | `0 * * * *` | Hourly; each alert self-suppresses for 24h after firing. |
+
+Run `market-data` **before** the digest jobs. A digest built on yesterday's
+cache explains yesterday's moves.
+
+A refresh is bounded by a wall-clock budget, so an unreachable vendor costs one
+skipped run rather than a request that never returns. If the badge on the
+market board reads "Simulated", the schedule is the first thing to check —
+`GET /api/market/refresh` reports coverage, the provider in use, and the last
+run.
 
 The jobs are idempotent by design — a duplicate daily run sends nothing,
 because `last_digest_sent_at` gates on a 20-hour window. Retrying a failed run

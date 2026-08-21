@@ -159,16 +159,48 @@ export async function refreshNews(symbol: string, days = 5): Promise<boolean> {
  */
 export async function refreshMany(
   symbols: string[],
-  { withHistory = false, concurrency = 6 }: { withHistory?: boolean; concurrency?: number } = {},
+  {
+    withHistory = false,
+    concurrency = 6,
+    budgetMs = 180_000,
+  }: { withHistory?: boolean; concurrency?: number; budgetMs?: number } = {},
 ): Promise<RefreshResult[]> {
   const queue = [...symbols];
   const results: RefreshResult[] = [];
+  const deadline = Date.now() + budgetMs;
+
+  /**
+   * A wall-clock budget, not just a per-request timeout.
+   *
+   * When a vendor is not merely slow but unreachable — DNS blackholed, a
+   * firewall dropping packets rather than refusing them — every symbol costs
+   * the full timeout, and 150 of those is a request that never returns. The
+   * budget bounds both the queue and each call in flight, so the caller gets
+   * partial results and an honest count of failures instead of hanging.
+   */
+  function withinBudget(symbol: string): Promise<RefreshResult> {
+    const remaining = deadline - Date.now();
+    const exhausted: RefreshResult = {
+      symbol, ok: false, vendor: null, error: "refresh budget exhausted",
+    };
+    if (remaining <= 0) return Promise.resolve(exhausted);
+
+    return Promise.race([
+      refreshSymbol(symbol, { withHistory }),
+      new Promise<RefreshResult>((resolve) => {
+        const timer = setTimeout(() => resolve(exhausted), remaining);
+        // Do not hold a Node process open for a timer that only exists to cut
+        // a request short.
+        timer.unref?.();
+      }),
+    ]);
+  }
 
   async function worker(): Promise<void> {
     for (;;) {
       const next = queue.shift();
       if (!next) return;
-      results.push(await refreshSymbol(next, { withHistory }));
+      results.push(await withinBudget(next));
     }
   }
 

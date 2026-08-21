@@ -60,8 +60,12 @@ export async function POST(req: Request) {
 
   let group = listId ? existing.find((g) => g.id === listId) : undefined;
 
+  // No list chosen and only one exists: it is the one they meant. The button
+  // skips the menu in that case too, so the API has to agree with it.
+  if (!group && !listId && !newListName && existing.length === 1) group = existing[0];
+
   if (!group) {
-    // No list chosen: either the visitor named a new one, or this is their
+    // Still nothing: either the visitor named a new list, or this is their
     // first ever add and the obvious thing to do is make one for them.
     const name = newListName?.trim() || (existing.length === 0 ? "My watchlist" : "");
     if (!name) return NextResponse.json({ error: "choose a watchlist" }, { status: 400 });

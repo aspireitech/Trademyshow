@@ -112,7 +112,7 @@ az containerapp create \
     NODE_ENV=production \
     AUTH_SECRET=secretref:auth-secret \
     CRON_SECRET=secretref:cron-secret \
-    MARKET_DATA_PROVIDER=mock \
+    MARKET_DATA_PROVIDER=auto \
     DB_PATH=/tmp/trademyshow.db \
     CONTRACTS_DIR=/tmp/contracts \
     LEGAL_COMPANY_NAME="TradeMyShow Sandbox" \

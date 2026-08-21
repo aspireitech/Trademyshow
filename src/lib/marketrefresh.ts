@@ -121,14 +121,28 @@ export function coverage(): { covered: number; total: number; pct: number } {
  * Called when someone opens a stock we have not seen recently, so a symbol
  * outside the tracked universe still renders a real page on first view.
  */
-export async function refreshSymbolDeeply(symbol: string): Promise<boolean> {
+export async function refreshSymbolDeeply(
+  symbol: string,
+  { budgetMs = 8_000 }: { budgetMs?: number } = {},
+): Promise<boolean> {
   if (!liveDataEnabled()) return false;
-  const [priced] = await refreshMany([symbol], { withHistory: true, concurrency: 1 });
+  const started = Date.now();
 
-  // Intraday and news are extras: a failure in either must not cost the page
-  // its price, so each is attempted independently and swallowed.
+  // Bounded, because this runs inside a page request. A visitor waiting on a
+  // vendor that is not answering should get the simulated page quickly and
+  // clearly labelled, not a spinner for half a minute.
+  const [priced] = await refreshMany([symbol], {
+    withHistory: true, concurrency: 1, budgetMs,
+  });
+
+  // The price is what the page cannot do without; intraday bars and headlines
+  // are extras. If the budget is already spent getting the price, they are
+  // skipped rather than allowed to extend the wait — the scheduled refresh
+  // will pick them up.
+  const deadline = started + budgetMs;
+
   for (const provider of marketDataChain()) {
-    if (!provider.fetchIntraday) continue;
+    if (!provider.fetchIntraday || Date.now() > deadline) break;
     try {
       const bars = await provider.fetchIntraday(symbol);
       if (bars.length > 1) {
@@ -139,7 +153,8 @@ export async function refreshSymbolDeeply(symbol: string): Promise<boolean> {
       // try the next vendor
     }
   }
-  await refreshNews(symbol).catch(() => false);
+
+  if (Date.now() <= deadline) await refreshNews(symbol).catch(() => false);
 
   return priced?.ok ?? false;
 }

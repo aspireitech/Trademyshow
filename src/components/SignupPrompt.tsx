@@ -19,11 +19,17 @@ const PAGES_BEFORE_PROMPT = 3;
  * It appears on the third page because by then the visitor has chosen to look
  * around, which is the difference between an offer and an interruption.
  */
-export default function SignupPrompt() {
+export default function SignupPrompt({ signedIn = false }: { signedIn?: boolean }) {
   const pathname = usePathname();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    // Never to somebody who already has an account. It used to be excluded by
+    // path, which worked while every signed-in page lived under /dashboard —
+    // and stopped working the moment stock pages became public, so a paying
+    // subscriber was invited to create a free account.
+    if (signedIn) return;
+
     // Never on the pages where it would be absurd or in the way.
     if (/^\/(login|register|reset-password|verify-email|unsubscribe|dashboard)/.test(pathname)) return;
 
@@ -43,7 +49,7 @@ export default function SignupPrompt() {
     } catch {
       // Storage unavailable — stay quiet rather than prompting every page.
     }
-  }, [pathname]);
+  }, [pathname, signedIn]);
 
   // Counted server-side too, because ad blockers remove client analytics for a
   // large share of exactly this audience.

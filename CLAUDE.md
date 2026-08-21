@@ -23,7 +23,11 @@ better-sqlite3 (needs Node 22 — there is no Node 24 prebuild).
   session closes — anything unpushed is lost, not merely delayed. Push even for
   work in progress; an honest commit message beats a lost afternoon.
 - Run `npx vitest run` and `npx next build` before pushing. Both must be clean.
-- Market data is simulated and must always be labelled as such in the UI.
+- Market data is real by default (Yahoo, then Stooq, then Finnhub if keyed) and
+  read from the local cache, never straight from a vendor. Where no real quote
+  exists the simulation answers — and every screen showing it must say so.
+  `sourceFor()` in `src/lib/providers/feed.ts` is the only thing that decides
+  which label a number gets; never print a price without one.
 - Never write copy that promises, forecasts or guarantees a price move. The legal
   position is that the product narrates arithmetic the AI cannot alter. See
   `docs/STATE.md` → "Settled decisions".

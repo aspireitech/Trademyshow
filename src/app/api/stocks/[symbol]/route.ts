@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import {
-  getHistory, getQuote, getStockInfo, marketCap, marketCapIsEstimated,
-  rangeChangePct, symbolStats, week52Range,
+  dayVolume, getHistory, getQuote, getStockInfo, marketCap, marketCapIsEstimated,
+  rangeChangePct, round2, symbolStats, week52Range,
 } from "@/lib/marketdata";
 import { getNews } from "@/lib/news";
 import { scoreStock } from "@/lib/insight/score";
@@ -14,6 +14,13 @@ import { limitRequest, tooManyRequests } from "@/lib/security";
 import { TIMEFRAMES, type Timeframe } from "@/lib/types";
 
 type Params = { params: Promise<{ symbol: string }> };
+
+/** Open, high and low from the generated session, for a simulated page. */
+function sessionRange(symbol: string): { open: number; high: number; low: number } | null {
+  const bars = getHistory(symbol, "1D").map((p) => p.price);
+  if (bars.length < 2) return null;
+  return { open: round2(bars[0]), high: round2(Math.max(...bars)), low: round2(Math.min(...bars)) };
+}
 
 /**
  * Everything one stock page needs.
@@ -53,6 +60,11 @@ export async function GET(req: Request, { params }: Params) {
   const stats = symbolStats(info.symbol);
   const range52 = week52Range(info.symbol);
   const label = sourceFor(info.symbol);
+  const simulated = label.source === "simulated";
+
+  // The session's own bars, used only to complete a simulated page. Under a
+  // real feed the vendor's figures are the only ones printed.
+  const session = simulated ? sessionRange(info.symbol) : null;
 
   // Signed-out visitors are held to the free plan's limits — the same line,
   // not a stricter one, so what they see is what a free account would see.
@@ -77,10 +89,15 @@ export async function GET(req: Request, { params }: Params) {
     score,
     expectations,
     stats: {
-      open: stats?.open ?? null,
-      dayHigh: stats?.dayHigh ?? null,
-      dayLow: stats?.dayLow ?? null,
-      volume: stats?.volume ?? null,
+      // Two modes, never mixed. When the page is showing a real quote, only
+      // what the vendor actually supplied is filled in — a blank cell is
+      // honest, a simulated volume printed beside a real price is not. When
+      // the whole page is already labelled simulated, the simulation fills
+      // every cell, because there is nothing left to mislead anyone about.
+      open: stats?.open ?? session?.open ?? null,
+      dayHigh: stats?.dayHigh ?? session?.high ?? null,
+      dayLow: stats?.dayLow ?? session?.low ?? null,
+      volume: stats?.volume ?? (simulated ? dayVolume(info.symbol) : null),
       currency: stats?.currency ?? "USD",
       exchange: stats?.exchange ?? null,
       week52High: range52.high,

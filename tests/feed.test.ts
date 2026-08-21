@@ -11,8 +11,8 @@ process.env.DB_PATH = ":memory:";
 import { resetDbForTests } from "@/lib/db";
 import { cacheQuote, cacheQuoteStats, knownSymbol, searchDirectory } from "@/lib/providers/cache";
 import {
-  liveDataEnabled, marketDataChain, providerChoice, refreshSymbol, resolveSymbol,
-  searchSymbols, sourceFor, sourceText,
+  liveDataEnabled, marketDataChain, providerChoice, refreshMany, refreshSymbol,
+  resolveSymbol, searchSymbols, sourceFor, sourceText,
 } from "@/lib/providers/feed";
 import { stooqSymbol } from "@/lib/providers/stooq";
 import { classifyHeadline, yahooMarketData, yahooSearch } from "@/lib/providers/yahoo";
@@ -187,6 +187,37 @@ describe("fallback chain", () => {
     expect(res.ok).toBe(false);
     expect(res.vendor).toBeNull();
     expect(res.error).toContain("yahoo");
+  });
+});
+
+describe("a vendor that never answers", () => {
+  it("stops at the budget instead of taking the timeout per symbol", async () => {
+    // The failure this guards against is not slowness. A blackholed host makes
+    // every request cost the full timeout, so 150 symbols becomes a refresh
+    // that never returns and a page that never renders.
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(() => {})));
+
+    const started = Date.now();
+    const results = await refreshMany(["AAPL", "MSFT", "NVDA", "AMZN"], {
+      concurrency: 2,
+      budgetMs: 0,
+    });
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect(results).toHaveLength(4);
+    expect(results.every((r) => !r.ok)).toBe(true);
+    expect(results.some((r) => r.error?.includes("budget"))).toBe(true);
+  });
+
+  it("cuts a request already in flight short, not just the queue behind it", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(() => {})));
+
+    const started = Date.now();
+    const results = await refreshMany(["AAPL"], { concurrency: 1, budgetMs: 150 });
+    const elapsed = Date.now() - started;
+
+    // Well under the adapters' own 12s timeout: the budget is what ended it.
+    expect(elapsed).toBeLessThan(2000);
+    expect(results[0].ok).toBe(false);
   });
 });
 
