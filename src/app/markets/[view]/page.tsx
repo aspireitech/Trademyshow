@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import MarketsDashboard from "@/components/MarketsDashboard";
-import SiteSidebar from "@/components/SiteSidebar";
-import ThemeToggle from "@/components/ThemeToggle";
+import NewsletterSignup from "@/components/NewsletterSignup";
+import SiteShell from "@/components/SiteShell";
 import { VIEW_LABELS, type MoverView } from "@/lib/insight/movers";
 
 const VIEWS = Object.keys(VIEW_LABELS) as MoverView[];
@@ -13,6 +12,14 @@ const VIEWS = Object.keys(VIEW_LABELS) as MoverView[];
 // never show the visitor's own watchlists.
 export const dynamic = "force-dynamic";
 
+const BLURB: Record<MoverView, string> = {
+  gainers: "The biggest risers of the session, ranked by percentage move.",
+  losers: "The biggest fallers of the session, ranked by percentage move.",
+  active: "The largest moves in either direction — where the day's action was.",
+  high52: "Trading closest to their highest price of the past year.",
+  low52: "Trading closest to their lowest price of the past year.",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -20,38 +27,29 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { view } = await params;
   const label = VIEW_LABELS[view as MoverView];
+  if (!label) return { title: "Markets" };
   return {
-    title: label ?? "Markets",
-    description: `${label ?? "Market screens"} across every stock, fund and coin we track — with a one-month trend and the signal reading beside each row.`,
+    title: label,
+    description: `${BLURB[view as MoverView]} Volume, market cap, a one-month trend and an itemised signal reading beside every row.`,
+    alternates: { canonical: `/markets/${view}` },
   };
 }
 
 export default async function MarketsPage({ params }: { params: Promise<{ view: string }> }) {
   const { view } = await params;
   if (!VIEWS.includes(view as MoverView)) notFound();
+  const key = view as MoverView;
 
   return (
-    <div className="shell">
-      <SiteSidebar active={view} />
-      <div className="shell-main">
-        <nav className="nav">
-          <Link href="/" className="brand">Trade<span>MyShow</span></Link>
-          <div className="links">
-            <ThemeToggle />
-            <Link href="/track-record">Track record</Link>
-            <Link href="/pricing">Pricing</Link>
-            <Link href="/login">Log in</Link>
-            <Link href="/register" className="btn">Start free</Link>
-          </div>
-        </nav>
-        <main style={{ padding: "22px 0 60px" }}>
-          <h1 style={{ fontSize: 26, marginBottom: 4 }}>{VIEW_LABELS[view as MoverView]}</h1>
-          <p className="dim" style={{ fontSize: 14, marginBottom: 18 }}>
-            Everything we track, ranked by what already happened today.
-          </p>
-          <MarketsDashboard view={view as MoverView} />
-        </main>
+    <SiteShell active={key} wide>
+      <div className="board-intro">
+        <div>
+          <h1>{VIEW_LABELS[key]}</h1>
+          <p className="dim">{BLURB[key]}</p>
+        </div>
       </div>
-    </div>
+      <MarketsDashboard view={key} />
+      <NewsletterSignup source={`markets-${key}`} />
+    </SiteShell>
   );
 }

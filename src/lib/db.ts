@@ -231,6 +231,60 @@ function open(): Database.Database {
       impact REAL NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_news_cache_symbol ON news_cache(symbol, published_at DESC);
+
+    -- Everything a real feed volunteers beside the last price. Separate from
+    -- quote_cache because a quote is refreshed every few minutes while a
+    -- 52-week range moves once a day, and because a vendor that supplies only
+    -- a price should not have to write nulls over what another one supplied.
+    CREATE TABLE IF NOT EXISTS quote_stats_cache (
+      symbol TEXT PRIMARY KEY,
+      currency TEXT,
+      exchange TEXT,
+      open REAL,
+      day_high REAL,
+      day_low REAL,
+      volume REAL,
+      week52_high REAL,
+      week52_low REAL,
+      market_cap REAL,
+      quote_time TEXT,
+      fetched_at TEXT NOT NULL
+    );
+
+    -- Instruments discovered through search rather than shipped in the
+    -- universe. Someone who looks up a small cap gets a working page, and the
+    -- next visitor who types the same letters gets the answer without a round
+    -- trip to the vendor.
+    CREATE TABLE IF NOT EXISTS symbol_directory (
+      symbol TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      sector TEXT NOT NULL,
+      asset_class TEXT NOT NULL DEFAULT 'stock',
+      source TEXT NOT NULL,
+      added_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Newsletter subscribers. Kept apart from users: most people who want the
+    -- market letter have no account yet, and requiring one to receive it
+    -- throws away the cheapest signup path there is.
+    -- Today's five-minute bars, as one JSON blob per symbol. A blob rather
+    -- than 78 rows because it is always read whole, always replaced whole, and
+    -- never queried by time.
+    CREATE TABLE IF NOT EXISTS intraday_cache (
+      symbol TEXT PRIMARY KEY,
+      day TEXT NOT NULL,
+      points TEXT NOT NULL,
+      fetched_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL UNIQUE,
+      source TEXT,
+      confirmed_at TEXT,
+      unsubscribed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // Visitor counts. The identifier is a daily salted hash, so it counts
@@ -247,6 +301,14 @@ function open(): Database.Database {
     );
     CREATE INDEX IF NOT EXISTS idx_visitors_day ON visitors(day);
   `);
+  // Alerts began as score thresholds only. A price alert is what people
+  // actually ask for first, so the row now says which kind it is; existing
+  // rows are score alerts, which is what they were.
+  const alertCols = conn.prepare("PRAGMA table_info(alerts)").all() as { name: string }[];
+  if (!alertCols.some((c) => c.name === "kind")) {
+    conn.exec("ALTER TABLE alerts ADD COLUMN kind TEXT NOT NULL DEFAULT 'score'");
+  }
+
   const cols = conn.prepare("PRAGMA table_info(digests)").all() as { name: string }[];
   if (!cols.some((c) => c.name === "period")) {
     conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");

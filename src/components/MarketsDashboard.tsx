@@ -1,8 +1,9 @@
 import Link from "next/link";
+import MarketDataBadge from "./MarketDataBadge";
 import {
   marketBreadth, moverView, VIEW_LABELS, type Mover, type MoverView,
 } from "@/lib/insight/movers";
-import { dayVolume, getHistory, getQuote, marketCap } from "@/lib/marketdata";
+import { getHistory, getQuote } from "@/lib/marketdata";
 import { currentUser } from "@/lib/auth";
 import { effectiveLimits } from "@/lib/plans";
 
@@ -58,7 +59,18 @@ const VIEWS: MoverView[] = ["gainers", "losers", "active", "high52", "low52"];
 /** The 52-week screens beyond this depth are a paid feature. */
 const PUBLIC_52W_ROWS = 15;
 
-export default async function MarketsDashboard({ view }: { view: MoverView }) {
+export default async function MarketsDashboard({
+  view,
+  basePath = "/markets",
+}: {
+  view: MoverView;
+  /**
+   * Where the screen tabs point. The home page keeps them on itself with a
+   * query string so the landing dashboard can switch screens without sending
+   * the visitor to a different page; everywhere else they are real routes.
+   */
+  basePath?: string;
+}) {
   const user = await currentUser();
   const unlocked = user ? effectiveLimits(user).advancedMovers : false;
   const is52 = view === "high52" || view === "low52";
@@ -76,7 +88,7 @@ export default async function MarketsDashboard({ view }: { view: MoverView }) {
           const hist = getHistory(ix.symbol, "1M").map((pt) => pt.price);
           const up = q.changePct >= 0;
           return (
-            <Link key={ix.symbol} href={`/dashboard/stocks/${ix.symbol}`} className="mkt-index">
+            <Link key={ix.symbol} href={`/stocks/${ix.symbol}`} className="mkt-index">
               <span className="mkt-index-name">
                 <strong>{ix.symbol}</strong>
                 <span className="dim">{ix.label}</span>
@@ -96,10 +108,17 @@ export default async function MarketsDashboard({ view }: { view: MoverView }) {
       <div className="mkt-toolbar">
         <div className="tf-tabs mkt-tabs">
           {VIEWS.map((v) => (
-            <Link key={v} href={`/markets/${v}`} className={v === view ? "active" : ""}>
+            <Link
+              key={v}
+              href={basePath === "/" ? (v === "gainers" ? "/" : `/?view=${v}`) : `${basePath}/${v}`}
+              className={v === view ? "active" : ""}
+            >
               {VIEW_LABELS[v]}
             </Link>
           ))}
+        </div>
+        <div className="mkt-status">
+          <MarketDataBadge />
         </div>
         <p className="dim mkt-breadth">
           <span className="live-dot" aria-hidden="true" />
@@ -161,7 +180,7 @@ function Row({ m, i, is52, view }: { m: Mover; i: number; is52: boolean; view: M
     <tr className="board-row">
       <td className="mkt-num mono dim">{i + 1}</td>
       <td>
-        <Link href={`/dashboard/stocks/${m.symbol}`} className="mkt-sym">
+        <Link href={`/stocks/${m.symbol}`} className="mkt-sym">
           <strong>{m.symbol}</strong>
           {m.assetClass !== "stock" && (
             <span className="badge" style={{ marginLeft: 6, fontSize: 10 }}>
@@ -181,8 +200,8 @@ function Row({ m, i, is52, view }: { m: Mover; i: number; is52: boolean; view: M
           {dist >= 0 ? "+" : ""}{dist.toFixed(1)}%
         </td>
       )}
-      <td className="mono mkt-right dim mkt-hide-sm">{compact(dayVolume(m.symbol))}</td>
-      <td className="mono mkt-right dim mkt-hide-sm">${compact(marketCap(m.symbol))}</td>
+      <td className="mono mkt-right dim mkt-hide-sm">{compact(m.volume)}</td>
+      <td className="mono mkt-right dim mkt-hide-sm">${compact(m.marketCap)}</td>
       <td>
         <svg className="board-spark" viewBox="0 0 110 30" aria-hidden="true" preserveAspectRatio="none">
           <path d={sparkPath(m.spark)} fill="none" strokeWidth="1.6"

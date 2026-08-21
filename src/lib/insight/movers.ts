@@ -1,4 +1,6 @@
-import { getHistory, getQuote, UNIVERSE } from "../marketdata";
+import {
+  dayVolume, getHistory, getQuote, marketCap, UNIVERSE, week52Range,
+} from "../marketdata";
 import { scoreStock } from "./score";
 import type { AssetClass } from "../types";
 
@@ -28,6 +30,9 @@ export interface Mover {
   /** Distance from the 52-week extremes, percent. Negative = below the high. */
   pctFrom52wHigh: number;
   pctFrom52wLow: number;
+  /** Session volume and market cap, so a row can be read without a second pass. */
+  volume: number;
+  marketCap: number;
   /** Present only where the scoring engine has enough history. */
   score: number | null;
   band: string | null;
@@ -64,8 +69,10 @@ export function allMovers(asOf: Date = new Date()): Mover[] {
     const quote = getQuote(info.symbol, asOf);
     const year = getHistory(info.symbol, "1Y", asOf).map((p) => p.price);
     if (year.length < 2) continue;
-    const hi = Math.max(...year);
-    const lo = Math.min(...year);
+    // The vendor's own 52-week extremes where it publishes them: they track
+    // intraday highs, which is what every other market site quotes, so
+    // computing ours from closes alone would disagree with them visibly.
+    const { high: hi, low: lo } = week52Range(info.symbol, asOf);
     const scored = scoreStock(info.symbol, asOf);
 
     out.push({
@@ -76,8 +83,10 @@ export function allMovers(asOf: Date = new Date()): Mover[] {
       price: quote.price,
       changePct: quote.changePct,
       spark: downsample(getHistory(info.symbol, "1M", asOf).map((p) => p.price)),
-      pctFrom52wHigh: Number((((quote.price - hi) / hi) * 100).toFixed(2)),
-      pctFrom52wLow: Number((((quote.price - lo) / lo) * 100).toFixed(2)),
+      pctFrom52wHigh: hi ? Number((((quote.price - hi) / hi) * 100).toFixed(2)) : 0,
+      pctFrom52wLow: lo ? Number((((quote.price - lo) / lo) * 100).toFixed(2)) : 0,
+      volume: dayVolume(info.symbol, asOf),
+      marketCap: marketCap(info.symbol, asOf),
       score: scored ? Math.round(scored.score) : null,
       band: scored ? scored.band : null,
     });

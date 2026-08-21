@@ -82,7 +82,7 @@ export default function MarketMovers() {
             {rows.map((m) => (
               <tr key={m.symbol}>
                 <td>
-                  <Link href={`/dashboard/stocks/${m.symbol}`}><strong>{m.symbol}</strong></Link>
+                  <Link href={`/stocks/${m.symbol}`}><strong>{m.symbol}</strong></Link>
                   {m.assetClass !== "stock" && (
                     <span className="badge" style={{ marginLeft: 6, fontSize: 10 }}>
                       {m.assetClass.toUpperCase()}

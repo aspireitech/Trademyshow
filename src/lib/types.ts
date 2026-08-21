@@ -40,10 +40,19 @@ export interface UserSession {
   current: boolean;
 }
 
+/**
+ * "price" watches the quote, "score" watches the Insight Score. Both are
+ * thresholds in the same shape, which is why they share a table — and the
+ * kind is stored rather than inferred from the threshold's magnitude, because
+ * a $60 price and a score of 60 are indistinguishable numbers.
+ */
+export type AlertKind = "price" | "score";
+
 export interface Alert {
   id: number;
   userId: number;
   symbol: string;
+  kind: AlertKind;
   direction: "above" | "below";
   threshold: number;
   lastFiredAt: string | null;
@@ -172,4 +181,38 @@ export interface PlanLimits {
   /** 52-week high/low and other screens beyond risers and fallers. */
   advancedMovers: boolean;
   csvExport: boolean;
+}
+
+/**
+ * The facts a real feed supplies beside the last price.
+ *
+ * Every field is nullable because coverage differs by vendor and by
+ * instrument: a fund has no market cap the way a company does, and an
+ * end-of-day feed has no intraday high. A null means "not supplied", and the
+ * UI leaves the cell blank rather than inventing a number.
+ */
+export interface QuoteStats {
+  symbol: string;
+  currency: string | null;
+  exchange: string | null;
+  open: number | null;
+  dayHigh: number | null;
+  dayLow: number | null;
+  volume: number | null;
+  fiftyTwoWeekHigh: number | null;
+  fiftyTwoWeekLow: number | null;
+  marketCap: number | null;
+  /** ISO timestamp the vendor stamped on the price. */
+  quoteTime: string | null;
+}
+
+/** Where a number on screen came from. Shown to the user, never guessed. */
+export type DataSource = "live" | "delayed" | "eod" | "simulated";
+
+export interface SourceLabel {
+  source: DataSource;
+  /** Vendor name, or "TradeMyShow engine" for the simulation. */
+  vendor: string;
+  /** ISO timestamp of the underlying data, when known. */
+  asOf: string | null;
 }

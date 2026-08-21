@@ -53,7 +53,7 @@ export default function StockSearch() {
               onClick={() => {
                 setQ("");
                 setResults([]);
-                router.push(`/dashboard/stocks/${r.symbol}`);
+                router.push(`/stocks/${r.symbol}`);
               }}
             >
               <strong>{r.symbol}</strong> <span className="dim">{r.name}</span>

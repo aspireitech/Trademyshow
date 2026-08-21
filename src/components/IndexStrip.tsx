@@ -55,7 +55,7 @@ export default function IndexStrip() {
   return (
     <div className="index-strip" aria-label="Market benchmarks">
       {rows.map((r) => (
-        <Link key={r.symbol} href={`/dashboard/stocks/${r.symbol}`} className="index-tile">
+        <Link key={r.symbol} href={`/stocks/${r.symbol}`} className="index-tile">
           <span className="index-label">
             <strong>{r.symbol}</strong>
             <span className="dim">{r.label}</span>

@@ -1,15 +1,21 @@
-import { cachedQuote } from "./providers/cache";
-import type { AssetClass, PricePoint, Quote, StockInfo, Timeframe } from "./types";
+import {
+  cachedCloses, cachedIntraday, cachedQuote, cachedQuoteStats, knownSymbol, searchDirectory,
+} from "./providers/cache";
+import { liveDataEnabled } from "./providers/feed";
+import type { AssetClass, PricePoint, Quote, QuoteStats, StockInfo, Timeframe } from "./types";
 
 /**
- * Deterministic mock market-data provider.
+ * Market data: the real feed first, the simulation only as a floor.
  *
- * Prices come from a seeded random walk keyed by symbol, anchored to the
- * calendar, so the same (symbol, date) always yields the same series —
- * which makes the digest engine fully testable and the app usable with no
- * external API key. Swap in a real provider (Finnhub, Polygon, Alpha
- * Vantage) by implementing the same three functions behind
- * MARKET_DATA_PROVIDER.
+ * Every read here follows the same rule. If a vendor's number for this symbol
+ * is in the cache and fresh enough to stand behind, that is what comes back.
+ * Otherwise a seeded random walk answers — deterministic, keyed by symbol and
+ * anchored to the calendar, so the same (symbol, date) always yields the same
+ * series and the test suite and published track record stay reproducible.
+ *
+ * The walk is not a stand-in for a quote and must never be presented as one.
+ * `sourceFor()` in providers/feed.ts tells every screen which of the two it is
+ * looking at, and the screens say so.
  */
 
 export const UNIVERSE: StockInfo[] = [
@@ -179,8 +185,25 @@ export function assetClassOf(symbol: string): AssetClass {
 
 const BY_SYMBOL = new Map(UNIVERSE.map((s) => [s.symbol, s]));
 
+/**
+ * The instrument behind a symbol.
+ *
+ * The shipped universe answers first — it is a map lookup and covers what
+ * most people type. Anything else falls through to the directory of symbols
+ * learned from the vendor's search, which is what lets a visitor who looks up
+ * a small cap get a working page instead of a 404.
+ */
 export function getStockInfo(symbol: string): StockInfo | null {
-  return BY_SYMBOL.get(symbol.toUpperCase()) ?? null;
+  const shipped = BY_SYMBOL.get(symbol.toUpperCase());
+  if (shipped) return shipped;
+  if (!liveDataEnabled()) return null;
+  try {
+    return knownSymbol(symbol);
+  } catch {
+    // No database (a unit test, a build-time render): the universe is all
+    // there is, and a null here reads as "unknown symbol", which is true.
+    return null;
+  }
 }
 
 export function searchStocks(query: string, limit = 8): StockInfo[] {
@@ -199,6 +222,18 @@ export function searchStocks(query: string, limit = 8): StockInfo[] {
     const bSym = b.symbol.toLowerCase().startsWith(q) ? 0 : 1;
     return aSym - bSym || a.symbol.length - b.symbol.length;
   });
+  if (matches.length >= limit || !liveDataEnabled()) return matches.slice(0, limit);
+
+  // Top up from symbols already learned from the vendor, so the second person
+  // to type "APLM" gets it without a round trip.
+  const seen = new Set(matches.map((m) => m.symbol));
+  try {
+    for (const hit of searchDirectory(query, limit)) {
+      if (!seen.has(hit.symbol)) matches.push(hit);
+    }
+  } catch {
+    // No database available; the universe matches stand on their own.
+  }
   return matches.slice(0, limit);
 }
 
@@ -415,9 +450,54 @@ export function sharesOutstanding(symbol: string): number {
   return (capB * 1e9) / price;
 }
 
-/** Market cap at the current price, in USD. Moves with the quote, as it should. */
+/**
+ * Market cap at the current price, in USD.
+ *
+ * The vendor's own figure wins where it supplies one. Otherwise this is an
+ * estimate — the shipped share count multiplied by the live price — which is
+ * accurate to within a buyback or two and is marked as an estimate wherever it
+ * is shown. Inventing precision would be worse than admitting the estimate.
+ */
 export function marketCap(symbol: string, asOf: Date = new Date()): number {
+  const stats = fromCache(() => cachedQuoteStats(symbol));
+  if (stats?.marketCap) return stats.marketCap;
   return sharesOutstanding(symbol) * getQuote(symbol, asOf).price;
+}
+
+/** True when the market cap above is our arithmetic rather than the vendor's. */
+export function marketCapIsEstimated(symbol: string): boolean {
+  return !fromCache(() => cachedQuoteStats(symbol))?.marketCap;
+}
+
+/**
+ * Everything the feed volunteered beside the price, or null when the only
+ * thing behind this symbol is the simulation.
+ */
+export function symbolStats(symbol: string): QuoteStats | null {
+  return fromCache(() => cachedQuoteStats(symbol));
+}
+
+/**
+ * The 52-week range, preferring the vendor's own figures.
+ *
+ * Computing it from cached closes is the fallback, and it is a slightly
+ * different number — the vendor tracks intraday extremes, we only hold closes.
+ * That difference is why the vendor's version is used when it exists.
+ */
+export function week52Range(
+  symbol: string,
+  asOf: Date = new Date(),
+): { high: number; low: number } {
+  const stats = fromCache(() => cachedQuoteStats(symbol));
+  if (stats?.fiftyTwoWeekHigh && stats.fiftyTwoWeekLow) {
+    return { high: stats.fiftyTwoWeekHigh, low: stats.fiftyTwoWeekLow };
+  }
+  const year = getHistory(symbol, "1Y", asOf).map((p) => p.price);
+  if (year.length === 0) {
+    const price = getQuote(symbol, asOf).price;
+    return { high: price, low: price };
+  }
+  return { high: Math.max(...year), low: Math.min(...year) };
 }
 
 /**
@@ -425,6 +505,9 @@ export function marketCap(symbol: string, asOf: Date = new Date()): number {
  * inflated on days the stock moved hard, which is how real volume behaves.
  */
 export function dayVolume(symbol: string, asOf: Date = new Date()): number {
+  const stats = fromCache(() => cachedQuoteStats(symbol));
+  if (stats?.volume) return stats.volume;
+
   const [, capB] = anchorFor(symbol);
   const rand = mulberry32(hashString(`vol:${symbol}:${dayIndex(asOf)}`));
   const turnover = 0.002 + rand() * 0.004; // 0.2%-0.6% of shares change hands
@@ -488,19 +571,43 @@ function closeAt(symbol: string, asOf: Date, daysBack: number): number {
   return closes[idx];
 }
 
-/** True when a live vendor is configured; otherwise everything is the mock. */
+/**
+ * True unless the simulation has been forced on with MARKET_DATA_PROVIDER=mock.
+ *
+ * The default is live. An installation that shows invented prices by default
+ * and only shows real ones when someone remembers to set a variable is an
+ * installation that will show invented prices.
+ */
 export function usingLiveData(): boolean {
-  return (process.env.MARKET_DATA_PROVIDER ?? "mock") !== "mock";
+  return liveDataEnabled();
+}
+
+/**
+ * Read the cache without letting its absence break a render.
+ *
+ * The cache lives in SQLite, and there are contexts — a unit test with no
+ * database, a build-time prerender — where opening it is not possible. In
+ * those the simulation is the correct answer, so a throw here is a fallback
+ * signal, not an error.
+ */
+function fromCache<T>(read: () => T | null): T | null {
+  if (!liveDataEnabled()) return null;
+  try {
+    return read();
+  } catch {
+    return null;
+  }
 }
 
 export function getQuote(symbol: string, asOf: Date = new Date()): Quote {
   // A live quote is only consulted for "now". Historical and back-dated
   // requests stay deterministic, which is what keeps the test suite and the
   // published track record reproducible.
-  if (usingLiveData() && Math.abs(Date.now() - asOf.getTime()) < 60_000) {
-    const live = cachedQuote(symbol);
+  if (Math.abs(Date.now() - asOf.getTime()) < 60_000) {
+    const live = fromCache(() => cachedQuote(symbol));
     if (live) return live;
   }
+
   const price = closeAt(symbol, asOf, 0);
   const prevClose = closeAt(symbol, asOf, 1);
   return {
@@ -520,7 +627,63 @@ const RANGE_DAYS: Record<Exclude<Timeframe, "1D" | "YTD" | "ALL">, number> = {
   "5Y": 5 * 365,
 };
 
+/** Calendar days of history a timeframe covers. */
+function daysFor(range: Timeframe, asOf: Date): number {
+  if (range === "ALL") return ALL_DAYS - 1;
+  if (range === "1D") return 1;
+  if (range === "YTD") {
+    const jan1 = new Date(Date.UTC(asOf.getUTCFullYear(), 0, 1));
+    return Math.max(1, dayIndex(asOf) - dayIndex(jan1));
+  }
+  return RANGE_DAYS[range];
+}
+
+/** Thin a series to at most `points` values, keeping both endpoints. */
+function thin(points: PricePoint[], max = 260): PricePoint[] {
+  if (points.length <= max) return points;
+  const step = (points.length - 1) / (max - 1);
+  const out: PricePoint[] = [];
+  for (let i = 0; i < max; i++) out.push(points[Math.round(i * step)]);
+  return out;
+}
+
+/**
+ * Real closes for the window, or null when the cache cannot cover it.
+ *
+ * "Cannot cover it" is deliberately strict: a 1Y chart drawn from three weeks
+ * of cached closes is a misleading chart, and silently mixing cached closes
+ * with simulated ones to fill the gap would be worse than either alone. Better
+ * to hand the whole range back to the simulation, which is labelled.
+ */
+function cachedHistory(symbol: string, range: Timeframe, asOf: Date): PricePoint[] | null {
+  if (range === "1D") {
+    const bars = fromCache(() => cachedIntraday(symbol));
+    return bars && bars.length > 1 ? bars : null;
+  }
+
+  const days = daysFor(range, asOf);
+  const since = new Date(asOf.getTime() - days * 86_400_000);
+  const closes = fromCache(() => cachedCloses(symbol, since));
+  if (!closes || closes.length < 2) return null;
+
+  // Markets trade about five days in seven. Accept anything within half of
+  // that — holidays, and genuinely young listings, both legitimately fall
+  // short — but reject a window the cache has barely started to fill.
+  const tradingDays = days * (5 / 7);
+  if (closes.length < Math.min(20, tradingDays * 0.5)) return null;
+
+  return thin(closes);
+}
+
 export function getHistory(symbol: string, range: Timeframe, asOf: Date = new Date()): PricePoint[] {
+  // Back-dated requests stay on the deterministic walk for the same reason
+  // quotes do: the published track record must not be rewritten by whatever
+  // the cache happens to hold today.
+  if (Math.abs(Date.now() - asOf.getTime()) < 86_400_000) {
+    const real = cachedHistory(symbol, range, asOf);
+    if (real) return real;
+  }
+
   if (range === "1D") return intradaySeries(symbol, asOf);
 
   let days: number;

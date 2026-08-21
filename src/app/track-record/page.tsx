@@ -1,6 +1,6 @@
+import SiteShell from "@/components/SiteShell";
 import Link from "next/link";
 import { buildTrackRecord, HORIZONS, type Horizon } from "@/lib/insight/trackrecord";
-import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata = {
   title: "Track record — TradeMyShow",
@@ -25,19 +25,7 @@ export default async function TrackRecordPage({
   const record = buildTrackRecord(horizon);
 
   return (
-    <div className="container">
-      <nav className="nav">
-        <Link href="/" className="brand">
-          Trade<span>MyShow</span>
-        </Link>
-        <div className="links">
-          <ThemeToggle />
-          <Link href="/pricing">Pricing</Link>
-          <Link href="/register" className="btn">
-            Get started
-          </Link>
-        </div>
-      </nav>
+    <SiteShell active="track-record">
 
       <section className="section" style={{ borderTop: "none" }}>
         <h2>Our track record</h2>
@@ -155,11 +143,6 @@ export default async function TrackRecordPage({
         </div>
       </section>
 
-      <footer className="site">
-        <div className="container">
-          TradeMyShow provides analytics and educational content only. <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link>
-        </div>
-      </footer>
-    </div>
+    </SiteShell>
   );
 }

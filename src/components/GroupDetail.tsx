@@ -267,7 +267,7 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
                   return (
                     <tr key={h.symbol}>
                       <td>
-                        <Link href={`/dashboard/stocks/${h.symbol}`}>
+                        <Link href={`/stocks/${h.symbol}`}>
                           <strong>{h.symbol}</strong>
                         </Link>
                         <br />

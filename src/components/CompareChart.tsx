@@ -191,7 +191,7 @@ export default function CompareChart({ initial }: { initial: string[] }) {
                     <tr key={s.symbol}>
                       <td>
                         <span className="compare-swatch" style={{ background: LINE_COLOURS[i % 4] }} />
-                        <Link href={`/dashboard/stocks/${s.symbol}`}><strong>{s.symbol}</strong></Link>
+                        <Link href={`/stocks/${s.symbol}`}><strong>{s.symbol}</strong></Link>
                         <br />
                         <span className="dim" style={{ fontSize: 12 }}>{s.name}</span>
                       </td>

@@ -1,7 +1,7 @@
+import SiteShell from "@/components/SiteShell";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PLAN_LIMITS, PLAN_PRICING, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plans";
-import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -63,21 +63,7 @@ const ROWS: { label: string; free: string; pro: string; premium: string }[] = [
 
 export default function PricingPage() {
   return (
-    <>
-      <div className="container">
-        <nav className="nav">
-          <Link href="/" className="brand">
-            Trade<span>MyShow</span>
-          </Link>
-          <div className="links">
-          <ThemeToggle />
-            <Link href="/track-record">Track record</Link>
-            <Link href="/login">Log in</Link>
-            <Link href="/register" className="btn">
-              Start free
-            </Link>
-          </div>
-        </nav>
+    <SiteShell active="pricing">
 
         <section className="section" style={{ borderTop: "none", textAlign: "center" }}>
           <h2 className="rise" style={{ fontSize: 32 }}>
@@ -223,13 +209,6 @@ export default function PricingPage() {
             where the data comes from, and why none of this is investment advice.
           </p>
         </section>
-      </div>
-
-      <footer className="site">
-        <div className="container">
-          Analytics and educational content only — never investment advice. Prices in USD. <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link>
-        </div>
-      </footer>
-    </>
+    </SiteShell>
   );
 }

@@ -2,6 +2,7 @@ import { getDb, getUserById, listGroups, listHoldings, saveDigest } from "./db";
 import { computeGroupFacts } from "./digest/engine";
 import { writeDigest } from "./digest/writer";
 import { scoreStock } from "./insight/score";
+import { getQuote } from "./marketdata";
 import { digestTemplate, sendMail } from "./mailer";
 import { subscriptionState } from "./billing";
 import { effectiveLimits } from "./plans";
@@ -138,7 +139,7 @@ export interface AlertHit {
 export function runAlertJob(now: Date = new Date()): AlertHit[] {
   const db = getDb();
   const rows = db.prepare("SELECT * FROM alerts").all() as {
-    id: number; user_id: number; symbol: string;
+    id: number; user_id: number; symbol: string; kind: "price" | "score";
     direction: "above" | "below"; threshold: number; last_fired_at: string | null;
   }[];
 
@@ -148,25 +149,35 @@ export function runAlertJob(now: Date = new Date()): AlertHit[] {
     if (a.last_fired_at && now.getTime() - new Date(a.last_fired_at).getTime() < 24 * 3600_000) {
       continue;
     }
-    const scored = scoreStock(a.symbol, now);
-    if (!scored) continue;
 
-    const met =
-      a.direction === "above" ? scored.score >= a.threshold : scored.score <= a.threshold;
+    // Two kinds, one rule: read the measure, compare it to the threshold. What
+    // differs is only which measure and how the notification reads.
+    let value: number;
+    let title: string;
+    let body: string;
+
+    if (a.kind === "price") {
+      value = getQuote(a.symbol, now).price;
+      title = `${a.symbol} is ${a.direction} ${a.threshold}`;
+      body = `${a.symbol} last traded at ${value.toFixed(2)}.`;
+    } else {
+      const scored = scoreStock(a.symbol, now);
+      if (!scored) continue;
+      value = scored.score;
+      title = `${a.symbol} Insight Score is ${a.direction} ${a.threshold}`;
+      body = `${a.symbol} now scores ${scored.score.toFixed(0)} — ${scored.band} signals.`;
+    }
+
+    const met = a.direction === "above" ? value >= a.threshold : value <= a.threshold;
     if (!met) continue;
 
     db.prepare("UPDATE alerts SET last_fired_at = ? WHERE id = ?").run(now.toISOString(), a.id);
     db.prepare(
       "INSERT INTO notifications (user_id, kind, title, body, href) VALUES (?, 'alert', ?, ?, ?)",
-    ).run(
-      a.user_id,
-      `${a.symbol} Insight Score is ${a.direction} ${a.threshold}`,
-      `${a.symbol} now scores ${scored.score.toFixed(0)} — ${scored.band} signals.`,
-      `/dashboard/stocks/${a.symbol}`,
-    );
+    ).run(a.user_id, title, body, `/stocks/${a.symbol}`);
 
     hits.push({
-      userId: a.user_id, symbol: a.symbol, score: scored.score,
+      userId: a.user_id, symbol: a.symbol, score: value,
       direction: a.direction, threshold: a.threshold,
     });
   }
@@ -188,55 +199,47 @@ export interface RefreshReport {
 /**
  * Pull vendor data into the cache.
  *
- * Only refreshes symbols someone is actually watching, plus the index trackers
- * used as comparison baselines. Refreshing the whole universe would burn a
- * free-tier quota on symbols nobody has ever opened.
+ * Refreshes the whole tracked universe, not just what someone happens to hold:
+ * the market screens on the landing page are the first thing a visitor sees,
+ * and a screen ranking a hundred simulated rows against fifty real ones is not
+ * a market screen. Symbols people actually watch are added on top, because a
+ * holding outside the shipped universe still needs a real price.
  *
  * Failures are collected rather than thrown: one delisted symbol must not stop
  * the other ninety-nine from refreshing.
  */
 export async function refreshMarketData(now: Date = new Date()): Promise<RefreshReport> {
+  const { coreSymbols, refreshMarket, historyMissing } = await import("./marketrefresh");
+  const { providerChoice } = await import("./providers/feed");
+  const { refreshNews } = await import("./providers/feed");
+
   const report: RefreshReport = {
-    provider: process.env.MARKET_DATA_PROVIDER ?? "mock",
+    provider: providerChoice(),
     symbols: 0, quotes: 0, histories: 0, newsItems: 0, failures: [],
   };
   if (report.provider === "mock") return report;
 
-  const { finnhubMarketData, finnhubNews } = await import("./providers/finnhub");
-  const { cacheCloses, cacheNews, cacheQuote } = await import("./providers/cache");
-
   const watched = getDb()
     .prepare("SELECT DISTINCT symbol FROM holdings ORDER BY symbol")
     .all() as { symbol: string }[];
-  const symbols = [...new Set([...watched.map((r) => r.symbol), "SPY", "QQQ"])];
+  const symbols = [...new Set([...coreSymbols(), ...watched.map((r) => r.symbol)])];
   report.symbols = symbols.length;
 
-  for (const symbol of symbols) {
-    try {
-      const quote = await finnhubMarketData.fetchQuote(symbol);
-      if (quote) {
-        cacheQuote(quote, now);
-        report.quotes++;
-      }
+  // History is expensive and only changes once a day, so it rides along on the
+  // first run of a fresh installation and is skipped after that.
+  const withHistory = historyMissing();
+  const summary = await refreshMarket({ symbols, withHistory });
+  report.quotes = summary.refreshed;
+  report.histories = withHistory ? summary.refreshed : 0;
+  report.failures = summary.errors.map((e) => {
+    const [symbol, ...rest] = e.split(": ");
+    return { symbol, error: rest.join(": ").slice(0, 120) };
+  });
 
-      const closes = await finnhubMarketData.fetchDailyCloses(symbol, 400);
-      if (closes.length > 0) {
-        cacheCloses(symbol, closes);
-        report.histories++;
-      }
-
-      const news = await finnhubNews.fetchNews(
-        symbol,
-        new Date(now.getTime() - 7 * 86_400_000),
-        now,
-      );
-      if (news.length > 0) {
-        cacheNews(symbol, news);
-        report.newsItems += news.length;
-      }
-    } catch (err) {
-      report.failures.push({ symbol, error: String(err).slice(0, 120) });
-    }
+  // Headlines only for what people hold. News is per-symbol and slow, and an
+  // unread symbol's headlines help nobody.
+  for (const symbol of watched.map((r) => r.symbol)) {
+    if (await refreshNews(symbol)) report.newsItems++;
   }
 
   return report;

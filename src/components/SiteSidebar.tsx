@@ -42,15 +42,20 @@ export default async function SiteSidebar({ active }: { active?: string }) {
       <ul>
         {MARKET_LINKS.map((m) => item(`/markets/${m.view}`, m.label, m.view))}
         {item(user ? "/dashboard/compare" : "/register", "Compare", "compare")}
+        {item("/news", "Market news", "news")}
       </ul>
 
-      {user && groups.length > 0 && (
+      {user && (
         <>
           <p className="side-label">My watchlists</p>
           <ul>
             {groups.slice(0, 8).map((g) =>
               item(`/dashboard/groups/${g.id}`, g.name, `group-${g.id}`),
             )}
+            {/* An empty watchlist section is not a bug to hide — it is the one
+                thing a new account most needs to be told to do next. */}
+            {groups.length === 0 && item("/dashboard", "Create your first list", "new-list")}
+            {item("/dashboard/settings/activity", "Alerts & activity", "alerts")}
           </ul>
         </>
       )}

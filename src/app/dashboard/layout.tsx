@@ -1,42 +1,19 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
-import { effectivePlan, isTrialing, trialDaysRemaining } from "@/lib/plans";
-import CookieNotice from "@/components/CookieNotice";
-import DashboardNavActions from "@/components/DashboardNavActions";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteShell from "@/components/SiteShell";
 
+/**
+ * The signed-in area sits in exactly the same frame as everything else.
+ *
+ * It used to have its own centred container and its own navigation bar, so
+ * logging in visibly threw away the market dashboard the visitor had just been
+ * using — sidebar gone, search gone, layout different. Same shell, same
+ * header, same search box: signing in adds their watchlists to what they were
+ * already looking at instead of replacing it.
+ */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
   if (!user) redirect("/login");
 
-  const plan = effectivePlan(user);
-  const trialing = isTrialing(user);
-
-  return (
-    <div className="container">
-      <nav className="nav">
-        <Link href="/dashboard" className="brand">
-          Trade<span>MyShow</span>
-        </Link>
-        <div className="links">
-          <Link href="/dashboard/compare">Compare</Link>
-          <Link href="/dashboard/settings">Settings</Link>
-          {user.role === "admin" && <Link href="/dashboard/admin">Admin</Link>}
-          <ThemeToggle />
-          <span className="dim">{user.name}</span>
-          <span className={`badge ${plan !== "free" ? "pro" : ""}`}>
-            {trialing ? "Pro trial" : plan}
-          </span>
-          <DashboardNavActions
-            plan={user.plan}
-            trialing={trialing}
-            trialDaysRemaining={trialDaysRemaining(user)}
-          />
-        </div>
-      </nav>
-      <main style={{ padding: "26px 0 60px" }}>{children}</main>
-      <CookieNotice />
-    </div>
-  );
+  return <SiteShell active="dashboard">{children}</SiteShell>;
 }

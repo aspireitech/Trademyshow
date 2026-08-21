@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "sandbox": "SANDBOX=true next start",
-    "verify": "npm run typecheck && npm run test && npm run build"
+    "verify": "npm run typecheck && npm run test && npm run build",
+    "refresh": "tsx scripts/refresh-market.ts",
+    "refresh:history": "tsx scripts/refresh-market.ts --history"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
