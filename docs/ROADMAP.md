@@ -11,15 +11,15 @@ Single source of truth for launch readiness. Updated 2026-08-19.
 
 | Area | Done | Partial | Not started | Blocks launch |
 |---|---|---|---|---|
-| Core product | 24 | 1 | 1 | 0 |
+| Core product | 27 | 1 | 1 | 0 |
 | Data & AI | 3 | 3 | 1 | 2 |
 | Auth & security | 17 | 0 | 1 | 1 |
-| Billing & growth | 10 | 2 | 0 | 1 |
+| Billing & growth | 11 | 2 | 0 | 1 |
 | Legal & compliance | 8 | 0 | 4 | 4 |
 | Infrastructure | 15 | 2 | 2 | 1 |
-| **Total** | **77** | **8** | **9** | **9** |
+| **Total** | **81** | **8** | **9** | **9** |
 
-**77 of 94 components complete (82%).** 199 automated tests plus 18 end-to-end journeys;
+**81 of 98 components complete (83%).** 199 automated tests plus 18 end-to-end journeys;
 typecheck and production build clean.
 
 **The seven remaining blockers split into two kinds.** Two are code — wiring a real market-data
@@ -56,6 +56,10 @@ decisions and purchases, not tickets.
 | Benchmark strip | ✅ | S&P, Nasdaq, small cap, bonds always in view for context | — |
 | Help centre | ✅ | 22 answers, advice question first, server-rendered with FAQ schema | — |
 | Purchase assurances | ✅ | No card, 30-day refund, pause — stated where the price is | — |
+| Live landing board | ✅ | Server-rendered movers with trend lines and score bands | — |
+| Plan gating by capability | ✅ | Compare, alerts, screens and export gated; enforced server-side | — |
+| Soft signup prompt | ✅ | After 3 distinct pages, dismissible, never blocks content | — |
+| Visitor engagement counts | ✅ | Server-side, daily-rotating hash — counts returns, cannot profile | — |
 | Multi-asset (ETFs, crypto) | ✅ | 17 funds and 3 coins alongside 35 equities, one scoring model | — |
 | Mobile responsive audit | ✅ | Playwright at iPhone viewport; asserts no horizontal page scroll | — |
 | Onboarding flow | 🔨 | Empty states now suggest starting points; no guided tour yet | — |

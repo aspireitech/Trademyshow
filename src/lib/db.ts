@@ -232,6 +232,21 @@ function open(): Database.Database {
     );
     CREATE INDEX IF NOT EXISTS idx_news_cache_symbol ON news_cache(symbol, published_at DESC);
   `);
+
+  // Visitor counts. The identifier is a daily salted hash, so it counts
+  // returning visitors within a day but cannot be linked across days.
+  conn.exec(`
+    CREATE TABLE IF NOT EXISTS visitors (
+      visitor_id TEXT NOT NULL,
+      day TEXT NOT NULL,
+      views INTEGER NOT NULL DEFAULT 1,
+      last_path TEXT,
+      first_seen_at TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL,
+      PRIMARY KEY (visitor_id, day)
+    );
+    CREATE INDEX IF NOT EXISTS idx_visitors_day ON visitors(day);
+  `);
   const cols = conn.prepare("PRAGMA table_info(digests)").all() as { name: string }[];
   if (!cols.some((c) => c.name === "period")) {
     conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");

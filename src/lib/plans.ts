@@ -33,6 +33,25 @@ export interface PlanPricing {
   annualSavingPct: number;
 }
 
+/**
+ * What each tier includes, and why.
+ *
+ * The gating follows one rule: the free tier must prove the product, and every
+ * paywall must sit at a moment of wanting rather than at the door. A visitor
+ * who cannot see a single explained move never learns whether the analysis is
+ * any good, and never converts.
+ *
+ * So free gets the whole promise at small scale — a real watchlist, a real
+ * daily insight, the score's band and every timeframe. What it does not get is
+ * the exact number behind the band. Seeing "mixed signals" and wanting to know
+ * *why* is the strongest upgrade trigger this product has, and it arrives
+ * after the value has been demonstrated rather than before.
+ *
+ * Pro then sells the habit: more lists, the weekly view, base rates, alerts,
+ * and email delivery — the thing that turns a site you remember into a message
+ * that arrives. Premium sells depth and workflow: per-holding analysis, export,
+ * and headroom, which is what a heavier user asks for unprompted.
+ */
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free: {
     maxGroups: 1,
@@ -42,6 +61,12 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     exactScore: false,
     expectations: false,
     emailDelivery: false,
+    // Two lines answer "my stock versus the market", which is the question
+    // most people arrive with. A fourth line is a power-user need.
+    maxCompare: 2,
+    maxAlerts: 0,
+    advancedMovers: false,
+    csvExport: false,
   },
   pro: {
     maxGroups: 10,
@@ -51,6 +76,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     exactScore: true,
     expectations: true,
     emailDelivery: true,
+    maxCompare: 4,
+    maxAlerts: 20,
+    advancedMovers: true,
+    csvExport: false,
   },
   premium: {
     maxGroups: 100,
@@ -60,6 +89,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     exactScore: true,
     expectations: true,
     emailDelivery: true,
+    maxCompare: 4,
+    maxAlerts: 100,
+    advancedMovers: true,
+    csvExport: true,
   },
 };
 

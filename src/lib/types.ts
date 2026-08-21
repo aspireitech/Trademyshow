@@ -165,4 +165,11 @@ export interface PlanLimits {
   /** Historical base rates for a score band. */
   expectations: boolean;
   emailDelivery: boolean;
+  /** Instruments that can sit on one comparison chart. */
+  maxCompare: number;
+  /** Score-threshold alerts this account may keep. */
+  maxAlerts: number;
+  /** 52-week high/low and other screens beyond risers and fallers. */
+  advancedMovers: boolean;
+  csvExport: boolean;
 }

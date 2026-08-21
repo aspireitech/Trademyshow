@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { THEME_BOOTSTRAP } from "@/lib/csp";
 import SandboxBanner from "@/components/SandboxBanner";
+import SignupPrompt from "@/components/SignupPrompt";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "https://trademyshow.com"),
@@ -29,6 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <SandboxBanner />
         {children}
+        <SignupPrompt />
       </body>
     </html>
   );

@@ -14,6 +14,30 @@ const no = "—";
 
 const ROWS: { label: string; free: string; pro: string; premium: string }[] = [
   {
+    label: "Compare on one chart",
+    free: `${PLAN_LIMITS.free.maxCompare} instruments`,
+    pro: `${PLAN_LIMITS.pro.maxCompare} instruments`,
+    premium: `${PLAN_LIMITS.premium.maxCompare} instruments`,
+  },
+  {
+    label: "Score alerts",
+    free: no,
+    pro: `${PLAN_LIMITS.pro.maxAlerts}`,
+    premium: `${PLAN_LIMITS.premium.maxAlerts}`,
+  },
+  {
+    label: "52-week high / low screens",
+    free: no,
+    pro: yes,
+    premium: yes,
+  },
+  {
+    label: "CSV export",
+    free: no,
+    pro: no,
+    premium: yes,
+  },
+  {
     label: "Watchlists",
     free: String(PLAN_LIMITS.free.maxGroups),
     pro: String(PLAN_LIMITS.pro.maxGroups),

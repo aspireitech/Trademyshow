@@ -71,3 +71,43 @@ test("look up any stock directly from the dashboard", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /TSLA/ })).toBeVisible();
   await expect(page.getByText(/not investment advice/i)).toBeVisible();
 });
+
+test("the landing page shows a live board before any JavaScript runs", async ({ page }) => {
+  // Server-rendered: this is the proof the product does something, so it has
+  // to be in the HTML rather than appearing after hydration.
+  await page.context().addInitScript(() => {
+    Object.defineProperty(navigator, "webdriver", { get: () => true });
+  });
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "Today's board" })).toBeVisible();
+  const rows = page.locator(".board-row");
+  await expect(rows.first()).toBeVisible();
+  expect(await rows.count()).toBeGreaterThanOrEqual(4);
+
+  // Each row carries the three things the page claims to deliver.
+  await expect(rows.first().locator(".board-change")).toBeVisible();
+  await expect(rows.first().locator(".board-spark")).toBeAttached();
+  await expect(page.locator(".board-band").first()).toBeVisible();
+
+  await expect(page.getByText(/never a list of what to buy/)).toBeVisible();
+});
+
+test("the signup prompt appears only after a few pages, and stays dismissed", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".signup-prompt")).toHaveCount(0);
+
+  await page.goto("/pricing");
+  await expect(page.locator(".signup-prompt")).toHaveCount(0);
+
+  // Third distinct page — the visitor has chosen to look around by now, which
+  // is the difference between an offer and an interruption.
+  await page.goto("/track-record");
+  await expect(page.locator(".signup-prompt")).toBeVisible({ timeout: 10000 });
+
+  await page.getByRole("button", { name: "Not now" }).click();
+  await expect(page.locator(".signup-prompt")).toHaveCount(0);
+
+  await page.goto("/help");
+  await expect(page.locator(".signup-prompt")).toHaveCount(0);
+});

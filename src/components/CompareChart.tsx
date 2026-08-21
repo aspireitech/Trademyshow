@@ -12,6 +12,7 @@ interface Series {
 interface Comparison {
   timeframe: Timeframe; series: Series[];
   bestSymbol: string | null; worstSymbol: string | null; spreadPct: number;
+  allowance: number;
 }
 
 /** Distinguishable in both themes and to the most common colour deficiencies. */
@@ -28,15 +29,21 @@ export default function CompareChart({ initial }: { initial: string[] }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<StockInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [locked, setLocked] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (symbols.length === 0) { setData(null); return; }
     const res = await fetch(`/api/stocks/compare?symbols=${symbols.join(",")}&range=${range}`);
     if (!res.ok) {
-      setError(((await res.json()) as { error?: string }).error ?? "Could not compare those.");
+      const body = (await res.json()) as { error?: string; allowance?: number };
+      // 402 is the plan limit, not a failure — show the upgrade, keep the chart
+      // that is already on screen rather than blanking it.
+      setLocked(res.status === 402 ? (body.allowance ?? 2) : null);
+      setError(body.error ?? "Could not compare those.");
       return;
     }
     setError(null);
+    setLocked(null);
     setData((await res.json()) as Comparison);
   }, [symbols, range]);
   useEffect(() => { void load(); }, [load]);
@@ -54,7 +61,12 @@ export default function CompareChart({ initial }: { initial: string[] }) {
   function add(symbol: string) {
     setQuery(""); setResults([]);
     if (symbols.includes(symbol)) return;
-    if (symbols.length >= 4) { setError("Compare up to 4 at a time."); return; }
+    const ceiling = data?.allowance ?? 4;
+    if (symbols.length >= ceiling) {
+      setLocked(ceiling);
+      setError(null);
+      return;
+    }
     setSymbols([...symbols, symbol]);
   }
 
@@ -118,7 +130,21 @@ export default function CompareChart({ initial }: { initial: string[] }) {
             </span>
           )}
         </div>
-        {error && <p className="error">{error}</p>}
+        {locked !== null ? (
+          <div className="callout upsell" style={{ marginTop: 12 }}>
+            <strong>Comparing {locked} at once is included on your plan.</strong>{" "}
+            <span className="dim">
+              Pro puts four instruments on one axis — a holding, its sector, its index and a rival,
+              in a single glance.
+            </span>
+            <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Link className="btn small" href="/pricing">See Pro</Link>
+              <button className="btn small secondary" onClick={() => setLocked(null)}>Not now</button>
+            </div>
+          </div>
+        ) : error ? (
+          <p className="error">{error}</p>
+        ) : null}
 
         {data && data.series.length > 0 && (
           <>

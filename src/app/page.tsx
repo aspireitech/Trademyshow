@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { buildTrackRecord } from "@/lib/insight/trackrecord";
 import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
+import LandingBoard from "@/components/LandingBoard";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -144,7 +145,11 @@ export default async function LandingPage() {
             No credit card. Full access for {TRIAL_DAYS} days, then a free plan forever.
           </p>
 
-          <div className="card digest-preview rise d4 draw">
+          <div className="board-wrap rise d4">
+            <LandingBoard />
+          </div>
+
+          <div className="card digest-preview rise d5 draw">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
               <span className="badge">
                 <span className="live-dot" aria-hidden="true" />
