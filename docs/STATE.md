@@ -97,7 +97,13 @@ test suite time out when the universe grew from 61 to 150 symbols.
   visitors and a list picker for signed-in ones. Alerts now watch a price as
   well as a score.
 - **Market news and a newsletter sign-up** below the board, plus a `/news` page.
-- 383 unit tests passing.
+- 383 unit tests and 34 e2e specs passing.
+- **Every page fits a phone.** The left rail becomes a scrolling strip below
+  980px instead of vanishing (a phone previously had no navigation at all), the
+  header action row wraps, and wide tables and charts scroll inside their own
+  container rather than taking the page with them.
+- Settings → "Your data" now exists. The nav had linked to it for weeks and the
+  route was never committed, because `.gitignore` had an unanchored `data/`.
 
 ## 5. Next up
 
@@ -117,9 +123,6 @@ test suite time out when the universe grew from 61 to 150 symbols.
 - [ ] Re-run the contrast audit over the new `.gsearch-*`, `.act-*`, `.stock-*`
       and `.news-*` components.
 - [ ] Republish `docs/tracker.html`.
-- [ ] Run the Playwright e2e suite against the rebuilt pages — the specs that
-      assert on the old hero markup and on `/dashboard/stocks/...` will need
-      updating.
 - [ ] Sector and market-cap filters on the screens, the way stockanalysis.com
       filters its gainers list.
 
@@ -146,6 +149,16 @@ test suite time out when the universe grew from 61 to 150 symbols.
   to unlink with `EPERM`.
 - Contrast: coloured text on a tint of its own hue caps around 4.1:1. Measure
   against the composited result, not the token.
+- `min-width: auto` on a flex or grid item is what turns a scroll container into
+  a page-wide overflow: the item sizes to its widest child, so the scroll box
+  has nothing left to scroll. `.card`, `.shell-main` and `.settings-content`
+  carry `min-width: 0` for this reason, and wide content uses `.scroll-x`.
+- `flex: none` on a row means it is never asked to be narrower than its
+  contents, so `flex-wrap` inside it never fires. The header action row needs
+  both `flex: 1 1 auto` and `min-width: 0` to wrap on a phone.
+- A redirect for a path under `/dashboard` cannot live in a page there: the
+  layout's auth check redirects to /login first. Use `redirects()` in
+  `next.config.mjs`.
 - The cloud sandbox blocks outbound HTTPS to finance hosts. Anything touching a
   real vendor has to be verified on a machine with open network.
 - A running `next start` keeps port 3000 and the next one fails with

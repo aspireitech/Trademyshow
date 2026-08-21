@@ -246,7 +246,7 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
             </div>
           </div>
         ) : (
-          <div style={{ overflowX: "auto", marginTop: 12 }}>
+          <div className="scroll-x" style={{ marginTop: 12 }}>
             <table className="holdings">
               <thead>
                 <tr>

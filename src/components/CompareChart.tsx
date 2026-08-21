@@ -148,7 +148,7 @@ export default function CompareChart({ initial }: { initial: string[] }) {
 
         {data && data.series.length > 0 && (
           <>
-            <div style={{ overflowX: "auto", marginTop: 14 }}>
+            <div className="scroll-x" style={{ marginTop: 14 }}>
               <svg
                 viewBox={`0 0 ${W} ${H}`}
                 className="compare-svg"

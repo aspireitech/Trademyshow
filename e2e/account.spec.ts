@@ -224,14 +224,17 @@ test("the help centre answers the advice question without JavaScript", async ({ 
   await expect(page.getByText(/never tells you what to buy, sell or hold/)).toBeVisible();
 });
 
-test("the dashboard shows what moved today", async ({ page }) => {
+test("the dashboard shows the same market board as the home page", async ({ page }) => {
+  // Signing in used to replace the board with a different layout, which threw
+  // away whatever the visitor had just been reading.
   await signUp(page, "movers");
-  await expect(page.getByRole("heading", { name: "What moved today" })).toBeVisible();
-  await expect(page.locator("text=/\\d+ up, \\d+ down/")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Markets today" })).toBeVisible();
+  await expect(page.locator("table.mkt-table tbody tr").first()).toBeVisible();
+  await expect(page.locator("text=/\\d+ up · \\d+ down/")).toBeVisible();
 
-  // Risers and fallers are separate tabs; neither is a ranking of what to buy.
-  await page.getByRole("button", { name: "Fallers" }).click();
-  await expect(page.getByText(/Biggest moves that already happened/)).toBeVisible();
+  // The search box and left rail follow you in, rather than disappearing.
+  await expect(page.getByRole("combobox", { name: /Search for a company/ })).toBeVisible();
+  await expect(page.locator(".side-nav")).toBeVisible();
 });
 
 test("stocks can be compared on one rebased chart", async ({ page }) => {
