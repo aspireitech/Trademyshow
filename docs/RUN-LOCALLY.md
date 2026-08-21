@@ -119,7 +119,8 @@ git diff HEAD@{1} --name-only | Select-String "package.json|package-lock.json"
 #    …if that printed nothing, skip npm ci entirely.
 npm ci
 
-# 4. Rebuild and start
+# 4. Rebuild and start — the old process must be gone, or port 3000 is taken
+#    and it would serve the previous build anyway
 npm run build
 npm start
 ```
@@ -140,7 +141,7 @@ npm ci
 | What you see | What to do |
 | --- | --- |
 | `npm : command not found` | Node did not install, or the terminal predates the install. Open a new terminal. |
-| `EADDRINUSE` / port 3000 in use | Something else is on that port. `npm start -- -p 3001` and use `localhost:3001`. |
+| `EADDRINUSE` / port 3000 in use | An earlier server is still running. `Get-Process node \| Stop-Process -Force`, then `npm start`. Restarting matters: the running process holds the *previous* build in memory and would keep serving old pages. To run both, use `npm start -- -p 3001`. |
 | Build fails on `better-sqlite3` | Windows needs build tools: `npm install --global windows-build-tools`, or reinstall Node with "Tools for Native Modules" ticked. |
 | Page loads but looks like plain text | A stale build. Delete the `.next` folder and run `npm run build` again. |
 | Want to start over with fresh data | Delete the `data` folder, then `npm run seed`. |
