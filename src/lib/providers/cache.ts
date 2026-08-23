@@ -15,15 +15,27 @@ import type { NewsItem, PricePoint, Quote, QuoteStats, StockInfo } from "../type
  * it.
  */
 
-export function cacheQuote(q: Quote, fetchedAt: Date = new Date()): void {
+export function cacheQuote(q: Quote, fetchedAt: Date = new Date(), vendor?: string): void {
   getDb()
     .prepare(
-      "INSERT INTO quote_cache (symbol, price, prev_close, change_pct, fetched_at)\n" +
-        "VALUES (?, ?, ?, ?, ?)\n" +
+      "INSERT INTO quote_cache (symbol, price, prev_close, change_pct, fetched_at, vendor)\n" +
+        "VALUES (?, ?, ?, ?, ?, ?)\n" +
         "ON CONFLICT(symbol) DO UPDATE SET price = excluded.price, prev_close = excluded.prev_close,\n" +
-        "  change_pct = excluded.change_pct, fetched_at = excluded.fetched_at",
+        "  change_pct = excluded.change_pct, fetched_at = excluded.fetched_at,\n" +
+        "  vendor = excluded.vendor",
     )
-    .run(q.symbol.toUpperCase(), q.price, q.prevClose, q.changePct, fetchedAt.toISOString());
+    .run(
+      q.symbol.toUpperCase(), q.price, q.prevClose, q.changePct,
+      fetchedAt.toISOString(), vendor ?? null,
+    );
+}
+
+/** Which vendor supplied the cached quote, or null when nothing is cached. */
+export function quoteVendor(symbol: string): string | null {
+  const row = getDb()
+    .prepare("SELECT vendor FROM quote_cache WHERE symbol = ?")
+    .get(symbol.toUpperCase()) as { vendor: string | null } | undefined;
+  return row?.vendor ?? null;
 }
 
 interface QuoteRow {

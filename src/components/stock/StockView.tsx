@@ -35,7 +35,7 @@ interface Stats {
   exchange: string | null;
   week52High: number;
   week52Low: number;
-  marketCap: number;
+  marketCap: number | null;
   marketCapEstimated: boolean;
 }
 
@@ -201,7 +201,9 @@ export default function StockView({ symbol }: { symbol: string }) {
           <dl>
             <div>
               <dt>Market cap{stats.marketCapEstimated ? " *" : ""}</dt>
-              <dd className="mono">${compact(stats.marketCap)}</dd>
+              <dd className="mono">
+                {stats.marketCap === null ? "—" : `$${compact(stats.marketCap)}`}
+              </dd>
             </div>
             <div>
               <dt>Volume</dt>
@@ -255,6 +257,14 @@ export default function StockView({ symbol }: { symbol: string }) {
             <p className="dim stock-foot">
               * Market cap is estimated from the live price and our stored share count. The feed
               in use does not publish a share count.
+            </p>
+          )}
+
+          {stats.marketCap === null && (
+            <p className="dim stock-foot">
+              Market cap is blank because neither the feed nor our own records carry a share
+              count for {info.symbol}. The price above is real; a market cap invented to fill the
+              gap would not be.
             </p>
           )}
         </div>

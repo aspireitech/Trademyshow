@@ -1,4 +1,5 @@
-import { getHistory, getStockInfo } from "../marketdata";
+import { getHistory, getQuote, getStockInfo } from "../marketdata";
+import { sourceFor, sourceText } from "../providers/feed";
 import { scoreStock } from "./score";
 import type { Timeframe } from "../types";
 
@@ -18,6 +19,13 @@ import type { Timeframe } from "../types";
 export const MAX_COMPARE = 4;
 
 export interface ComparisonSeries {
+  /** Last price, today's move, and where the number came from. Shown beside
+   *  the rebased return because "up 40% over a year" means something different
+   *  at $9 than at $900 — and because a return with no visible price is a
+   *  number the reader cannot check against anywhere else. */
+  price: number;
+  changePct: number;
+  source: string;
   symbol: string;
   name: string;
   sector: string;
@@ -60,11 +68,16 @@ export function compareSymbols(
       pct: Number((((p.price - base) / base) * 100).toFixed(2)),
     }));
     const scored = scoreStock(symbol, asOf);
+    const quote = getQuote(symbol, asOf);
+    const label = sourceFor(symbol);
 
     series.push({
       symbol,
       name: info.name,
       sector: info.sector,
+      price: quote.price,
+      changePct: quote.changePct,
+      source: sourceText(label),
       points,
       totalReturnPct: points[points.length - 1].pct,
       score: scored ? Math.round(scored.score) : null,

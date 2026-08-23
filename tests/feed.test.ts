@@ -9,7 +9,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 process.env.DB_PATH = ":memory:";
 
 import { resetDbForTests } from "@/lib/db";
-import { cacheQuote, cacheQuoteStats, knownSymbol, searchDirectory } from "@/lib/providers/cache";
+import {
+  cacheQuote, cacheQuoteStats, knownSymbol, quoteVendor, searchDirectory,
+} from "@/lib/providers/cache";
 import {
   liveDataEnabled, marketDataChain, providerChoice, refreshMany, refreshSymbol,
   resolveSymbol, searchSymbols, sourceFor, sourceText,
@@ -263,12 +265,13 @@ describe("what the UI is allowed to claim", () => {
     expect(sourceText(label)).toContain("Simulated");
   });
 
-  it("calls a fresh cached quote delayed, and names the vendor", () => {
+  it("calls a fresh cached quote delayed, and names the vendor that supplied it", () => {
     process.env.MARKET_DATA_PROVIDER = "yahoo";
-    cacheQuote({ symbol: "AAPL", price: 210, prevClose: 200, changePct: 5 });
+    cacheQuote({ symbol: "AAPL", price: 210, prevClose: 200, changePct: 5 }, new Date(), "yahoo");
     const label = sourceFor("AAPL");
     expect(label.source).toBe("delayed");
     expect(sourceText(label)).toContain("Yahoo Finance");
+    expect(quoteVendor("AAPL")).toBe("yahoo");
   });
 
   it("demotes a quote older than a trading day to an end-of-day close", () => {
@@ -290,5 +293,31 @@ describe("what the UI is allowed to claim", () => {
     process.env.MARKET_DATA_PROVIDER = "mock";
     cacheQuote({ symbol: "AAPL", price: 210, prevClose: 200, changePct: 5 });
     expect(sourceFor("AAPL").source).toBe("simulated");
+  });
+});
+
+describe("the label names the vendor that actually answered", () => {
+  it("does not credit the whole chain when one vendor supplied the price", async () => {
+    // "Yahoo Finance / Stooq" on every row credits a vendor that may have
+    // supplied nothing — the label has to reflect what happened, not what was
+    // configured.
+    process.env.MARKET_DATA_PROVIDER = "auto";
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (String(url).includes("yahoo")) return new Response("no", { status: 500 });
+      return new Response("Date,Open,High,Low,Close,Volume\n2026-08-20,1,1,1,10\n2026-08-21,1,1,1,11\n");
+    }));
+
+    const res = await refreshSymbol("SNDK");
+    expect(res.vendor).toBe("stooq");
+
+    const label = sourceFor("SNDK");
+    expect(label.vendor).toContain("Stooq");
+    expect(label.vendor).not.toContain("Yahoo");
+  });
+
+  it("stays vague rather than guessing for a quote cached before vendors were recorded", () => {
+    process.env.MARKET_DATA_PROVIDER = "auto";
+    cacheQuote({ symbol: "AAPL", price: 210, prevClose: 200, changePct: 5 });
+    expect(sourceFor("AAPL").vendor).toBe("a market data vendor");
   });
 });

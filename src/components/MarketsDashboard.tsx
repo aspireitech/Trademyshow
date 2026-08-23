@@ -30,7 +30,8 @@ function sparkPath(values: number[], w = 110, h = 30): string {
 }
 
 /** 1.23B / 45.6M / 789K — the way every market screen abbreviates size. */
-function compact(n: number): string {
+function compact(n: number | null): string {
+  if (n === null || !Number.isFinite(n)) return "—";
   const abs = Math.abs(n);
   if (abs >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
   if (abs >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
@@ -201,7 +202,9 @@ function Row({ m, i, is52, view }: { m: Mover; i: number; is52: boolean; view: M
         </td>
       )}
       <td className="mono mkt-right dim mkt-hide-sm">{compact(m.volume)}</td>
-      <td className="mono mkt-right dim mkt-hide-sm">${compact(m.marketCap)}</td>
+      <td className="mono mkt-right dim mkt-hide-sm">
+        {m.marketCap === null ? "—" : `$${compact(m.marketCap)}`}
+      </td>
       <td>
         <svg className="board-spark" viewBox="0 0 110 30" aria-hidden="true" preserveAspectRatio="none">
           <path d={sparkPath(m.spark)} fill="none" strokeWidth="1.6"

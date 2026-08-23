@@ -42,6 +42,8 @@ npm run verify:prices    are the prices real? prints vendor vs. what we show
 | The AI narrates arithmetic it cannot alter | Publisher exclusion, Advisers Act §202(a)(11)(D), *Lowe v. SEC*. If the model could change the number it would be advice. |
 | No forecasting language anywhere | §215(a) anti-waiver: disclaimers cannot cure a statutory breach. A wording audit enforces this in tests. |
 | Real data is the default; `mock` is the opt-out | A default that shows invented prices unless someone sets a variable is a default that shows invented prices. |
+| A blank cell beats an invented number | Market cap is null for a symbol we hold no share count for — multiplying a hashed share count by a real price produced a fabricated cap beside a real one (this is what made SNDK look wrong). |
+| The source label names the vendor that answered | Recorded on the quote row, not inferred from the configured chain. "Yahoo Finance / Stooq" credited a vendor that may have supplied nothing. |
 | No number is printed without its provenance | The keyless endpoints are not a data licence. `sourceFor()` is the single decider; anything unsourced is labelled simulated. |
 | Real and simulated figures never mix on one screen | A simulated volume beside a real price is the worst of both. Blank is honest. |
 | Stock pages are public; the paywall is the exact score | The product cannot be judged before signup if you cannot look at one stock. |
@@ -82,6 +84,7 @@ components/MarketsDashboard.tsx  index strip + breadth + 50-row table
 components/stock/StockView.tsx   the public stock page (the big one)
 components/stock/{WatchlistButton,AlertButton,SignupGate,FullChart}.tsx
 components/AdminFooterStats.tsx  admin-only footer counters (server-gated)
+components/BrandMark.tsx     logo lockup; app/icon.svg is the same mark
 app/page.tsx  the board  ·  app/stocks/[symbol]/  ·  app/markets/[view]/
 app/globals.css  ~2000 lines, appended in themed sections
 ```
@@ -115,11 +118,13 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [ ] **Verify the live feed against the real internet.** Written and
-      unit-tested in a sandbox that blocks `query1.finance.yahoo.com` and
-      `stooq.com`, so the adapters have never completed a real call. Run
-      `npm run verify:prices` on an open network. If Yahoo's shape drifted,
-      `lib/providers/yahoo.ts` is the only file to touch.
+- [x] ~~Verify the live feed against the real internet.~~ **Confirmed working**
+      by the owner on 2026-08-23: real Apple and Amazon prices on a machine
+      with open network. The sandbox still blocks the finance hosts, so any
+      future vendor change has to be verified outside it.
+- [ ] Anchors for instruments outside the shipped 150, or a share-count source,
+      so market cap is not blank for them. Blank is correct today; a real
+      figure would be better.
 - [ ] Fundamentals the keyless feeds lack: P/E, EPS, revenue, dividend, shares
       outstanding, earnings date. Needs a licensed feed or SEC company-facts;
       until then those rows are absent rather than invented.

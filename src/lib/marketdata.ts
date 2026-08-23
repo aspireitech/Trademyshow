@@ -444,6 +444,11 @@ function anchorFor(symbol: string): [number, number] {
   return [20 + (seed % 380), 5 + (seed % 200)];
 }
 
+/** True when this symbol has a shipped anchor rather than a hashed stand-in. */
+export function hasAnchor(symbol: string): boolean {
+  return ANCHORS[symbol.toUpperCase()] !== undefined;
+}
+
 /** Shares outstanding implied by the anchor pair, so market cap tracks price. */
 export function sharesOutstanding(symbol: string): number {
   const [price, capB] = anchorFor(symbol);
@@ -458,15 +463,24 @@ export function sharesOutstanding(symbol: string): number {
  * accurate to within a buyback or two and is marked as an estimate wherever it
  * is shown. Inventing precision would be worse than admitting the estimate.
  */
-export function marketCap(symbol: string, asOf: Date = new Date()): number {
+export function marketCap(symbol: string, asOf: Date = new Date()): number | null {
   const stats = fromCache(() => cachedQuoteStats(symbol));
   if (stats?.marketCap) return stats.marketCap;
+
+  // No vendor figure and no shipped share count: there is nothing to compute
+  // from. `anchorFor` would happily return a hash-derived share count, and
+  // multiplying that by a real price produces an invented market cap sitting
+  // beside a real one — which is exactly the mixing this product refuses to
+  // do. A blank cell is the honest answer for a symbol we do not carry.
+  if (!hasAnchor(symbol)) return null;
+
   return sharesOutstanding(symbol) * getQuote(symbol, asOf).price;
 }
 
 /** True when the market cap above is our arithmetic rather than the vendor's. */
 export function marketCapIsEstimated(symbol: string): boolean {
-  return !fromCache(() => cachedQuoteStats(symbol))?.marketCap;
+  if (fromCache(() => cachedQuoteStats(symbol))?.marketCap) return false;
+  return hasAnchor(symbol);
 }
 
 /**

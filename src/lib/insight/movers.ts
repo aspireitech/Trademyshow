@@ -32,7 +32,8 @@ export interface Mover {
   pctFrom52wLow: number;
   /** Session volume and market cap, so a row can be read without a second pass. */
   volume: number;
-  marketCap: number;
+  /** Null for an instrument we hold no share count for — never a guess. */
+  marketCap: number | null;
   /** Present only where the scoring engine has enough history. */
   score: number | null;
   band: string | null;

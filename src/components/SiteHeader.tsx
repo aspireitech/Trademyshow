@@ -2,6 +2,7 @@ import Link from "next/link";
 import { currentUser } from "@/lib/auth";
 import { effectivePlan, isTrialing, trialDaysRemaining } from "@/lib/plans";
 import DashboardNavActions from "./DashboardNavActions";
+import BrandMark from "./BrandMark";
 import GlobalSearch from "./GlobalSearch";
 import ThemeToggle from "./ThemeToggle";
 
@@ -20,8 +21,8 @@ export default async function SiteHeader() {
 
   return (
     <header className="topbar">
-      <Link href="/" className="brand">
-        Trade<span>MyShow</span>
+      <Link href="/" className="brand" aria-label="TradeMyShow home">
+        <BrandMark />
       </Link>
 
       <GlobalSearch />

@@ -1,6 +1,6 @@
 import {
   cacheCloses, cacheNews, cacheQuote, cacheQuoteStats, cachedQuote, cachedQuoteStats,
-  knownSymbol, quoteAgeHours, rememberSymbol, searchDirectory,
+  knownSymbol, quoteAgeHours, quoteVendor, rememberSymbol, searchDirectory,
 } from "./cache";
 import { finnhubMarketData, finnhubNews } from "./finnhub";
 import { stooqMarketData } from "./stooq";
@@ -97,14 +97,14 @@ export async function refreshSymbol(
       if (provider.fetchQuoteWithStats) {
         const res = await provider.fetchQuoteWithStats(symbol);
         if (res) {
-          cacheQuote(res.quote);
+          cacheQuote(res.quote, new Date(), provider.name);
           cacheQuoteStats(res.stats);
           wrote = true;
         }
       } else {
         const quote = await provider.fetchQuote(symbol);
         if (quote) {
-          cacheQuote(quote);
+          cacheQuote(quote, new Date(), provider.name);
           wrote = true;
         }
       }
@@ -304,23 +304,29 @@ export function sourceFor(symbol: string): SourceLabel {
   const source: DataSource = ageHours <= 12 ? "delayed" : "eod";
   return {
     source,
-    vendor: vendorLabel(),
+    // The vendor recorded against this quote, not the configured chain. The
+    // chain is a list of who we would ask; only one of them answered, and
+    // naming both credits a vendor that may have supplied nothing.
+    vendor: vendorLabel(quoteVendor(symbol)),
     asOf: stats?.quoteTime ?? null,
   };
 }
 
-function vendorLabel(): string {
-  switch (providerChoice()) {
+/** Display name for a vendor id, falling back when the row predates the column. */
+export function vendorLabel(name: string | null): string {
+  switch (name) {
     case "yahoo":
       return "Yahoo Finance";
     case "stooq":
-      return "Stooq";
+      return "Stooq (end of day)";
     case "finnhub":
       return "Finnhub";
     case "mock":
       return "TradeMyShow engine";
     default:
-      return "Yahoo Finance / Stooq";
+      // Cached before the vendor was recorded. "A market data vendor" is
+      // vague, but it is true, which beats naming one at random.
+      return "a market data vendor";
   }
 }
 

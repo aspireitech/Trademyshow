@@ -211,7 +211,11 @@ function open(): Database.Database {
       price REAL NOT NULL,
       prev_close REAL NOT NULL,
       change_pct REAL NOT NULL,
-      fetched_at TEXT NOT NULL
+      fetched_at TEXT NOT NULL,
+      -- Which vendor actually answered. Without it the UI can only name the
+      -- configured chain ("Yahoo Finance / Stooq"), which credits a vendor
+      -- that may not have supplied the number on screen.
+      vendor TEXT
     );
     CREATE TABLE IF NOT EXISTS close_cache (
       symbol TEXT NOT NULL,
@@ -301,6 +305,11 @@ function open(): Database.Database {
     );
     CREATE INDEX IF NOT EXISTS idx_visitors_day ON visitors(day);
   `);
+  const quoteCols = conn.prepare("PRAGMA table_info(quote_cache)").all() as { name: string }[];
+  if (!quoteCols.some((c) => c.name === "vendor")) {
+    conn.exec("ALTER TABLE quote_cache ADD COLUMN vendor TEXT");
+  }
+
   // Alerts began as score thresholds only. A price alert is what people
   // actually ask for first, so the row now says which kind it is; existing
   // rows are score alerts, which is what they were.
