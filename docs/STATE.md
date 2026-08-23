@@ -106,6 +106,14 @@ test suite time out when the universe grew from 61 to 150 symbols.
   the vendor symbol by symbol and exits non-zero on disagreement, and
   `/dashboard/admin` → Market data shows coverage plus per-symbol provenance
   with a "check against Yahoo" link per row.
+- **Update scripts fetch the right branch and refresh prices.** Both took a
+  hardcoded old branch and used `git pull`, which only moves the branch you are
+  standing on — so an update could appear to succeed and change nothing. They
+  now fetch/checkout, take `-Branch`/`$BRANCH`, run `npm run refresh`, and warn
+  when `MARKET_DATA_PROVIDER=mock` is pinning the install to simulated data.
+- `.env.example` no longer ships `MARKET_DATA_PROVIDER=mock`, which was copied
+  into every install and was the single most likely reason a correct deployment
+  still showed invented prices.
 - 390 unit tests and 38 e2e specs passing.
 - **Every page fits a phone.** The left rail becomes a scrolling strip below
   980px instead of vanishing (a phone previously had no navigation at all), the

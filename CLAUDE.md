@@ -46,6 +46,11 @@ npm run seed           # seed the SQLite database
 ## Deploying an update to a running machine
 
 ```
-.\scripts\update.ps1   # Windows: stop server, pull, rebuild
-sudo ./scripts/update.sh # Linux/Azure VM: pull, rebuild, restart the service
+.\scripts\update.ps1   # Windows: stop server, fetch branch, rebuild, refresh prices
+sudo ./scripts/update.sh # Linux/Azure VM: same, then restart the service
 ```
+
+Both take the branch as a parameter and default to the one above. They fetch
+and check out rather than `git pull`, because a pull only moves the branch you
+are standing on. After either, `npm run verify:prices` says whether the prices
+on the site are real.

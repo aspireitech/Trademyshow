@@ -102,31 +102,67 @@ npm run verify     # typecheck + tests + build, all three
 
 ### Updating to the newest code
 
-**Stop the server first.** `npm ci` deletes and rebuilds `node_modules`, and on
-Windows it cannot delete a file a running process still has open — the database
-module in particular. Interrupting it half-way leaves the install broken and
-`next` missing.
+**One command does all of it:**
+
+```powershell
+.\scripts\update.ps1
+```
+
+It stops the server, fetches and checks out the right branch, reinstalls only
+if the lockfile moved, rebuilds, and refreshes the market cache. Then start the
+site with `npm start`.
+
+To pull a different branch: `.\scripts\update.ps1 -Branch some-other-branch`.
+
+**Doing it by hand**, if you would rather see each step:
 
 ```powershell
 # 1. Stop it: Ctrl+C in the window running the server. Then make sure:
 Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 
-# 2. Get the code
-git pull
+# 2. Get the code. `git pull` alone only updates the branch you are standing
+#    on — which does nothing when the work landed on a different one.
+git fetch origin claude/landing-dashboard-stock-data-5fngt1
+git checkout -B claude/landing-dashboard-stock-data-5fngt1 origin/claude/landing-dashboard-stock-data-5fngt1
 
 # 3. Only reinstall if the dependency list actually changed:
 git diff HEAD@{1} --name-only | Select-String "package.json|package-lock.json"
 #    …if that printed nothing, skip npm ci entirely.
 npm ci
 
-# 4. Rebuild and start — the old process must be gone, or port 3000 is taken
-#    and it would serve the previous build anyway
+# 4. Rebuild — the old process must be gone, or port 3000 is taken and it
+#    would serve the previous build anyway
 npm run build
+
+# 5. Fill the market cache with real prices. Nothing else does this, and
+#    without it every screen correctly reports simulated data.
+npm run refresh
+
+# 6. Start, and check the prices are real
 npm start
+npm run verify:prices     # in a second terminal
 ```
 
 Most pulls change no dependencies, so step 3 is usually skippable — which also
 makes the update far faster.
+
+**Why step 5 exists.** The site never calls a vendor while rendering a page; it
+reads a local cache, and `npm run refresh` is what fills it. The first run also
+pulls five years of daily closes, so it takes a minute or two; later runs take
+seconds. Schedule it every few minutes during market hours (Task Scheduler on
+Windows) or the prices go stale and the labels change to "End-of-day close".
+
+**If prices still say "Simulated data"** after all that, the usual cause is one
+line in your `.env`:
+
+```
+MARKET_DATA_PROVIDER=mock
+```
+
+That switches every vendor off. Delete the line — real data needs no setting
+and no API key — then run `npm run refresh` again. `npm run verify:prices`
+prints exactly which vendor failed and why, and the admin dashboard has the
+same thing under **Market data**.
 
 **If `npm ci` still fails with EPERM**, something is holding a file. Close your
 editor, pause antivirus scanning of the folder, then:
@@ -145,6 +181,8 @@ npm ci
 | Build fails on `better-sqlite3` | Windows needs build tools: `npm install --global windows-build-tools`, or reinstall Node with "Tools for Native Modules" ticked. |
 | Page loads but looks like plain text | A stale build. Delete the `.next` folder and run `npm run build` again. |
 | Want to start over with fresh data | Delete the `data` folder, then `npm run seed`. |
+| Prices look wrong, or say "Simulated data" | The cache is empty or `MARKET_DATA_PROVIDER=mock` is set in `.env`. Run `npm run verify:prices` — it names the vendor that failed and why. |
+| Update ran but the site looks unchanged | A server was still running: it holds the previous build in memory and keeps serving it. `Get-Process node \| Stop-Process -Force`, then `npm start`. |
 
 ## What is different from the live version
 
