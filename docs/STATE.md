@@ -4,8 +4,11 @@
 session costs almost nothing: the map below says which file owns what, so work
 starts by opening two or three known files instead of searching the codebase.
 
-Status: branch `claude/landing-dashboard-stock-data-5fngt1` · Node 22 ·
+Status: branch `claude/landing-dashboard-stock-data-5fngt1`, open as
+[PR #9](https://github.com/aspireitech/Trademyshow/pull/9) · Node 22 ·
 428 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-23.
+
+Pushing to the branch updates that PR — there is no second one to open.
 
 `tests/docs-map.test.ts` asserts every path in the map below exists and that
 this file stays short enough to be worth reading every time. If you rename a
