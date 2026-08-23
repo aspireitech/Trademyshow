@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { coverage, historyMissing, refreshMarket, type RefreshSummary } from "@/lib/marketrefresh";
 import { providerChoice, sourceText, sourceFor } from "@/lib/providers/feed";
+import { quoteAgeHours } from "@/lib/providers/cache";
+import { getQuote, symbolStats } from "@/lib/marketdata";
 
 /**
  * Fill the market cache on demand.
@@ -26,15 +28,39 @@ let inFlight: Promise<RefreshSummary> | null = null;
 let lastRunAt = 0;
 let lastSummary: RefreshSummary | null = null;
 
+/**
+ * A handful of liquid names anyone can check against a public quote page in
+ * ten seconds. Chosen to span the failure modes: a mega cap, a slow-moving
+ * pharma, an index tracker, and a coin that trades at the weekend.
+ */
+const SAMPLE = ["AAPL", "AMZN", "JNJ", "SPY", "BTC-USD"];
+
 export async function GET() {
   const cov = coverage();
+
+  // Per-symbol provenance, so "is this real?" is answerable by looking rather
+  // than by trusting a percentage.
+  const sample = SAMPLE.map((symbol) => {
+    const label = sourceFor(symbol);
+    const stats = symbolStats(symbol);
+    return {
+      symbol,
+      price: getQuote(symbol).price,
+      source: label.source,
+      text: sourceText(label),
+      ageHours: quoteAgeHours(symbol),
+      quoteTime: stats?.quoteTime ?? null,
+      exchange: stats?.exchange ?? null,
+    };
+  });
+
   return NextResponse.json({
     provider: providerChoice(),
     coverage: cov,
     historyMissing: historyMissing(),
     lastRunAt: lastRunAt ? new Date(lastRunAt).toISOString() : null,
     lastSummary,
-    sample: sourceText(sourceFor("AAPL")),
+    sample,
   });
 }
 

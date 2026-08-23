@@ -25,6 +25,7 @@ cannot copy a history.
 | No number is printed without its provenance | Yahoo's and Stooq's keyless endpoints are not a data licence, so quotes are labelled delayed or end-of-day, and anything the feed could not supply is labelled simulated rather than dressed up as a price. `sourceFor()` is the single decider. |
 | Real and simulated figures are never mixed on one screen | A simulated volume beside a real price is the worst of both. Under a real feed only what the vendor supplied is filled in; a blank cell is honest. Under the simulation it fills everything, because the page is already labelled. |
 | Stock pages are public; the paywall is the exact score | The product cannot be judged before signing up if a visitor cannot look at one stock. Signed-out visitors get exactly the free plan's view. |
+| Traffic counters say "visitor-days", not "unique visitors" | The identifying hash is re-salted daily so it cannot be linked across days — that is what keeps this from being a tracking system. One person on three days is three visitor-days. Naming it accurately costs nothing; naming it "unique visitors" would have the operator making decisions on a number inflated by their own return visitors. |
 | The free plan keeps 3 alerts, not 0 | An alert is what earns the second visit. A free tier that cannot set one never gets it. |
 | Free tier proves the product; the exact score is the upgrade trigger | Free: 1 watchlist, 2-way compare, 15 rows on 52-week screens. Pro/Premium unlock the rest. |
 
@@ -97,7 +98,15 @@ test suite time out when the universe grew from 61 to 150 symbols.
   visitors and a list picker for signed-in ones. Alerts now watch a price as
   well as a score.
 - **Market news and a newsletter sign-up** below the board, plus a `/news` page.
-- 383 unit tests and 34 e2e specs passing.
+- **Admin-only visitor counters** in the page footer (total views, visitor-days,
+  repeats, unique today, returned today, views per visit), gated server-side so
+  they are absent from the HTML for everyone else. The fuller panel stays on
+  `/dashboard/admin`.
+- **A way to validate the prices**: `npm run verify:prices` compares us against
+  the vendor symbol by symbol and exits non-zero on disagreement, and
+  `/dashboard/admin` → Market data shows coverage plus per-symbol provenance
+  with a "check against Yahoo" link per row.
+- 390 unit tests and 38 e2e specs passing.
 - **Every page fits a phone.** The left rail becomes a scrolling strip below
   980px instead of vanishing (a phone previously had no navigation at all), the
   header action row wraps, and wide tables and charts scroll inside their own

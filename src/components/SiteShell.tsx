@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AdminFooterStats from "./AdminFooterStats";
 import CookieNotice from "./CookieNotice";
 import SiteHeader from "./SiteHeader";
 import SiteSidebar from "./SiteSidebar";
@@ -29,6 +30,11 @@ export default function SiteShell({
         <main className="shell-content">{children}</main>
 
         <footer className="site">
+          {/* Renders nothing at all unless the signed-in account is an
+              administrator — the check is server-side, so the numbers never
+              reach anyone else's browser. */}
+          <AdminFooterStats />
+
           <div className="shell-foot">
             <p>
               TradeMyShow provides analytics and educational content only. Nothing here is

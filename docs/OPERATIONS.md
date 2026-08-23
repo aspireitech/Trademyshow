@@ -48,7 +48,28 @@ A refresh is bounded by a wall-clock budget, so an unreachable vendor costs one
 skipped run rather than a request that never returns. If the badge on the
 market board reads "Simulated", the schedule is the first thing to check —
 `GET /api/market/refresh` reports coverage, the provider in use, and the last
-run.
+run, and `/dashboard/admin` → Market data shows the same thing with a
+per-symbol provenance table.
+
+`npm run verify:prices` compares what the site shows against what the vendor
+answers, symbol by symbol, and exits non-zero when they disagree. Worth running
+after a deploy: it is the difference between believing the feed works and
+knowing it does.
+
+## 2b. Traffic counters
+
+Visitor counts appear in two places, both administrator-only and both gated
+server-side, so the numbers are never sent to anyone else's browser:
+
+- a compact line in the page footer, on every page — total views, visitor-days,
+  repeats, unique today, returned today, views per visit;
+- the fuller Traffic panel on `/dashboard/admin`.
+
+"Visitor-days" is not "unique visitors" and the wording is deliberate. The
+identifying hash is re-salted every day, so yesterday's identifier cannot be
+linked to today's — which is what stops this being a tracking system, and means
+one person visiting on three days counts three times in the all-time figure.
+Within a single day the count really is unique people.
 
 The jobs are idempotent by design — a duplicate daily run sends nothing,
 because `last_digest_sent_at` gates on a 20-hour window. Retrying a failed run

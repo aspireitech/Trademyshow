@@ -641,7 +641,15 @@ footer.site {
 .stat {
   position: relative;
   padding-left: 16px;
+  /* Value above label. Without this the two run together — "$58MRR" — which
+     is only obvious once there are enough tiles to read as a table. */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
+.stat > strong { font-size: 19px; font-weight: 700; line-height: 1.25; }
+.stat > .dim { font-size: 12px; }
 .stat::before {
   content: "";
   position: absolute;
@@ -2195,4 +2203,57 @@ a.news-title:hover { color: var(--accent); }
   .newsletter { padding: 16px; }
   .newsletter-form { flex-basis: 100%; }
   .news-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- admin-only traffic line in the footer ----------
+   Deliberately understated: it is an operator's instrument panel, not part of
+   the product, and it sits on every page. Loud styling here would make the
+   site look like it was built for the person running it. */
+
+.admin-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding: 10px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.admin-footer-tag {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--badge-warn);
+  border: 1px solid var(--warn);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+.admin-footer dl {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 0;
+  min-width: 0;
+}
+.admin-footer dl > div { display: flex; flex-direction: column; min-width: 0; }
+.admin-footer dt {
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.admin-footer dd { margin: 0; font-size: 15px; font-weight: 700; }
+.admin-footer-more { margin-left: auto; flex: none; font-size: 12.5px; font-weight: 600; }
+
+@media (max-width: 640px) {
+  .admin-footer { gap: 10px; }
+  .admin-footer dl { gap: 12px; }
+  .admin-footer dd { font-size: 14px; }
+  .admin-footer-more { margin-left: 0; }
 }

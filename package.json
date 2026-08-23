@@ -16,7 +16,8 @@
     "sandbox": "SANDBOX=true next start",
     "verify": "npm run typecheck && npm run test && npm run build",
     "refresh": "tsx scripts/refresh-market.ts",
-    "refresh:history": "tsx scripts/refresh-market.ts --history"
+    "refresh:history": "tsx scripts/refresh-market.ts --history",
+    "verify:prices": "tsx scripts/verify-prices.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",

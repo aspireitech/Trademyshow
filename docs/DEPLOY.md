@@ -155,6 +155,24 @@ Once data is flowing:
 - market cap is the vendor's where it publishes one, and otherwise our own
   estimate (live price × stored share count), marked with an asterisk.
 
+**Checking that the prices are actually real:**
+
+```
+npm run verify:prices              a spread of well-known tickers
+npm run verify:prices AAPL AMZN    whatever you want to check
+```
+
+It prints, per symbol, what the vendor answers right now, what the site shows,
+whether they agree, and which vendor answered — plus links to Yahoo and
+stockanalysis.com so a person can settle it by eye. It exits non-zero when no
+vendor answered or when the cache disagrees with the vendor by more than 0.5%,
+so it works as a post-deploy smoke test as well as a hand check.
+
+The same thing is visible in the browser: `/dashboard/admin` → **Market data**
+shows coverage, the last refresh, and a per-symbol provenance table with a
+"check against Yahoo" link on every row. `GET /api/market/refresh` returns it
+as JSON.
+
 **On the keyless endpoints.** Yahoo's chart and search endpoints are the ones
 its own website calls, and Stooq publishes CSV files. Neither is a commercial
 data licence: prices are treated as delayed, nothing is redistributed as a
