@@ -1,194 +1,167 @@
-# TradeMyShow — project state
+# TradeMyShow — session state
 
-Living document. **Read at the start of every session; update at the end of every
-session.** Last updated: 2026-08-21 (second session that day).
+**Read this file first, and usually only this file.** It exists so a cold
+session costs almost nothing: the map below says which file owns what, so work
+starts by opening two or three known files instead of searching the codebase.
 
----
+Status: branch `claude/landing-dashboard-stock-data-5fngt1` · Node 22 ·
+428 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-23.
+
+`tests/docs-map.test.ts` asserts every path in the map below exists and that
+this file stays short enough to be worth reading every time. If you rename a
+file, the map is part of the rename.
 
 ## 1. What this is
 
-A stock-insight SaaS. The differentiator is that every score is broken into parts
-the user can check, and every published score is graded afterwards against what
-actually happened (`/track-record`). Competitors can copy a number overnight; they
+Stock-insight SaaS. Next.js 15 App Router, TypeScript strict, React 19, SQLite
+via better-sqlite3. The differentiator: every score breaks into parts the user
+can check, and every published score is graded afterwards against what actually
+happened (`/track-record`). A competitor can copy a number overnight; they
 cannot copy a history.
 
-## 2. Settled decisions — do not re-open these
+## 2. Commands
+
+```
+npm run dev              local dev
+npx vitest run           unit suite — must be clean before pushing
+npx next build           production build — must be clean before pushing
+npx playwright test      e2e (needs a built app; PLAYWRIGHT_CHROMIUM_PATH in sandbox)
+npm run seed             seed SQLite (demo@ + admin@, passwords in src/lib/sandbox.ts)
+npm run refresh          fill the price cache from the live feed
+npm run verify:prices    are the prices real? prints vendor vs. what we show
+.\scripts\update.ps1     Windows deploy;  sudo ./scripts/update.sh  Linux/Azure
+```
+
+## 3. Settled — do not re-open
 
 | Decision | Why |
 |---|---|
-| The AI narrates arithmetic it cannot alter | Keeps the product inside the publisher exclusion, Investment Advisers Act §202(a)(11)(D), *Lowe v. SEC*. If the model could change the number, it would be advice. |
-| No forecasting language anywhere | §215(a) anti-waiver means disclaimers cannot cure a statutory breach. Copy describes what *happened*, never what *will* happen. A wording audit enforces this in tests. |
-| Liability cap of $1,000, accepted at signup, contract stored as PDF | User requirement. `src/lib/legal.ts` is the single source for both the page and the PDF; `src/lib/contracts.ts` stores a SHA-256 alongside the file so the record is tamper-evident. |
-| Light theme is the true default | User requirement. The `prefers-color-scheme: dark` block was removed; dark is opt-in only. |
-| No permanent "70% OFF" banner | A permanent discount is a false anchor and is actionable under UK/EU/US pricing rules. |
-| Real market data is the default; the simulation is the opt-out | A default that shows invented prices unless somebody sets a variable is a default that shows invented prices. `MARKET_DATA_PROVIDER` unset means Yahoo → Stooq → Finnhub-if-keyed. `mock` forces the simulation. |
-| No number is printed without its provenance | Yahoo's and Stooq's keyless endpoints are not a data licence, so quotes are labelled delayed or end-of-day, and anything the feed could not supply is labelled simulated rather than dressed up as a price. `sourceFor()` is the single decider. |
-| Real and simulated figures are never mixed on one screen | A simulated volume beside a real price is the worst of both. Under a real feed only what the vendor supplied is filled in; a blank cell is honest. Under the simulation it fills everything, because the page is already labelled. |
-| Stock pages are public; the paywall is the exact score | The product cannot be judged before signing up if a visitor cannot look at one stock. Signed-out visitors get exactly the free plan's view. |
-| Traffic counters say "visitor-days", not "unique visitors" | The identifying hash is re-salted daily so it cannot be linked across days — that is what keeps this from being a tracking system. One person on three days is three visitor-days. Naming it accurately costs nothing; naming it "unique visitors" would have the operator making decisions on a number inflated by their own return visitors. |
-| The free plan keeps 3 alerts, not 0 | An alert is what earns the second visit. A free tier that cannot set one never gets it. |
-| Free tier proves the product; the exact score is the upgrade trigger | Free: 1 watchlist, 2-way compare, 15 rows on 52-week screens. Pro/Premium unlock the rest. |
+| The AI narrates arithmetic it cannot alter | Publisher exclusion, Advisers Act §202(a)(11)(D), *Lowe v. SEC*. If the model could change the number it would be advice. |
+| No forecasting language anywhere | §215(a) anti-waiver: disclaimers cannot cure a statutory breach. A wording audit enforces this in tests. |
+| Real data is the default; `mock` is the opt-out | A default that shows invented prices unless someone sets a variable is a default that shows invented prices. |
+| No number is printed without its provenance | The keyless endpoints are not a data licence. `sourceFor()` is the single decider; anything unsourced is labelled simulated. |
+| Real and simulated figures never mix on one screen | A simulated volume beside a real price is the worst of both. Blank is honest. |
+| Stock pages are public; the paywall is the exact score | The product cannot be judged before signup if you cannot look at one stock. |
+| Traffic counters say "visitor-days", not "unique visitors" | The identifying hash re-salts daily, so one person over three days is three visitor-days. |
+| Free tier proves the product | 1 watchlist, 5 stocks, 3 alerts, 2-way compare, 15 rows on 52-week screens. |
+| Liability cap $1,000, accepted at signup, stored as PDF | Owner requirement. `src/lib/legal.ts` is the single source for page and PDF. |
+| Light theme is the true default | Dark is opt-in via `:root[data-theme="dark"]` only. |
 
-## 3. Architecture quick map
+## 4. Map — which file owns what
 
+**Market data** (all reads go through the cache, never straight to a vendor)
 ```
-src/lib/marketdata.ts        UNIVERSE (150 instruments); reads the cache first,
-                             falls back to the seeded price engine
-src/lib/providers/feed.ts    vendor chain, fallback, search, and sourceFor()
-src/lib/providers/yahoo.ts   keyless quotes, history, intraday, search, news
-src/lib/providers/stooq.ts   keyless end-of-day CSV, a different operator
-src/lib/marketrefresh.ts     the refresh job + coverage reporting
-src/components/SiteShell.tsx the one frame every page uses
-src/components/GlobalSearch.tsx  header type-ahead over the whole market
-src/components/stock/        the public stock page and its four actions
-src/lib/insight/score.ts     the score and its bands
-src/lib/insight/movers.ts    five market screens, memoised per day
-src/lib/insight/trackrecord.ts  back-graded published scores, memoised per day
-src/lib/legal.ts             terms as data (page + PDF share one source)
-src/lib/pdf.ts               hand-rolled PDF writer, no dependency
-src/lib/contracts.ts         signed-contract records
-src/middleware.ts            CSP with per-request nonce; HSTS keyed off x-forwarded-proto
-src/components/SiteSidebar.tsx      left nav incl. the user's watchlists
-src/components/MarketsDashboard.tsx index strip + breadth + 50-row screen table
+lib/marketdata.ts       UNIVERSE (150 symbols), getQuote/getHistory/week52Range.
+                        Cache first, seeded random walk as the labelled floor.
+lib/providers/feed.ts   vendor chain, fallback, search, refresh budget, sourceFor()
+lib/providers/yahoo.ts  keyless quotes, history, intraday, search, news
+lib/providers/stooq.ts  keyless end-of-day CSV — a second operator, on purpose
+lib/providers/cache.ts  the synchronous read layer + symbol_directory
+lib/marketrefresh.ts    the refresh job, coverage, on-demand per-symbol fetch
+lib/news.ts             cached headlines, generated fallback
+lib/insight/movers.ts   the five screens, memoised per day
 ```
 
-**Performance rule:** anything that scans the whole universe must be memoised per
-day. `movers.ts` and `trackrecord.ts` both do this. Forgetting it is what made the
-test suite time out when the universe grew from 61 to 150 symbols.
+**Scoring**
+```
+lib/insight/score.ts        the 0-100 score and its four components
+lib/insight/expectation.ts  base rates by band — never a forecast
+lib/insight/trackrecord.ts  back-graded published scores, memoised per day
+lib/digest/engine.ts        per-holding facts;  digest/writer.ts  the prose
+```
 
-## 4. Done
+**Pages and shell**
+```
+components/SiteShell.tsx     the one frame: sidebar + header + footer
+components/SiteHeader.tsx    brand, GlobalSearch, auth actions
+components/GlobalSearch.tsx  header type-ahead ("/" focuses)
+components/MarketsDashboard.tsx  index strip + breadth + 50-row table
+components/stock/StockView.tsx   the public stock page (the big one)
+components/stock/{WatchlistButton,AlertButton,SignupGate,FullChart}.tsx
+components/AdminFooterStats.tsx  admin-only footer counters (server-gated)
+app/page.tsx  the board  ·  app/stocks/[symbol]/  ·  app/markets/[view]/
+app/globals.css  ~2000 lines, appended in themed sections
+```
 
-- Auth: email/password, email verification, password reset, TOTP, OTP over email
-  and SMS, security questions, OAuth social login.
-- Billing: tiers, pause/resume/upgrade, gating enforced server-side.
-- Admin: user list by tier, per-user profile view, per-user change log.
-- Settings: profile, security, billing, activity, data export/delete.
-- Legal: terms/privacy pages, signup acceptance, PDF contract per user, $1,000 cap,
-  wording audit in CI.
-- Security: CSP with nonce, HSTS, cookie consent, rate limiting.
-- Market screens: top gainers, top losers, biggest moves, near 52-week highs, near
-  52-week lows — 50 rows each, plus 2-way/multi-way compare.
-- Landing page rebuilt as a full-width dashboard with sidebar, index strip, market
-  breadth, and the live gainers table.
-- LLM router with automatic failover between Gemini, Anthropic and OpenAI.
-- Visitor counters (unique/repeat) in the footer; signup prompt after 2–3 pages.
-- 338 unit tests passing; 30 e2e specs.
-- Prices anchored to realistic per-instrument levels, with volume and market-cap
-  columns on every screen.
-- Landing hero compressed to a band so the market data sits above the fold.
-- **Real market data.** Yahoo Finance (keyless) with Stooq end-of-day underneath
-  and Finnhub when a key exists, written into the SQLite cache by a refresh job
-  that every page then reads synchronously. `npm run refresh`,
-  `POST /api/cron?job=market-data`, or `POST /api/market/refresh`; the landing
-  page fills an empty cache itself on first visit.
-- **Provenance on every price.** delayed / end-of-day / simulated, with the
-  vendor named, decided in one place and shown as a pill on the board, the
-  stock page and the full chart.
-- **Public type-ahead search** in the header of every page, covering the whole
-  market rather than the shipped universe. Symbols the vendor confirms are
-  remembered in `symbol_directory`, so the second lookup is local. "/" focuses.
-- **One shell everywhere** — landing, market screens, stock pages, news, and the
-  signed-in dashboard share `SiteShell` (sidebar + header + search). Logging in
-  no longer changes the layout.
-- **Public stock page** at `/stocks/[symbol]` (the old `/dashboard/stocks/...`
-  permanently redirects), laid out like stockanalysis.com: price, actions,
-  statistics with the price's position in its 52-week range, chart with nine
-  ranges, score, news. Plus `/stocks/[symbol]/chart` for the chart alone.
-- **Watchlist / Alerts / Compare** buttons with a sign-up gate for signed-out
-  visitors and a list picker for signed-in ones. Alerts now watch a price as
-  well as a score.
-- **Market news and a newsletter sign-up** below the board, plus a `/news` page.
-- **Admin-only visitor counters** in the page footer (total views, visitor-days,
-  repeats, unique today, returned today, views per visit), gated server-side so
-  they are absent from the HTML for everyone else. The fuller panel stays on
-  `/dashboard/admin`.
-- **A way to validate the prices**: `npm run verify:prices` compares us against
-  the vendor symbol by symbol and exits non-zero on disagreement, and
-  `/dashboard/admin` → Market data shows coverage plus per-symbol provenance
-  with a "check against Yahoo" link per row.
-- **Update scripts run from anywhere and survive PowerShell.** They resolve the
-  project root from their own location (running from inside `scripts\` used to
-  fail three commands later at `npm run build`), and no longer use `HEAD@{1}` —
-  PowerShell parses an unquoted `@{1}` as a hashtable literal, producing
-  `fatal: ambiguous argument 'HEAD@'`, and the reflog entry does not always
-  exist anyway. They compare captured SHAs instead. `$ErrorActionPreference` is
-  `Continue` with explicit `$LASTEXITCODE` checks, because git writes ordinary
-  progress to stderr and `Stop` turns that into a fatal NativeCommandError.
-- **Update scripts fetch the right branch and refresh prices.** Both took a
-  hardcoded old branch and used `git pull`, which only moves the branch you are
-  standing on — so an update could appear to succeed and change nothing. They
-  now fetch/checkout, take `-Branch`/`$BRANCH`, run `npm run refresh`, and warn
-  when `MARKET_DATA_PROVIDER=mock` is pinning the install to simulated data.
-- `.env.example` no longer ships `MARKET_DATA_PROVIDER=mock`, which was copied
-  into every install and was the single most likely reason a correct deployment
-  still showed invented prices.
-- 390 unit tests and 38 e2e specs passing.
-- **Every page fits a phone.** The left rail becomes a scrolling strip below
-  980px instead of vanishing (a phone previously had no navigation at all), the
-  header action row wraps, and wide tables and charts scroll inside their own
-  container rather than taking the page with them.
-- Settings → "Your data" now exists. The nav had linked to it for weeks and the
-  route was never committed, because `.gitignore` had an unanchored `data/`.
+**Platform**
+```
+lib/db.ts        schema + migrations, all CREATE TABLE IF NOT EXISTS
+lib/auth.ts      sessions, currentUser(), assertCsrf()
+lib/plans.ts     PLAN_LIMITS — the single source for every gate
+lib/jobs.ts      digest send, alert evaluation, market refresh
+lib/security.ts  rate limits, clientIp, audit
+lib/visitors.ts  traffic counting
+middleware.ts    CSP nonce, HSTS
+next.config.mjs  legacy redirects live here, not in pages
+```
 
-## 5. Next up
+## 5. To change X, open Y
 
-- [ ] **Verify the live feed against the real internet.** It was written and
-      unit-tested in a sandbox whose egress policy blocks
-      `query1.finance.yahoo.com` and `stooq.com`, so the adapters have never
-      made a successful call. Run `npm run refresh:history` on a machine with
-      open network and check `GET /api/market/refresh` reports coverage near
-      100%. If Yahoo's response shape has drifted, `src/lib/providers/yahoo.ts`
-      is the only file that needs touching.
-- [ ] Fundamentals the keyless endpoints do not carry: P/E, EPS, revenue,
-      dividend, shares outstanding, earnings date. Needs either a licensed feed
-      or SEC company-facts, and until then those rows are absent rather than
-      invented.
-- [ ] Wire the newsletter to an actual send (the addresses are stored and
-      unsubscribe works; nothing is mailed yet).
-- [ ] Re-run the contrast audit over the new `.gsearch-*`, `.act-*`, `.stock-*`
-      and `.news-*` components.
+| Task | Files |
+|---|---|
+| A price or chart is wrong | `lib/marketdata.ts`, then `lib/providers/feed.ts` |
+| A vendor changed its response | `lib/providers/yahoo.ts` — nothing else knows the shape |
+| Add a market screen | `lib/insight/movers.ts` (`MoverView`) + `components/MarketsDashboard.tsx` |
+| Change what a plan allows | `lib/plans.ts` only — every gate reads it |
+| Add a table or column | `components/MarketsDashboard.tsx`; wrap wide content in `.scroll-x` |
+| Stock page layout | `components/stock/StockView.tsx` |
+| Anything about signup gates | `components/stock/SignupGate.tsx` + the button that opens it |
+| A new API route | `src/app/api/<name>/route.ts`; mutations need `assertCsrf` |
+| A new DB column | `lib/db.ts` — additive `ALTER TABLE` guarded by `PRAGMA table_info` |
+| Styling | append a commented section to `app/globals.css`; check phone width |
+
+## 6. Next up
+
+- [ ] **Verify the live feed against the real internet.** Written and
+      unit-tested in a sandbox that blocks `query1.finance.yahoo.com` and
+      `stooq.com`, so the adapters have never completed a real call. Run
+      `npm run verify:prices` on an open network. If Yahoo's shape drifted,
+      `lib/providers/yahoo.ts` is the only file to touch.
+- [ ] Fundamentals the keyless feeds lack: P/E, EPS, revenue, dividend, shares
+      outstanding, earnings date. Needs a licensed feed or SEC company-facts;
+      until then those rows are absent rather than invented.
+- [ ] Wire the newsletter to an actual send (addresses stored, unsubscribe
+      works, nothing is mailed).
+- [ ] Contrast audit over `.gsearch-*`, `.act-*`, `.stock-*`, `.news-*`.
+- [ ] Sector and market-cap filters on the screens.
 - [ ] Republish `docs/tracker.html`.
-- [ ] Sector and market-cap filters on the screens, the way stockanalysis.com
-      filters its gainers list.
 
-## 6. Blocked on a purchase or a decision, not on code
+## 7. Blocked on a decision or a purchase, not on code
 
-- A *licensed* market data feed. The keyless endpoints now in use are the ones
-  Yahoo's own site calls and Stooq's public CSV files: fine for showing a
-  visitor a delayed price, not a redistribution licence, and not a contract
-  anyone can complain to. Vendor still not chosen.
-- A licensed news feed. Yahoo's search endpoint returns headlines and links but
-  no article text, so summaries are blank rather than invented.
-- Penetration test.
-- Lawyer review of the terms.
-- Production API keys for Gemini / Anthropic / OpenAI.
-- GitHub's default branch still needs flipping to `main` in repo settings so PRs
-  can be opened against it.
+Licensed market-data feed (the keyless endpoints are not a redistribution
+licence) · licensed news feed (Yahoo gives headlines, no article text) ·
+penetration test · lawyer review of the terms · production LLM keys · GitHub
+default branch still needs flipping to `main`.
 
-## 7. Known traps
+## 8. Traps that have already cost a session
 
 - `better-sqlite3` has no Node 24 prebuild. Use Node 22.
-- PowerShell `Out-File -Encoding utf8` writes a BOM that silently breaks
-  `.env.local`. Use `-Encoding ascii`.
-- Stop the running server before `npm ci` on Windows, or the native module fails
-  to unlink with `EPERM`.
-- Contrast: coloured text on a tint of its own hue caps around 4.1:1. Measure
-  against the composited result, not the token.
-- `min-width: auto` on a flex or grid item is what turns a scroll container into
-  a page-wide overflow: the item sizes to its widest child, so the scroll box
-  has nothing left to scroll. `.card`, `.shell-main` and `.settings-content`
-  carry `min-width: 0` for this reason, and wide content uses `.scroll-x`.
-- `flex: none` on a row means it is never asked to be narrower than its
-  contents, so `flex-wrap` inside it never fires. The header action row needs
-  both `flex: 1 1 auto` and `min-width: 0` to wrap on a phone.
-- A redirect for a path under `/dashboard` cannot live in a page there: the
-  layout's auth check redirects to /login first. Use `redirects()` in
-  `next.config.mjs`.
-- The cloud sandbox blocks outbound HTTPS to finance hosts. Anything touching a
-  real vendor has to be verified on a machine with open network.
-- A running `next start` keeps port 3000 and the next one fails with
-  `EADDRINUSE` — and the *old build* keeps serving, which looks exactly like a
-  change that did not take. Kill `next-server`, not `next start`.
-- Playwright in the cloud sandbox: launch with
-  `executablePath: "/opt/pw-browsers/chromium"`; the bundled browser build does
-  not match the installed one.
+- Stop the running server before `npm ci` on Windows or the native module
+  fails to unlink with `EPERM`. A running `next start` also keeps serving the
+  *previous* build — which looks exactly like a change that did not take. Kill
+  `next-server`, not `next start`.
+- Anything scanning the whole universe must be memoised per day
+  (`movers.ts`, `trackrecord.ts`). Forgetting it timed out the suite once.
+- `min-width: auto` on a flex/grid item turns a scroll container into a
+  page-wide overflow. `.card`, `.shell-main`, `.settings-content` carry
+  `min-width: 0`; wide content uses `.scroll-x`.
+- `flex: none` on a row means `flex-wrap` inside it never fires.
+- A redirect for a path under `/dashboard` cannot live in a page there — the
+  layout's auth check runs first. Use `redirects()` in `next.config.mjs`.
+- `.gitignore` patterns without a leading `/` match at any depth. An
+  unanchored `data/` silently swallowed a whole route for weeks.
+- Coloured text on a tint of its own hue caps near 4.1:1. Measure the
+  composited result, not the token.
+- PowerShell: `Out-File -Encoding utf8` writes a BOM that breaks `.env.local`
+  (use `ascii`); an unquoted `HEAD@{1}` parses as a hashtable literal; native
+  commands ignore `$ErrorActionPreference` — check `$LASTEXITCODE`.
+- The cloud sandbox blocks outbound HTTPS to finance hosts. Playwright there
+  needs `executablePath: "/opt/pw-browsers/chromium"`.
+
+---
+
+Older detail — what was built and why — lives in `docs/HISTORY.md`.
+**Do not read it unless the reasoning behind a decision is actually needed.**
+Deeper references, each read only when its subject comes up:
+`ARCHITECTURE.md`, `DEPLOY.md`, `OPERATIONS.md`, `RUN-LOCALLY.md`,
+`DESIGN.md`, `COSTS.md`, `ROADMAP.md`.
