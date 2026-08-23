@@ -114,6 +114,21 @@ site with `npm start`.
 
 To pull a different branch: `.\scripts\update.ps1 -Branch some-other-branch`.
 
+It can be run from the project folder or from inside `scripts\` — it finds the
+project root itself. It resets the checkout to match the branch, so local edits
+to tracked files are discarded; your `.env` and `data` folder are untracked and
+are left alone.
+
+**The very first time**, you need the new script before you can run it. Switch
+branches by hand once:
+
+```powershell
+git fetch origin claude/landing-dashboard-stock-data-5fngt1
+git checkout -B claude/landing-dashboard-stock-data-5fngt1 origin/claude/landing-dashboard-stock-data-5fngt1
+```
+
+After that, `.\scripts\update.ps1` handles it.
+
 **Doing it by hand**, if you would rather see each step:
 
 ```powershell

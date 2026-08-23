@@ -106,6 +106,14 @@ test suite time out when the universe grew from 61 to 150 symbols.
   the vendor symbol by symbol and exits non-zero on disagreement, and
   `/dashboard/admin` → Market data shows coverage plus per-symbol provenance
   with a "check against Yahoo" link per row.
+- **Update scripts run from anywhere and survive PowerShell.** They resolve the
+  project root from their own location (running from inside `scripts\` used to
+  fail three commands later at `npm run build`), and no longer use `HEAD@{1}` —
+  PowerShell parses an unquoted `@{1}` as a hashtable literal, producing
+  `fatal: ambiguous argument 'HEAD@'`, and the reflog entry does not always
+  exist anyway. They compare captured SHAs instead. `$ErrorActionPreference` is
+  `Continue` with explicit `$LASTEXITCODE` checks, because git writes ordinary
+  progress to stderr and `Stop` turns that into a fatal NativeCommandError.
 - **Update scripts fetch the right branch and refresh prices.** Both took a
   hardcoded old branch and used `git pull`, which only moves the branch you are
   standing on — so an update could appear to succeed and change nothing. They
