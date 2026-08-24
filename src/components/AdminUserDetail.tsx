@@ -12,7 +12,14 @@ interface Detail {
     termsVersion: string | null; termsAcceptedAt: string | null;
   };
   subscription: { plan: string; paused: boolean; pausedUntil: string | null; daysRemaining: number };
-  groups: { id: number; name: string; holdings: string[]; createdAt: string }[];
+  groups: {
+    id: number;
+    name: string;
+    createdAt: string;
+    totalValue: number;
+    changePct: number;
+    holdings: { symbol: string; quantity: number; price: number; value: number }[];
+  }[];
   counts: { insights: number; alerts: number; sessions: number; referrals: number };
   activity: { id: number; label: string; detail: string | null; createdAt: string; notable: boolean; kind: string }[];
 }
@@ -82,12 +89,32 @@ export default function AdminUserDetail({ id }: { id: number }) {
         {d.groups.length > 0 && (
           <div style={{ overflowX: "auto", marginTop: 16 }}>
             <table className="holdings">
-              <thead><tr><th>Watchlist</th><th>Holdings</th><th>Created</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Watchlist</th>
+                  <th>Holdings</th>
+                  <th className="mkt-right">Current value</th>
+                  <th className="mkt-right">Today</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
               <tbody>
                 {d.groups.map((g) => (
                   <tr key={g.id}>
                     <td>{g.name}</td>
-                    <td className="mono dim" style={{ fontSize: 12 }}>{g.holdings.join(", ") || "empty"}</td>
+                    <td className="mono dim" style={{ fontSize: 12 }}>
+                      {g.holdings.length === 0
+                        ? "empty"
+                        : g.holdings.map((h) => `${h.symbol} ×${h.quantity}`).join(", ")}
+                    </td>
+                    <td className="mono mkt-right">
+                      {g.holdings.length === 0
+                        ? "—"
+                        : `$${g.totalValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
+                    </td>
+                    <td className={`mono mkt-right ${g.changePct >= 0 ? "gain" : "loss"}`}>
+                      {g.holdings.length === 0 ? "—" : `${g.changePct >= 0 ? "+" : ""}${g.changePct.toFixed(2)}%`}
+                    </td>
                     <td className="dim mono" style={{ fontSize: 12 }}>
                       {new Date(g.createdAt).toLocaleDateString()}
                     </td>

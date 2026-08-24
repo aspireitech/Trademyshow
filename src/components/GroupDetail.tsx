@@ -38,6 +38,8 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
   // search state
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<StockInfo[]>([]);
+  const [addQty, setAddQty] = useState("1");
+  const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/groups/${groupId}`);
@@ -95,9 +97,10 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
 
   async function addStock(symbol: string) {
     setError(null);
+    const quantity = Number(addQty);
     const res = await apiFetch(`/api/groups/${groupId}/holdings`, {
       method: "POST",
-      body: JSON.stringify({ symbol, quantity: 1 }),
+      body: JSON.stringify({ symbol, quantity: quantity > 0 ? quantity : 1 }),
     });
     if (!res.ok) {
       const d = (await res.json().catch(() => ({}))) as { error?: string };
@@ -106,11 +109,27 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
     }
     setQuery("");
     setResults([]);
+    setAddQty("1");
     await load();
   }
 
   async function removeStock(symbol: string) {
     await apiFetch(`/api/groups/${groupId}/holdings?symbol=${symbol}`, { method: "DELETE" });
+    await load();
+  }
+
+  async function saveQuantity(symbol: string) {
+    const quantity = Number(qtyDrafts[symbol]);
+    if (!(quantity > 0)) return;
+    await apiFetch(`/api/groups/${groupId}/holdings`, {
+      method: "PATCH",
+      body: JSON.stringify({ symbol, quantity }),
+    });
+    setQtyDrafts((d) => {
+      const next = { ...d };
+      delete next[symbol];
+      return next;
+    });
     await load();
   }
 
@@ -199,6 +218,18 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <p className="dim" style={{ fontSize: 12, marginTop: 8 }}>
+          Shares held (leave at 1 for a plain watchlist):{" "}
+          <input
+            className="input qty-input"
+            type="number"
+            min="0.0001"
+            step="any"
+            value={addQty}
+            onChange={(e) => setAddQty(e.target.value)}
+            aria-label="Quantity to add"
+          />
+        </p>
         {results.length > 0 && (
           <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
             {results.map((r) => (
@@ -251,7 +282,9 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
               <thead>
                 <tr>
                   <th>Stock</th>
+                  <th>Shares</th>
                   <th>Price</th>
+                  <th>Value</th>
                   <th>Today</th>
                   <th>{tf} trend</th>
                   <th>{tf} %</th>
@@ -264,6 +297,7 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
                 {facts.holdings.map((h) => {
                   const det = details[h.symbol];
                   const tfPct = det?.trends?.[tf];
+                  const draft = qtyDrafts[h.symbol];
                   return (
                     <tr key={h.symbol}>
                       <td>
@@ -275,7 +309,20 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
                           {h.name}
                         </span>
                       </td>
+                      <td>
+                        <input
+                          className="input qty-input"
+                          type="number"
+                          min="0.0001"
+                          step="any"
+                          value={draft ?? String(h.quantity)}
+                          aria-label={`Shares of ${h.symbol}`}
+                          onChange={(e) => setQtyDrafts((d) => ({ ...d, [h.symbol]: e.target.value }))}
+                          onBlur={() => draft !== undefined && draft !== String(h.quantity) && saveQuantity(h.symbol)}
+                        />
+                      </td>
                       <td className="mono">${h.price.toFixed(2)}</td>
+                      <td className="mono">${(h.price * h.quantity).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                       <td className={`mono ${h.changePct >= 0 ? "gain" : "loss"}`}>
                         {h.changePct >= 0 ? "+" : ""}
                         {h.changePct.toFixed(2)}%

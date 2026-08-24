@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { addHolding, getGroup, listHoldings, removeHolding } from "@/lib/db";
+import { addHolding, getGroup, listHoldings, removeHolding, updateHoldingQuantity } from "@/lib/db";
 import { getStockInfo } from "@/lib/marketdata";
 import { effectiveLimits, effectivePlan } from "@/lib/plans";
 
@@ -35,6 +35,25 @@ export async function POST(req: Request, { params }: Params) {
   }
   const holding = addHolding(group.id, symbol, qty);
   return NextResponse.json({ holding }, { status: 201 });
+}
+
+export async function PATCH(req: Request, { params }: Params) {
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const { id } = await params;
+  const group = getGroup(Number(id), user.id);
+  if (!group) return NextResponse.json({ error: "group not found" }, { status: 404 });
+
+  const { symbol, quantity } = (await req.json().catch(() => ({}))) as {
+    symbol?: string;
+    quantity?: number;
+  };
+  if (!symbol || !quantity || quantity <= 0) {
+    return NextResponse.json({ error: "symbol and a positive quantity are required" }, { status: 400 });
+  }
+  const holding = updateHoldingQuantity(group.id, symbol, quantity);
+  if (!holding) return NextResponse.json({ error: "holding not found" }, { status: 404 });
+  return NextResponse.json({ holding });
 }
 
 export async function DELETE(req: Request, { params }: Params) {

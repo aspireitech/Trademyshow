@@ -474,6 +474,17 @@ export function listHoldings(groupId: number): Holding[] {
   return rows.map(toHolding);
 }
 
+/** A user correcting a share count is a normal edit, not a remove-and-readd. */
+export function updateHoldingQuantity(groupId: number, symbol: string, quantity: number): Holding | null {
+  getDb()
+    .prepare("UPDATE holdings SET quantity = ? WHERE group_id = ? AND symbol = ?")
+    .run(quantity, groupId, symbol.toUpperCase());
+  const r = getDb()
+    .prepare("SELECT * FROM holdings WHERE group_id = ? AND symbol = ?")
+    .get(groupId, symbol.toUpperCase()) as HoldingRow | undefined;
+  return r ? toHolding(r) : null;
+}
+
 export function removeHolding(groupId: number, symbol: string): boolean {
   return (
     getDb()

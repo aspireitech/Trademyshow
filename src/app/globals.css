@@ -1547,6 +1547,71 @@ footer.site {
 .mkt-right { text-align: right; font-variant-numeric: tabular-nums; }
 .mkt-sym { color: var(--text); text-decoration: none; display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; }
 .mkt-sym strong { font-size: 13.5px; }
+
+/* ---------- portfolio: donuts, legends, cards ---------- */
+.donut-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.donut-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px dashed var(--border);
+}
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+  text-align: center;
+}
+.donut-center strong { font-size: 15px; }
+.donut-center span { font-size: 11px; }
+.donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 140px;
+}
+.donut-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.donut-legend-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.portfolio-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.portfolio-card:hover { background: var(--bg-hover); }
+.qty-input {
+  width: 64px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
 .mkt-sym:hover strong { color: var(--accent); text-decoration: underline; }
 .mkt-name { font-size: 12px; }
 .mkt-sector { font-size: 12.5px; white-space: nowrap; }

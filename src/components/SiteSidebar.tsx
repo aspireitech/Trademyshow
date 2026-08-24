@@ -49,6 +49,7 @@ export default async function SiteSidebar({ active }: { active?: string }) {
         <>
           <p className="side-label">My watchlists</p>
           <ul>
+            {item("/dashboard/portfolio", "Portfolio", "portfolio")}
             {groups.slice(0, 8).map((g) =>
               item(`/dashboard/groups/${g.id}`, g.name, `group-${g.id}`),
             )}
