@@ -5,7 +5,7 @@ import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
 import { UNIVERSE } from "@/lib/marketdata";
 import { VIEW_LABELS, type MoverView } from "@/lib/insight/movers";
 import MarketsDashboard from "@/components/MarketsDashboard";
-import NewsPanel from "@/components/NewsPanel";
+import MarketNewsFeed from "@/components/MarketNewsFeed";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import SiteShell from "@/components/SiteShell";
 
@@ -148,7 +148,7 @@ export default async function LandingPage({
 
       <MarketsDashboard view={view} basePath="/" />
 
-      <NewsPanel />
+      <MarketNewsFeed />
 
       <NewsletterSignup source="landing" />
 

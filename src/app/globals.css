@@ -2172,6 +2172,19 @@ footer.site {
 .peer-list li > a.mkt-sym { flex: 1; min-width: 0; }
 .peer-list li > span { font-size: 13.5px; width: 80px; text-align: right; }
 
+/* A single symbol's own headlines — bounded so a busy news day doesn't
+   push the disclaimer line off the bottom of the screen, but no marquee:
+   this list is finite and specific, not a market-wide feed to skim. */
+.news-scroll-box.bounded {
+  max-height: 360px;
+  overflow-y: auto;
+  margin-top: 8px;
+  mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent);
+}
+.news-scroll-box.bounded .news-list { margin-top: 0; }
+.news-scroll-box.bounded .news-list li:last-child { padding-bottom: 20px; }
+
 .news-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .news-list li { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .news-list li:last-child { border-bottom: none; }
@@ -2218,6 +2231,93 @@ footer.site {
 }
 a.news-title:hover { color: var(--accent); }
 .news-src { font-size: 11.5px; margin-top: 6px; }
+
+/* ---------- dashboard news ticker ---------- */
+.news-ticker {
+  position: relative;
+  height: 380px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  /* Fades the top/bottom edge rather than cutting a row off mid-line —
+     the visual cue that there is more above and below, not a clipped card. */
+  mask-image: linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent);
+}
+.news-ticker-track {
+  list-style: none;
+  margin: 0;
+  padding: 14px 0;
+  animation-name: news-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+/* Hovering or focusing any row holds it still long enough to read and click —
+   a headline that keeps sliding out from under the pointer is not usable. */
+.news-ticker:hover .news-ticker-track,
+.news-ticker:focus-within .news-ticker-track {
+  animation-play-state: paused;
+}
+@keyframes news-scroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+.news-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--text);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.news-row:hover,
+.news-row:focus-visible {
+  background: var(--bg-hover);
+  border-left-color: var(--accent);
+}
+.news-row .sent { margin-top: 5px; flex: none; }
+.news-row-body { min-width: 0; flex: 1; }
+.news-row-top { display: flex; align-items: baseline; gap: 8px; }
+.news-sym {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--badge-accent);
+}
+.news-row-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.news-row-src { font-size: 11.5px; display: block; margin-top: 2px; }
+.news-row-arrow {
+  flex: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.news-row:hover .news-row-arrow,
+.news-row:focus-visible .news-row-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-ticker { overflow-y: auto; mask-image: none; -webkit-mask-image: none; }
+  .news-ticker-track { animation: none; }
+  .news-ticker-dup { display: none; }
+}
 
 /* ================= newsletter ================= */
 

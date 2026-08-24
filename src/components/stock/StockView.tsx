@@ -116,7 +116,6 @@ function trendSummary(trends: Record<Timeframe, number>): string {
 export default function StockView({ symbol }: { symbol: string }) {
   const [range, setRange] = useState<Timeframe>("1M");
   const [data, setData] = useState<StockResponse | null>(null);
-  const [showAllNews, setShowAllNews] = useState(false);
   const [missing, setMissing] = useState(false);
   const [gate, setGate] = useState(false);
 
@@ -446,9 +445,9 @@ export default function StockView({ symbol }: { symbol: string }) {
             No headlines for {info.symbol} in the last few days.
           </p>
         ) : (
-          <>
+          <div className={`news-scroll-box ${news.length > 5 ? "bounded" : ""}`}>
             <ul className="news-list">
-              {(showAllNews ? news : news.slice(0, 5)).map((n) => (
+              {news.map((n) => (
                 <li key={n.id}>
                   <span className={`sent ${n.sentiment}`} title={`${n.sentiment} tone`} />
                   <div>
@@ -467,17 +466,7 @@ export default function StockView({ symbol }: { symbol: string }) {
                 </li>
               ))}
             </ul>
-            {news.length > 5 && (
-              <button
-                type="button"
-                className="btn small secondary"
-                style={{ marginTop: 10 }}
-                onClick={() => setShowAllNews((v) => !v)}
-              >
-                {showAllNews ? "Show fewer" : `Show ${news.length - 5} more`}
-              </button>
-            )}
-          </>
+          </div>
         )}
       </div>
 
