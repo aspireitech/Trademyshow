@@ -139,7 +139,7 @@ export interface AlertHit {
 export function runAlertJob(now: Date = new Date()): AlertHit[] {
   const db = getDb();
   const rows = db.prepare("SELECT * FROM alerts").all() as {
-    id: number; user_id: number; symbol: string; kind: "price" | "score";
+    id: number; user_id: number; symbol: string; kind: "price" | "score" | "change";
     direction: "above" | "below"; threshold: number; last_fired_at: string | null;
   }[];
 
@@ -160,6 +160,13 @@ export function runAlertJob(now: Date = new Date()): AlertHit[] {
       value = getQuote(a.symbol, now).price;
       title = `${a.symbol} is ${a.direction} ${a.threshold}`;
       body = `${a.symbol} last traded at ${value.toFixed(2)}.`;
+    } else if (a.kind === "change") {
+      // Signed, not absolute — "above +5" catches a rally, "below -5" catches
+      // a drop. An absolute-value comparison would fire on either direction
+      // from one alert, which is not what "drops below -5%" means.
+      value = getQuote(a.symbol, now).changePct;
+      title = `${a.symbol} is ${a.direction === "above" ? "up" : "down"} ${Math.abs(a.threshold)}% today`;
+      body = `${a.symbol} is ${value >= 0 ? "up" : "down"} ${Math.abs(value).toFixed(2)}% on the day.`;
     } else {
       const scored = scoreStock(a.symbol, now);
       if (!scored) continue;
@@ -168,7 +175,12 @@ export function runAlertJob(now: Date = new Date()): AlertHit[] {
       body = `${a.symbol} now scores ${scored.score.toFixed(0)} — ${scored.band} signals.`;
     }
 
-    const met = a.direction === "above" ? value >= a.threshold : value <= a.threshold;
+    // Price and score thresholds are compared as entered. A change threshold
+    // is stored as a magnitude — "5" — so "below" compares against its
+    // negative; without that, "drops below 5%" would fire on a +3% day,
+    // which is the opposite of what the alert was set to catch.
+    const compareTo = a.kind === "change" && a.direction === "below" ? -a.threshold : a.threshold;
+    const met = a.direction === "above" ? value >= compareTo : value <= compareTo;
     if (!met) continue;
 
     db.prepare("UPDATE alerts SET last_fired_at = ? WHERE id = ?").run(now.toISOString(), a.id);

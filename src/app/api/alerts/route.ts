@@ -56,16 +56,21 @@ export async function POST(req: Request) {
   if (direction !== "above" && direction !== "below") {
     return NextResponse.json({ error: "direction must be above or below" }, { status: 400 });
   }
-  const alertKind: AlertKind = kind === "price" ? "price" : "score";
+  const alertKind: AlertKind = kind === "price" ? "price" : kind === "change" ? "change" : "score";
 
-  // A score is a 0-100 reading; a price is any positive number. Validating them
-  // against the same range would either reject a $5,000 share or accept a
-  // score of 900.
+  // A score is a 0-100 reading, a price is any positive number, and a change
+  // threshold is a percentage magnitude entered as a positive number even
+  // for the "below" (down) direction — runAlertJob is what applies the sign.
+  // Validating all three against one range would either reject a $5,000
+  // share or accept a score of 900.
   if (typeof threshold !== "number" || !Number.isFinite(threshold) || threshold <= 0) {
     return NextResponse.json({ error: "threshold must be a positive number" }, { status: 400 });
   }
   if (alertKind === "score" && threshold > 100) {
     return NextResponse.json({ error: "a score threshold is between 0 and 100" }, { status: 400 });
+  }
+  if (alertKind === "change" && threshold > 100) {
+    return NextResponse.json({ error: "a daily move threshold is between 0 and 100%" }, { status: 400 });
   }
 
   const limits = effectiveLimits(user);

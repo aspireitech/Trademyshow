@@ -6,17 +6,21 @@ import { apiFetch, apiPost } from "@/lib/apiClient";
 import SignupGate from "./SignupGate";
 
 /**
- * Price and score alerts for one symbol.
+ * Price, daily-move and score alerts for one symbol.
  *
- * Two kinds because they answer different questions. "Tell me if it drops
- * below $15" is a price the visitor already has in mind; "tell me when the
- * signals turn" is what this product measures and nobody else publishes. The
- * price alert is the one people ask for, and it is the reason they come back.
+ * Three kinds because they answer different questions. "Tell me if it drops
+ * below $15" is a limit price the visitor already has in mind. "Tell me if
+ * it moves 5% today" doesn't need a price target, just volatility. "Tell me
+ * when the signals turn" is what this product measures and nobody else
+ * publishes. The limit-price alert is the one people ask for first, and it
+ * is the reason they come back.
  */
+
+type AlertKind = "price" | "score" | "change";
 
 interface AlertRow {
   id: number;
-  kind: "price" | "score";
+  kind: AlertKind;
   direction: "above" | "below";
   threshold: number;
 }
@@ -32,7 +36,7 @@ export default function AlertButton({ symbol, price }: { symbol: string; price: 
   const [state, setState] = useState<AlertState | null>(null);
   const [open, setOpen] = useState(false);
   const [gate, setGate] = useState(false);
-  const [kind, setKind] = useState<"price" | "score">("price");
+  const [kind, setKind] = useState<AlertKind>("price");
   const [direction, setDirection] = useState<"above" | "below">("above");
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +60,7 @@ export default function AlertButton({ symbol, price }: { symbol: string; price: 
   // beats an empty field the visitor has to think about.
   useEffect(() => {
     if (kind === "price") setValue(price ? (price * 1.05).toFixed(2) : "");
+    else if (kind === "change") setValue("5");
     else setValue("70");
   }, [kind, price]);
 
@@ -115,27 +120,41 @@ export default function AlertButton({ symbol, price }: { symbol: string; price: 
             <div className="seg" role="group" aria-label="What to watch">
               <button type="button" className={kind === "price" ? "on" : ""}
                 onClick={() => setKind("price")}>price</button>
+              <button type="button" className={kind === "change" ? "on" : ""}
+                onClick={() => setKind("change")}>daily move</button>
               <button type="button" className={kind === "score" ? "on" : ""}
                 onClick={() => setKind("score")}>Insight Score</button>
             </div>
             <div className="seg" role="group" aria-label="Direction">
               <button type="button" className={direction === "above" ? "on" : ""}
-                onClick={() => setDirection("above")}>goes above</button>
+                onClick={() => setDirection("above")}>
+                {kind === "change" ? "up more than" : "goes above"}
+              </button>
               <button type="button" className={direction === "below" ? "on" : ""}
-                onClick={() => setDirection("below")}>drops below</button>
+                onClick={() => setDirection("below")}>
+                {kind === "change" ? "down more than" : "drops below"}
+              </button>
             </div>
             <div className="alert-value">
-              <span className="dim">{kind === "price" ? "$" : "score"}</span>
+              <span className="dim">{kind === "price" ? "$" : kind === "score" ? "score" : "%"}</span>
               <input
                 className="input"
                 inputMode="decimal"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                aria-label={kind === "price" ? "Price threshold" : "Score threshold"}
+                aria-label={
+                  kind === "price" ? "Price threshold" : kind === "change" ? "Daily move threshold" : "Score threshold"
+                }
               />
               <button type="submit" className="btn small" disabled={busy}>Set alert</button>
             </div>
           </form>
+          {kind === "change" && (
+            <p className="act-note dim" style={{ marginTop: 6 }}>
+              A limit alert on the day&apos;s move — fires once {symbol} is {direction === "above" ? "up" : "down"}{" "}
+              {value || "5"}% or more since yesterday&apos;s close, whichever side of zero you picked above.
+            </p>
+          )}
 
           {error && (
             <p className="act-note loss" role="alert">
@@ -148,10 +167,22 @@ export default function AlertButton({ symbol, price }: { symbol: string; price: 
               {state!.alerts.map((a) => (
                 <li key={a.id}>
                   <span>
-                    {a.kind === "price" ? "Price" : "Score"} {a.direction}{" "}
-                    <strong className="mono">
-                      {a.kind === "price" ? `$${a.threshold.toFixed(2)}` : a.threshold}
-                    </strong>
+                    {a.kind === "price" && (
+                      <>
+                        Price {a.direction} <strong className="mono">${a.threshold.toFixed(2)}</strong>
+                      </>
+                    )}
+                    {a.kind === "change" && (
+                      <>
+                        Day&apos;s move {a.direction === "above" ? "up" : "down"}{" "}
+                        <strong className="mono">{a.threshold}%</strong> or more
+                      </>
+                    )}
+                    {a.kind === "score" && (
+                      <>
+                        Score {a.direction} <strong className="mono">{a.threshold}</strong>
+                      </>
+                    )}
                   </span>
                   <button type="button" onClick={() => void remove(a.id)} aria-label="Remove alert">
                     ×

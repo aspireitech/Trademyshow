@@ -46,7 +46,7 @@ export interface UserSession {
  * kind is stored rather than inferred from the threshold's magnitude, because
  * a $60 price and a score of 60 are indistinguishable numbers.
  */
-export type AlertKind = "price" | "score";
+export type AlertKind = "price" | "score" | "change";
 
 export interface Alert {
   id: number;
