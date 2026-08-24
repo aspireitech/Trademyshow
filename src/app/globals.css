@@ -247,6 +247,9 @@ table.holdings th {
   padding: 8px 10px;
   border-bottom: 1px solid var(--border);
 }
+table.holdings th.mkt-right {
+  text-align: right;
+}
 table.holdings td {
   padding: 10px;
   border-bottom: 1px solid var(--border);
