@@ -1,5 +1,5 @@
 import { getDb } from "../db";
-import type { NewsItem, PricePoint, Quote, QuoteStats, StockInfo } from "../types";
+import type { Fundamentals, NewsItem, PricePoint, Quote, QuoteStats, StockInfo } from "../types";
 
 /**
  * A synchronous read layer over asynchronously fetched vendor data.
@@ -193,6 +193,58 @@ export function cachedQuoteStats(symbol: string, maxAgeMs = 26 * 3600_000): Quot
     fiftyTwoWeekLow: row.week52_low,
     marketCap: row.market_cap,
     quoteTime: row.quote_time,
+  };
+}
+
+// ---------- fundamentals ----------
+
+/** A company's shape, written whole on the same reasoning as quote stats. */
+export function cacheFundamentals(f: Fundamentals): void {
+  getDb()
+    .prepare(
+      "INSERT INTO fundamentals_cache (symbol, pe_trailing, pe_forward, eps_trailing,\n" +
+        "  dividend_yield_pct, dividend_per_share, ex_dividend_date, next_earnings_date,\n" +
+        "  profit_margin_pct, fetched_at)\n" +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n" +
+        "ON CONFLICT(symbol) DO UPDATE SET pe_trailing = excluded.pe_trailing,\n" +
+        "  pe_forward = excluded.pe_forward, eps_trailing = excluded.eps_trailing,\n" +
+        "  dividend_yield_pct = excluded.dividend_yield_pct,\n" +
+        "  dividend_per_share = excluded.dividend_per_share,\n" +
+        "  ex_dividend_date = excluded.ex_dividend_date,\n" +
+        "  next_earnings_date = excluded.next_earnings_date,\n" +
+        "  profit_margin_pct = excluded.profit_margin_pct, fetched_at = excluded.fetched_at",
+    )
+    .run(
+      f.symbol.toUpperCase(), f.peRatioTrailing, f.peRatioForward, f.epsTrailing,
+      f.dividendYieldPct, f.dividendPerShare, f.exDividendDate, f.nextEarningsDate,
+      f.profitMarginPct, f.fetchedAt,
+    );
+}
+
+interface FundamentalsRow {
+  symbol: string; pe_trailing: number | null; pe_forward: number | null; eps_trailing: number | null;
+  dividend_yield_pct: number | null; dividend_per_share: number | null; ex_dividend_date: string | null;
+  next_earnings_date: string | null; profit_margin_pct: number | null; fetched_at: string;
+}
+
+/** A week is the right staleness window — this changes on an earnings cadence, not daily. */
+export function cachedFundamentals(symbol: string, maxAgeMs = 7 * 24 * 3600_000): Fundamentals | null {
+  const row = getDb()
+    .prepare("SELECT * FROM fundamentals_cache WHERE symbol = ?")
+    .get(symbol.toUpperCase()) as FundamentalsRow | undefined;
+  if (!row) return null;
+  if (Date.now() - new Date(row.fetched_at).getTime() > maxAgeMs) return null;
+  return {
+    symbol: row.symbol,
+    peRatioTrailing: row.pe_trailing,
+    peRatioForward: row.pe_forward,
+    epsTrailing: row.eps_trailing,
+    dividendYieldPct: row.dividend_yield_pct,
+    dividendPerShare: row.dividend_per_share,
+    exDividendDate: row.ex_dividend_date,
+    nextEarningsDate: row.next_earnings_date,
+    profitMarginPct: row.profit_margin_pct,
+    fetchedAt: row.fetched_at,
   };
 }
 

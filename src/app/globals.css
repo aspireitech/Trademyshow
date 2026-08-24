@@ -2103,6 +2103,10 @@ footer.site {
   gap: 16px;
   align-items: start;
 }
+.stock-stats-col {
+  display: grid;
+  gap: 16px;
+}
 .stock-stats dl {
   display: grid;
   grid-template-columns: 1fr auto;

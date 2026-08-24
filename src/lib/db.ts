@@ -255,6 +255,23 @@ function open(): Database.Database {
       fetched_at TEXT NOT NULL
     );
 
+    -- A company's shape (P/E, EPS, dividend, next earnings), refreshed on a
+    -- reporting cadence rather than a trading one, so it is cached far
+    -- longer than a quote and kept in its own table rather than bloating
+    -- quote_stats_cache with columns most requests do not need.
+    CREATE TABLE IF NOT EXISTS fundamentals_cache (
+      symbol TEXT PRIMARY KEY,
+      pe_trailing REAL,
+      pe_forward REAL,
+      eps_trailing REAL,
+      dividend_yield_pct REAL,
+      dividend_per_share REAL,
+      ex_dividend_date TEXT,
+      next_earnings_date TEXT,
+      profit_margin_pct REAL,
+      fetched_at TEXT NOT NULL
+    );
+
     -- Instruments discovered through search rather than shipped in the
     -- universe. Someone who looks up a small cap gets a working page, and the
     -- next visitor who types the same letters gets the answer without a round

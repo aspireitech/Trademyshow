@@ -1,4 +1,4 @@
-import type { NewsItem, PricePoint, Quote, QuoteStats, StockInfo } from "../types";
+import type { Fundamentals, NewsItem, PricePoint, Quote, QuoteStats, StockInfo } from "../types";
 import { ProviderError } from "./types";
 import type { MarketDataProvider, NewsProvider, SearchProvider } from "./types";
 
@@ -324,3 +324,76 @@ export const yahooNews: NewsProvider = {
     return out.slice(0, 8);
   },
 };
+
+// ---------- fundamentals ----------
+
+interface RawNumber {
+  raw?: number;
+}
+
+interface QuoteSummaryResult {
+  summaryDetail?: {
+    trailingPE?: RawNumber;
+    forwardPE?: RawNumber;
+    dividendRate?: RawNumber;
+    dividendYield?: RawNumber;
+    exDividendDate?: RawNumber;
+  };
+  defaultKeyStatistics?: {
+    trailingEps?: RawNumber;
+  };
+  financialData?: {
+    profitMargins?: RawNumber;
+  };
+  calendarEvents?: {
+    earnings?: { earningsDate?: RawNumber[] };
+  };
+}
+
+interface QuoteSummaryResponse {
+  quoteSummary: { result?: QuoteSummaryResult[] | null; error?: { description?: string } | null };
+}
+
+function isoDate(v: RawNumber | undefined): string | null {
+  const t = v?.raw;
+  return typeof t === "number" && Number.isFinite(t) ? new Date(t * 1000).toISOString() : null;
+}
+
+function pct(v: RawNumber | undefined): number | null {
+  const raw = v?.raw;
+  // Yahoo reports these as a fraction (0.012 for 1.2%), not a percentage.
+  return typeof raw === "number" && Number.isFinite(raw) ? round2(raw * 100) : null;
+}
+
+/**
+ * The quoteSummary endpoint, not the chart endpoint — a company's shape
+ * (P/E, EPS, dividend, next earnings) rather than its trading action. Kept
+ * as its own fetch because it changes on a company's reporting cadence, not
+ * every tick, so it is cached far longer than a quote.
+ */
+export async function fetchFundamentals(symbol: string): Promise<Fundamentals | null> {
+  const body = await get<QuoteSummaryResponse>(`/v10/finance/quoteSummary/${encodeURIComponent(symbol)}`, {
+    modules: "summaryDetail,defaultKeyStatistics,financialData,calendarEvents",
+  });
+  const r = body.quoteSummary?.result?.[0];
+  if (!r) return null;
+
+  const earningsDates = r.calendarEvents?.earnings?.earningsDate ?? [];
+  const nextEarnings = earningsDates
+    .map(isoDate)
+    .filter((d): d is string => d !== null)
+    .sort()[0];
+
+  return {
+    symbol: symbol.toUpperCase(),
+    peRatioTrailing: num(r.summaryDetail?.trailingPE?.raw),
+    peRatioForward: num(r.summaryDetail?.forwardPE?.raw),
+    epsTrailing: num(r.defaultKeyStatistics?.trailingEps?.raw),
+    dividendYieldPct: pct(r.summaryDetail?.dividendYield),
+    dividendPerShare: num(r.summaryDetail?.dividendRate?.raw),
+    exDividendDate: isoDate(r.summaryDetail?.exDividendDate),
+    nextEarningsDate: nextEarnings ?? null,
+    profitMarginPct: pct(r.financialData?.profitMargins),
+    fetchedAt: new Date().toISOString(),
+  };
+}

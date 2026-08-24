@@ -206,6 +206,26 @@ export interface QuoteStats {
   quoteTime: string | null;
 }
 
+/**
+ * The figures a fundamentals table shows next to the price — a company's
+ * shape, not its trading action. All optional and independently null: a
+ * young or loss-making company has no trailing P/E, and Yahoo does not
+ * always know the next earnings date. A blank cell here follows the same
+ * rule as everywhere else — never a fabricated number.
+ */
+export interface Fundamentals {
+  symbol: string;
+  peRatioTrailing: number | null;
+  peRatioForward: number | null;
+  epsTrailing: number | null;
+  dividendYieldPct: number | null;
+  dividendPerShare: number | null;
+  exDividendDate: string | null;
+  nextEarningsDate: string | null;
+  profitMarginPct: number | null;
+  fetchedAt: string;
+}
+
 /** Where a number on screen came from. Shown to the user, never guessed. */
 export type DataSource = "live" | "delayed" | "eod" | "simulated";
 

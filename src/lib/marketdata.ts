@@ -1,8 +1,9 @@
 import {
-  cachedCloses, cachedIntraday, cachedQuote, cachedQuoteStats, knownSymbol, searchDirectory,
+  cachedCloses, cachedFundamentals, cachedIntraday, cachedQuote, cachedQuoteStats,
+  knownSymbol, searchDirectory,
 } from "./providers/cache";
 import { liveDataEnabled } from "./providers/feed";
-import type { AssetClass, PricePoint, Quote, QuoteStats, StockInfo, Timeframe } from "./types";
+import type { AssetClass, Fundamentals, PricePoint, Quote, QuoteStats, StockInfo, Timeframe } from "./types";
 
 /**
  * Market data: the real feed first, the simulation only as a floor.
@@ -489,6 +490,15 @@ export function marketCapIsEstimated(symbol: string): boolean {
  */
 export function symbolStats(symbol: string): QuoteStats | null {
   return fromCache(() => cachedQuoteStats(symbol));
+}
+
+/**
+ * Cache-only read of a company's shape (P/E, EPS, dividend, next earnings).
+ * Never null because a vendor is slow at request time — the on-demand fetch
+ * that fills this cache lives in marketrefresh.ts, same split as quotes.
+ */
+export function getFundamentals(symbol: string): Fundamentals | null {
+  return fromCache(() => cachedFundamentals(symbol));
 }
 
 /**

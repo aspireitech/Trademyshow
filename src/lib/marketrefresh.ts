@@ -1,5 +1,6 @@
-import { cachedCloses, cacheIntraday, cachedSymbols } from "./providers/cache";
+import { cachedCloses, cacheFundamentals, cachedFundamentals, cacheIntraday, cachedSymbols } from "./providers/cache";
 import { liveDataEnabled, marketDataChain, refreshMany, refreshNews } from "./providers/feed";
+import { fetchFundamentals } from "./providers/yahoo";
 import { UNIVERSE } from "./marketdata";
 
 /**
@@ -157,4 +158,23 @@ export async function refreshSymbolDeeply(
   if (Date.now() <= deadline) await refreshNews(symbol).catch(() => false);
 
   return priced?.ok ?? false;
+}
+
+/**
+ * Fills the fundamentals cache for one symbol if it is missing or past its
+ * week-long staleness window. Fundamentals only exist for real companies on
+ * a real feed — nothing to fabricate for the simulation, so this is a no-op
+ * when MARKET_DATA_PROVIDER=mock.
+ */
+export async function refreshFundamentals(symbol: string): Promise<boolean> {
+  if (!liveDataEnabled()) return false;
+  if (cachedFundamentals(symbol)) return true;
+  try {
+    const f = await fetchFundamentals(symbol);
+    if (!f) return false;
+    cacheFundamentals(f);
+    return true;
+  } catch {
+    return false;
+  }
 }

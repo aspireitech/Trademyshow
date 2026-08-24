@@ -39,6 +39,17 @@ interface Stats {
   marketCapEstimated: boolean;
 }
 
+interface Fundamentals {
+  peRatioTrailing: number | null;
+  peRatioForward: number | null;
+  epsTrailing: number | null;
+  dividendYieldPct: number | null;
+  dividendPerShare: number | null;
+  exDividendDate: string | null;
+  nextEarningsDate: string | null;
+  profitMarginPct: number | null;
+}
+
 export interface StockResponse {
   info: StockInfo;
   quote: Quote;
@@ -48,8 +59,18 @@ export interface StockResponse {
   score: (InsightScore & { masked?: boolean }) | null;
   expectations: Expectation[] | null;
   stats: Stats;
+  fundamentals: Fundamentals | null;
   source: { source: string; vendor: string; asOf: string | null; text: string };
   signedIn: boolean;
+}
+
+function num(n: number | null, digits = 2): string {
+  return n === null || !Number.isFinite(n) ? "—" : n.toFixed(digits);
+}
+
+function shortDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function compact(n: number | null): string {
@@ -129,7 +150,7 @@ export default function StockView({ symbol }: { symbol: string }) {
     );
   }
 
-  const { info, quote, history, trends, news, score, expectations, stats, source } = data;
+  const { info, quote, history, trends, news, score, expectations, stats, fundamentals, source } = data;
   const up = quote.changePct >= 0;
   const change = quote.price - quote.prevClose;
   const simulated = source.source === "simulated";
@@ -197,6 +218,7 @@ export default function StockView({ symbol }: { symbol: string }) {
 
       {/* ---------- statistics + chart ---------- */}
       <div className="stock-grid">
+        <div className="stock-stats-col">
         <div className="card stock-stats">
           <dl>
             <div>
@@ -267,6 +289,56 @@ export default function StockView({ symbol }: { symbol: string }) {
               gap would not be.
             </p>
           )}
+        </div>
+
+        <div className="card stock-stats">
+          <h3 style={{ marginBottom: 10 }}>Fundamentals</h3>
+          {fundamentals ? (
+            <dl>
+              <div>
+                <dt>P/E (trailing)</dt>
+                <dd className="mono">{num(fundamentals.peRatioTrailing)}</dd>
+              </div>
+              <div>
+                <dt>P/E (forward)</dt>
+                <dd className="mono">{num(fundamentals.peRatioForward)}</dd>
+              </div>
+              <div>
+                <dt>EPS (trailing)</dt>
+                <dd className="mono">{money(fundamentals.epsTrailing, stats.currency)}</dd>
+              </div>
+              <div>
+                <dt>Profit margin</dt>
+                <dd className="mono">
+                  {fundamentals.profitMarginPct === null ? "—" : `${num(fundamentals.profitMarginPct, 1)}%`}
+                </dd>
+              </div>
+              <div>
+                <dt>Dividend yield</dt>
+                <dd className="mono">
+                  {fundamentals.dividendYieldPct === null ? "—" : `${num(fundamentals.dividendYieldPct, 2)}%`}
+                </dd>
+              </div>
+              <div>
+                <dt>Dividend / share</dt>
+                <dd className="mono">{money(fundamentals.dividendPerShare, stats.currency)}</dd>
+              </div>
+              <div>
+                <dt>Ex-dividend date</dt>
+                <dd>{shortDate(fundamentals.exDividendDate)}</dd>
+              </div>
+              <div>
+                <dt>Next earnings</dt>
+                <dd>{shortDate(fundamentals.nextEarningsDate)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="dim" style={{ fontSize: 13 }}>
+              No fundamentals on file for {info.symbol}. A blank line here means the vendor has
+              nothing to report — not investment advice, and never a guess dressed up as a number.
+            </p>
+          )}
+        </div>
         </div>
 
         <div className="card stock-chart">

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import {
-  dayVolume, getHistory, getQuote, getStockInfo, marketCap, marketCapIsEstimated,
+  dayVolume, getFundamentals, getHistory, getQuote, getStockInfo, marketCap, marketCapIsEstimated,
   rangeChangePct, round2, symbolStats, week52Range,
 } from "@/lib/marketdata";
 import { getNews } from "@/lib/news";
@@ -9,7 +9,7 @@ import { scoreStock } from "@/lib/insight/score";
 import { expectationsFor } from "@/lib/insight/expectation";
 import { effectiveLimits, PLAN_LIMITS } from "@/lib/plans";
 import { resolveSymbol, sourceFor, sourceText } from "@/lib/providers/feed";
-import { refreshSymbolDeeply } from "@/lib/marketrefresh";
+import { refreshFundamentals, refreshSymbolDeeply } from "@/lib/marketrefresh";
 import { limitRequest, tooManyRequests } from "@/lib/security";
 import { TIMEFRAMES, type Timeframe } from "@/lib/types";
 
@@ -51,6 +51,10 @@ export async function GET(req: Request, { params }: Params) {
   // is a couple of requests, and it only happens on the first view.
   if (sourceFor(info.symbol).source === "simulated") {
     await refreshSymbolDeeply(info.symbol).catch(() => false);
+  } else {
+    // Fundamentals change on a reporting cadence, not a tick, so this is a
+    // cache check that only ever calls out on a cold symbol.
+    await refreshFundamentals(info.symbol).catch(() => false);
   }
 
   const quote = getQuote(info.symbol);
@@ -59,6 +63,7 @@ export async function GET(req: Request, { params }: Params) {
   const news = getNews(info.symbol, quote.changePct);
   const stats = symbolStats(info.symbol);
   const range52 = week52Range(info.symbol);
+  const fundamentals = getFundamentals(info.symbol);
   const label = sourceFor(info.symbol);
   const simulated = label.source === "simulated";
 
@@ -105,6 +110,9 @@ export async function GET(req: Request, { params }: Params) {
       marketCap: marketCap(info.symbol),
       marketCapEstimated: marketCapIsEstimated(info.symbol),
     },
+    // Only ever filled from a real vendor — nothing to show for a simulated
+    // symbol, so this stays null rather than the page inventing a P/E.
+    fundamentals: simulated ? null : fundamentals,
     source: { ...label, text: sourceText(label) },
     signedIn: Boolean(user),
   });
