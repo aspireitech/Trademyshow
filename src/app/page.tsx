@@ -4,6 +4,7 @@ import { buildTrackRecord } from "@/lib/insight/trackrecord";
 import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
 import { UNIVERSE } from "@/lib/marketdata";
 import { VIEW_LABELS, type MoverView } from "@/lib/insight/movers";
+import FeatureShowcase from "@/components/FeatureShowcase";
 import MarketsDashboard from "@/components/MarketsDashboard";
 import MarketNewsFeed from "@/components/MarketNewsFeed";
 import NewsletterSignup from "@/components/NewsletterSignup";
@@ -146,9 +147,12 @@ export default async function LandingPage({
         </dl>
       </div>
 
-      <MarketsDashboard view={view} basePath="/" />
+      <div className="board-layout">
+        <MarketsDashboard view={view} basePath="/" />
+        <MarketNewsFeed rail />
+      </div>
 
-      <MarketNewsFeed />
+      <FeatureShowcase />
 
       <NewsletterSignup source="landing" />
 

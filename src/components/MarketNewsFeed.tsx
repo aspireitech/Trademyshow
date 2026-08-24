@@ -12,7 +12,14 @@ import { moverView } from "@/lib/insight/movers";
  * fix as any other wide-content case on this site: the page never scrolls
  * to accommodate it, only the widget does.
  */
-export default function MarketNewsFeed({ limit = 12 }: { limit?: number }) {
+export default function MarketNewsFeed({
+  limit = 12,
+  rail = false,
+}: {
+  limit?: number;
+  /** Sitting beside the table instead of below it — taller, since it has the height to spare. */
+  rail?: boolean;
+}) {
   const movers = moverView("active", 12).map((m) => m.symbol);
   const { items, generated } = marketNews(movers, limit);
 
@@ -24,7 +31,7 @@ export default function MarketNewsFeed({ limit = 12 }: { limit?: number }) {
   const seconds = Math.max(items.length * 4.5, 20);
 
   return (
-    <section className="news-panel">
+    <section className={`news-panel${rail ? " news-panel-rail" : ""}`}>
       <div className="news-head">
         <h2>Market news</h2>
         {generated && (
@@ -32,7 +39,7 @@ export default function MarketNewsFeed({ limit = 12 }: { limit?: number }) {
         )}
       </div>
 
-      <div className="news-ticker">
+      <div className={`news-ticker${rail ? " tall" : ""}`}>
         <ul
           className="news-ticker-track"
           style={{ animationDuration: `${seconds}s` }}

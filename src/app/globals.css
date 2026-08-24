@@ -566,6 +566,123 @@ footer.site {
   .hero h1 { font-size: 32px; }
 }
 
+/* ---------- landing "what's new" showcase ---------- */
+.fs-shell {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+.fs-nav {
+  flex: none;
+  align-self: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.fs-nav:hover { color: var(--accent); border-color: var(--accent); }
+.fs-panel {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 28px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  padding: 28px 32px;
+  min-height: 260px;
+  animation: fs-fade-in 0.35s ease both;
+}
+@keyframes fs-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fs-eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.fs-copy h3 { font-size: 22px; margin-bottom: 8px; letter-spacing: -0.01em; }
+.fs-copy p { font-size: 14.5px; margin-bottom: 16px; max-width: 46ch; }
+.fs-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+.fs-illus { width: 100%; }
+
+.fs-illus-portfolio { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.fs-mini-legend { list-style: none; margin: 0; padding: 0; font-size: 12.5px; display: grid; gap: 6px; }
+.fs-mini-legend li { display: flex; align-items: center; gap: 6px; }
+.fs-mini-legend .dim { margin-left: auto; font-family: var(--font-mono); }
+.fs-swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+.fs-stat-list { display: grid; gap: 0; font-size: 13.5px; }
+.fs-stat-list > div { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.fs-stat-list > div:last-child { border-bottom: none; }
+.fs-stat-list dt { color: var(--text-dim); }
+.fs-stat-list dd { margin: 0; font-weight: 600; }
+
+.fs-illus-peers { display: grid; gap: 8px; }
+.fs-peer-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13.5px;
+  background: var(--bg);
+}
+.fs-peer-row span { font-family: var(--font-mono); font-weight: 600; }
+
+.fs-alert-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-size: 13.5px;
+}
+.fs-alert-card p { margin-top: 3px; font-size: 12px; }
+
+.fs-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.fs-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+}
+.fs-dots button.on { background: var(--accent); width: 22px; border-radius: 4px; transition: width 0.2s; }
+
+@media (max-width: 760px) {
+  .fs-panel { grid-template-columns: minmax(0, 1fr); padding: 22px; text-align: left; }
+  .fs-visual { min-height: 140px; }
+  .fs-nav { display: none; }
+}
+
 .faq details {
   border-bottom: 1px solid var(--border);
   padding: 14px 0;
@@ -2233,6 +2350,34 @@ a.news-title:hover { color: var(--accent); }
 .news-src { font-size: 11.5px; margin-top: 6px; }
 
 /* ---------- dashboard news ticker ---------- */
+/* ---------- landing dashboard: table + news side by side ---------- */
+.board-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  gap: 20px;
+  /* Stretch, not start: the rail matches the table's height rather than
+     leaving a gap of empty card below a short table or a tall rail. */
+  align-items: stretch;
+}
+.news-panel-rail {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.news-panel-rail .news-ticker.tall {
+  flex: 1;
+  height: auto;
+  min-height: 420px;
+}
+@media (max-width: 1180px) {
+  /* Below this the table's own columns start losing to the rail's 320px
+     before either has room to breathe — stack instead of squeezing both. */
+  .board-layout { grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .news-panel-rail { margin-top: 20px; }
+  .news-panel-rail .news-ticker.tall { flex: none; height: 380px; }
+}
+
 .news-ticker {
   position: relative;
   height: 380px;
