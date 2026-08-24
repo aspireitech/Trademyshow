@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import {
   dayVolume, getFundamentals, getHistory, getQuote, getStockInfo, marketCap, marketCapIsEstimated,
-  rangeChangePct, round2, symbolStats, week52Range,
+  rangeChangePct, round2, sectorPeers, symbolStats, week52Range,
 } from "@/lib/marketdata";
 import { getNews } from "@/lib/news";
 import { scoreStock } from "@/lib/insight/score";
@@ -60,10 +60,16 @@ export async function GET(req: Request, { params }: Params) {
   const quote = getQuote(info.symbol);
   const history = getHistory(info.symbol, range);
   const trends = Object.fromEntries(TIMEFRAMES.map((tf) => [tf, rangeChangePct(info.symbol, tf)]));
-  const news = getNews(info.symbol, quote.changePct);
+  // More than the digest or score need — this is the one place a visitor
+  // can actually read a symbol's recent headlines rather than the top few.
+  const news = getNews(info.symbol, quote.changePct, new Date(), 12);
   const stats = symbolStats(info.symbol);
   const range52 = week52Range(info.symbol);
   const fundamentals = getFundamentals(info.symbol);
+  const peers = sectorPeers(info.symbol).map((p) => {
+    const q = getQuote(p.symbol);
+    return { symbol: p.symbol, name: p.name, price: q.price, changePct: q.changePct };
+  });
   const label = sourceFor(info.symbol);
   const simulated = label.source === "simulated";
 
@@ -113,6 +119,7 @@ export async function GET(req: Request, { params }: Params) {
     // Only ever filled from a real vendor — nothing to show for a simulated
     // symbol, so this stays null rather than the page inventing a P/E.
     fundamentals: simulated ? null : fundamentals,
+    peers,
     source: { ...label, text: sourceText(label) },
     signedIn: Boolean(user),
   });

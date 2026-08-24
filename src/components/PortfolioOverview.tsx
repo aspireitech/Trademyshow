@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import PortfolioDonut from "./PortfolioDonut";
+import { downloadCsv } from "@/lib/csv";
 import { allocationSlices, type AllocationSlice } from "@/lib/portfolio";
 import type { DigestFacts } from "@/lib/types";
 
@@ -76,14 +77,36 @@ export default function PortfolioOverview() {
   const totalValue = groups.reduce((sum, g) => sum + g.totalValue, 0);
   const rollupSlices = allocationSlices(groups.map((g) => ({ label: g.name, value: g.totalValue })));
 
+  function exportAllCsv() {
+    downloadCsv("portfolios", [
+      ["Portfolio", "Symbol", "Name", "Shares", "Price", "Value", "Today %"],
+      ...(groups ?? []).flatMap((g) =>
+        (facts[g.id]?.holdings ?? []).map((h) => [
+          g.name,
+          h.symbol,
+          h.name,
+          h.quantity,
+          h.price.toFixed(2),
+          h.value.toFixed(2),
+          h.changePct.toFixed(2),
+        ]),
+      ),
+    ]);
+  }
+
   return (
     <div style={{ display: "grid", gap: 18 }}>
       <section className="card">
         <div className="sec-head">
           <h3>All portfolios</h3>
-          <p className="mono" style={{ fontSize: 20, fontWeight: 700 }}>
-            ${totalValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <p className="mono" style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>
+              ${totalValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+            </p>
+            <button type="button" className="btn small secondary" onClick={exportAllCsv}>
+              Export CSV
+            </button>
+          </div>
         </div>
         <p className="dim" style={{ fontSize: 14, marginTop: 4 }}>
           Every portfolio you hold, combined into one number. Priced with the same delayed

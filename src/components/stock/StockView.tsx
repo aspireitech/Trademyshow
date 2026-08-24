@@ -50,6 +50,13 @@ interface Fundamentals {
   profitMarginPct: number | null;
 }
 
+interface Peer {
+  symbol: string;
+  name: string;
+  price: number;
+  changePct: number;
+}
+
 export interface StockResponse {
   info: StockInfo;
   quote: Quote;
@@ -60,6 +67,7 @@ export interface StockResponse {
   expectations: Expectation[] | null;
   stats: Stats;
   fundamentals: Fundamentals | null;
+  peers: Peer[];
   source: { source: string; vendor: string; asOf: string | null; text: string };
   signedIn: boolean;
 }
@@ -108,6 +116,7 @@ function trendSummary(trends: Record<Timeframe, number>): string {
 export default function StockView({ symbol }: { symbol: string }) {
   const [range, setRange] = useState<Timeframe>("1M");
   const [data, setData] = useState<StockResponse | null>(null);
+  const [showAllNews, setShowAllNews] = useState(false);
   const [missing, setMissing] = useState(false);
   const [gate, setGate] = useState(false);
 
@@ -150,7 +159,7 @@ export default function StockView({ symbol }: { symbol: string }) {
     );
   }
 
-  const { info, quote, history, trends, news, score, expectations, stats, fundamentals, source } = data;
+  const { info, quote, history, trends, news, score, expectations, stats, fundamentals, peers, source } = data;
   const up = quote.changePct >= 0;
   const change = quote.price - quote.prevClose;
   const simulated = source.source === "simulated";
@@ -392,6 +401,43 @@ export default function StockView({ symbol }: { symbol: string }) {
         </div>
       )}
 
+      {/* ---------- sector peers ---------- */}
+      {peers.length > 0 && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="sec-head">
+            <h3 style={{ margin: 0 }}>{info.sector} peers</h3>
+            {data.signedIn ? (
+              <Link
+                className="btn small secondary"
+                href={`/dashboard/compare?symbols=${encodeURIComponent(
+                  [info.symbol, ...peers.slice(0, 3).map((p) => p.symbol)].join(","),
+                )}`}
+              >
+                Compare all
+              </Link>
+            ) : (
+              <button type="button" className="btn small secondary" onClick={() => setGate(true)}>
+                Compare all
+              </button>
+            )}
+          </div>
+          <ul className="peer-list">
+            {peers.map((p) => (
+              <li key={p.symbol}>
+                <Link href={`/stocks/${p.symbol}`} className="mkt-sym">
+                  <strong>{p.symbol}</strong> <span className="dim">{p.name}</span>
+                </Link>
+                <span className="mono">{money(p.price, stats.currency)}</span>
+                <span className={`mono ${p.changePct >= 0 ? "gain" : "loss"}`}>
+                  {p.changePct >= 0 ? "+" : ""}
+                  {p.changePct.toFixed(2)}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* ---------- news ---------- */}
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Latest news</h3>
@@ -400,26 +446,38 @@ export default function StockView({ symbol }: { symbol: string }) {
             No headlines for {info.symbol} in the last few days.
           </p>
         ) : (
-          <ul className="news-list">
-            {news.map((n) => (
-              <li key={n.id}>
-                <span className={`sent ${n.sentiment}`} title={`${n.sentiment} tone`} />
-                <div>
-                  {n.url ? (
-                    <a href={n.url} target="_blank" rel="noopener noreferrer nofollow">
-                      {n.headline}
-                    </a>
-                  ) : (
-                    <strong>{n.headline}</strong>
-                  )}
-                  <p className="dim">
-                    {n.summary ? `${n.summary} — ` : ""}
-                    {n.source} · {new Date(n.publishedAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="news-list">
+              {(showAllNews ? news : news.slice(0, 5)).map((n) => (
+                <li key={n.id}>
+                  <span className={`sent ${n.sentiment}`} title={`${n.sentiment} tone`} />
+                  <div>
+                    {n.url ? (
+                      <a href={n.url} target="_blank" rel="noopener noreferrer nofollow">
+                        {n.headline}
+                      </a>
+                    ) : (
+                      <strong>{n.headline}</strong>
+                    )}
+                    <p className="dim">
+                      {n.summary ? `${n.summary} — ` : ""}
+                      {n.source} · {new Date(n.publishedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {news.length > 5 && (
+              <button
+                type="button"
+                className="btn small secondary"
+                style={{ marginTop: 10 }}
+                onClick={() => setShowAllNews((v) => !v)}
+              >
+                {showAllNews ? "Show fewer" : `Show ${news.length - 5} more`}
+              </button>
+            )}
+          </>
         )}
       </div>
 

@@ -45,7 +45,12 @@ function hashString(s: string): number {
  * News for a symbol on a given day. `dayChangePct` steers sentiment so the
  * mock feed plausibly explains the price move.
  */
-export function getNews(symbol: string, dayChangePct: number, asOf: Date = new Date()): NewsItem[] {
+export function getNews(
+  symbol: string,
+  dayChangePct: number,
+  asOf: Date = new Date(),
+  limit = 4,
+): NewsItem[] {
   const info = getStockInfo(symbol);
   if (!info) return [];
 
@@ -54,7 +59,7 @@ export function getNews(symbol: string, dayChangePct: number, asOf: Date = new D
   // component of the score defined on days the vendor returns an empty set.
   if (usingLiveData()) {
     const since = new Date(asOf.getTime() - 3 * 86_400_000);
-    const live = cachedNews(symbol, since);
+    const live = cachedNews(symbol, since, limit);
     if (live.length > 0) return live;
   }
   const dayKey = asOf.toISOString().slice(0, 10);

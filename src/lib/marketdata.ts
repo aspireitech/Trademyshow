@@ -207,6 +207,18 @@ export function getStockInfo(symbol: string): StockInfo | null {
   }
 }
 
+/**
+ * Other shipped instruments in the same sector — the comparison a visitor
+ * reaches for right after "is this cheap", and one Compare already answers
+ * once they have symbols to put on it. Limited to the shipped universe: a
+ * vendor-discovered symbol has no sector we can group it by.
+ */
+export function sectorPeers(symbol: string, limit = 6): StockInfo[] {
+  const info = getStockInfo(symbol);
+  if (!info) return [];
+  return UNIVERSE.filter((s) => s.sector === info.sector && s.symbol !== info.symbol).slice(0, limit);
+}
+
 export function searchStocks(query: string, limit = 8): StockInfo[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];

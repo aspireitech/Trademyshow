@@ -6,6 +6,7 @@ import Sparkline from "./Sparkline";
 import type { Digest, DigestFacts, DigestPeriod, Holding, StockInfo, Timeframe } from "@/lib/types";
 import { TIMEFRAMES } from "@/lib/types";
 import { apiFetch } from "@/lib/apiClient";
+import { downloadCsv } from "@/lib/csv";
 
 interface GroupResponse {
   group: { id: number; name: string };
@@ -133,6 +134,23 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
     await load();
   }
 
+  function exportCsv() {
+    if (!data) return;
+    downloadCsv(`${data.group.name}-holdings`, [
+      ["Symbol", "Name", "Shares", "Price", "Value", "Today %", "Weight %", "Contribution %"],
+      ...facts.holdings.map((h) => [
+        h.symbol,
+        h.name,
+        h.quantity,
+        h.price.toFixed(2),
+        (h.price * h.quantity).toFixed(2),
+        h.changePct.toFixed(2),
+        (h.weight * 100).toFixed(2),
+        h.contributionPct.toFixed(2),
+      ]),
+    ]);
+  }
+
   async function generateDigest() {
     setDigestBusy(true);
     setError(null);
@@ -251,12 +269,19 @@ export default function GroupDetail({ groupId }: { groupId: number }) {
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <h3 style={{ margin: 0 }}>Holdings &amp; trends</h3>
-          <div className="tf-tabs">
-            {TIMEFRAMES.map((t) => (
-              <button key={t} className={t === tf ? "active" : ""} onClick={() => setTf(t)}>
-                {t}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div className="tf-tabs">
+              {TIMEFRAMES.map((t) => (
+                <button key={t} className={t === tf ? "active" : ""} onClick={() => setTf(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            {facts.holdings.length > 0 && (
+              <button type="button" className="btn small secondary" onClick={exportCsv}>
+                Export CSV
               </button>
-            ))}
+            )}
           </div>
         </div>
         {facts.holdings.length === 0 ? (
