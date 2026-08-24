@@ -15,7 +15,14 @@
 # which looks exactly like an update that did not work.
 
 param(
-  [string]$Branch = "claude/landing-dashboard-stock-data-5fngt1"
+  [string]$Branch = "claude/landing-dashboard-stock-data-5fngt1",
+  # Start the server when the update finishes, instead of leaving you to type
+  # `npm start` as a separate step. Off by default: on a deployed machine the
+  # service manager owns starting the server, not this script.
+  [switch]$Start,
+  # Skip the market refresh — for when you are iterating on layout and do not
+  # need newer prices. The cache already on disk keeps serving.
+  [switch]$NoRefresh
 )
 
 # Deliberately NOT "Stop". git writes ordinary progress to stderr, and with
@@ -116,6 +123,8 @@ if ($mockPin.Count -gt 0) {
   Write-Host "   Delete that line — real prices need no setting and no API key —" -ForegroundColor Yellow
   Write-Host "   then run this script again." -ForegroundColor Yellow
   Write-Host ""
+} elseif ($NoRefresh) {
+  Write-Host "==> Skipping the market refresh (-NoRefresh); prices stay as cached" -ForegroundColor DarkGray
 } else {
   Write-Host "==> Refreshing market data (the first run also pulls 5 years of history)" -ForegroundColor Cyan
   npm run refresh
@@ -128,7 +137,14 @@ if ($mockPin.Count -gt 0) {
 }
 
 Write-Host ""
-Write-Host "Done. Start the site with:  npm start" -ForegroundColor Green
-Write-Host "Then open http://localhost:3000" -ForegroundColor Green
-Write-Host ""
-Write-Host "Check the prices are real:  npm run verify:prices" -ForegroundColor Green
+if ($Start) {
+  Write-Host "==> Starting on http://localhost:3000  (Ctrl+C to stop)" -ForegroundColor Green
+  Write-Host ""
+  npm start
+} else {
+  Write-Host "Done. Start the site with:  npm start" -ForegroundColor Green
+  Write-Host "  ...or next time:          .\scripts\update.ps1 -Start" -ForegroundColor DarkGray
+  Write-Host "Then open http://localhost:3000" -ForegroundColor Green
+  Write-Host ""
+  Write-Host "Check the prices are real:  npm run verify:prices" -ForegroundColor Green
+}

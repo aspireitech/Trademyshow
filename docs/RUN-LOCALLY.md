@@ -105,12 +105,38 @@ npm run verify     # typecheck + tests + build, all three
 **One command does all of it:**
 
 ```powershell
-.\scripts\update.ps1
+.\scripts\update.ps1 -Start
 ```
 
 It stops the server, fetches and checks out the right branch, reinstalls only
-if the lockfile moved, rebuilds, and refreshes the market cache. Then start the
-site with `npm start`.
+if the lockfile moved, rebuilds, refreshes the market cache, and starts the
+site. Drop `-Start` if you would rather run `npm start` yourself.
+
+Useful switches: `-NoRefresh` skips the price fetch when you are iterating on
+layout and do not need newer prices; `-Branch <name>` takes a different branch.
+
+**How often each part is actually needed:**
+
+| Step | When |
+| --- | --- |
+| `git checkout <branch>` | Once. You stay on that branch until you switch. |
+| `git pull` | Whenever there is new work to collect. |
+| `npm ci` | Only when `package-lock.json` changed. The script decides for you. |
+| `npm run build` | After any code change — `npm start` serves the last build, not your files. |
+| `npm run refresh` | To get newer prices. The cache is on disk and survives restarts, so this is not needed just to restart. |
+| `npm start` | Whenever you want the site running. |
+| `npm run verify:prices` | When you want to confirm the prices are real. Not part of running. |
+
+**For trying things out, use dev mode instead:**
+
+```powershell
+npm run dev
+```
+
+No build step, and edits appear in the browser as you save. It is slower per
+page and shows development warnings, so use `npm run build` + `npm start` when
+you want to see what a visitor would actually get — but for looking around,
+`npm run dev` saves you a rebuild every time.
 
 To pull a different branch: `.\scripts\update.ps1 -Branch some-other-branch`.
 
