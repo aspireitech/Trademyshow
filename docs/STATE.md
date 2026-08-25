@@ -4,11 +4,15 @@
 session costs almost nothing: the map below says which file owns what, so work
 starts by opening two or three known files instead of searching the codebase.
 
-Status: branch `claude/landing-dashboard-stock-data-5fngt1`, open as
-[PR #9](https://github.com/aspireitech/Trademyshow/pull/9) · Node 22 ·
-456 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-25.
+Status: `claude/landing-dashboard-stock-data-5fngt1` ([PR #9](https://github.com/aspireitech/Trademyshow/pull/9))
+is **frozen** at the owner's request. Active work is branch
+`claude/stock-page-rail-and-quote-label`, [PR #11](https://github.com/aspireitech/Trademyshow/pull/11)
+against #9, not main · Node 22 · 454 unit tests, 38 e2e, `next build` clean ·
+2026-08-25.
 
-Pushing to the branch updates that PR — there is no second one to open.
+Push to the PR #11 branch, never to #9, unless told otherwise. (PR #10: a
+different, uncoordinated Claude session's follow-on to #9 — closed
+2026-08-25, superseded by #11.)
 
 `tests/docs-map.test.ts` asserts every path in the map below exists and that
 this file stays short enough to be worth reading every time. If you rename a
@@ -119,10 +123,13 @@ next.config.mjs  legacy redirects live here, not in pages
 ## 6. Next up
 
 - [x] ~~Signed-out landing popup, CTA/popup vibrancy, footer social row.~~
-      `components/FeatureSpotlight.tsx` (`.pop-vivid` modal, random entry per
-      load); `.btn` gradient+glow; `components/SocialLinks.tsx` — Facebook,
-      X, LinkedIn, YouTube as brand-colour circular badges. **Placeholder
-      handles** — swap for the real accounts before they're public.
+      `FeatureSpotlight.tsx`, `.btn` gradient, `SocialLinks.tsx` (Facebook,
+      X, LinkedIn, YouTube). **Placeholder handles** — swap before public.
+- [x] ~~PR #11: sticky news rail, quieter data-source label.~~
+      `.stock-lower-side` is `position: sticky` instead of height-matched —
+      a short news list no longer leaves blank space. `.src-pill` shrinks to
+      a `.src-info` ⓘ icon for real/delayed data (tooltip carries the text);
+      simulated data keeps its visible pill.
 - [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
       data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
       (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
