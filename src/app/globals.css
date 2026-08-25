@@ -753,6 +753,53 @@ footer.site {
   }
 }
 
+/* ---------- announcement bar ---------- */
+
+.announce-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  animation: cookie-in 0.32s ease-out both;
+}
+.announce-bar p {
+  margin: 0;
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.announce-bar p a {
+  color: var(--text);
+  font-weight: 600;
+}
+.announce-close {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.announce-close:hover {
+  background: var(--border);
+  color: var(--text);
+}
+@media (prefers-reduced-motion: reduce) {
+  .announce-bar {
+    animation: none;
+  }
+}
+
 /* ---------- social sign-in ---------- */
 
 .or-divider {
