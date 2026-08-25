@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { currentUser } from "@/lib/auth";
 import { buildTrackRecord } from "@/lib/insight/trackrecord";
 import { PLAN_PRICING, TRIAL_DAYS } from "@/lib/plans";
 import { UNIVERSE } from "@/lib/marketdata";
 import { VIEW_LABELS, type MoverView } from "@/lib/insight/movers";
+import FeatureSpotlight from "@/components/FeatureSpotlight";
 import MarketsDashboard from "@/components/MarketsDashboard";
 import MarketNewsFeed from "@/components/MarketNewsFeed";
 import NewsletterSignup from "@/components/NewsletterSignup";
@@ -85,6 +87,7 @@ export default async function LandingPage({
     ? (requested as MoverView)
     : "gainers";
 
+  const user = await currentUser();
   const record = buildTrackRecord(30);
 
   const jsonLd = {
@@ -119,6 +122,8 @@ export default async function LandingPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      <FeatureSpotlight signedIn={!!user} />
 
       <div className="board-intro">
         <div>

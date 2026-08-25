@@ -121,7 +121,10 @@ a:hover {
 /* ---------- buttons & forms ---------- */
 .btn {
   display: inline-block;
-  background: var(--accent);
+  /* Concentrated vibrancy: the site stays on its calm, AA-checked base
+     everywhere, but the one thing every page wants you to click gets a
+     gradient and a glow instead of a flat fill. */
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
   color: #fff;
   border: none;
   border-radius: var(--radius);
@@ -130,15 +133,24 @@ a:hover {
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transition: box-shadow 0.15s ease, transform 0.15s ease, filter 0.15s ease;
 }
 .btn:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
   text-decoration: none;
 }
 .btn.secondary {
   background: var(--bg-raised);
   border: 1px solid var(--border);
   color: var(--text);
+  box-shadow: none;
+}
+.btn.secondary:hover {
+  box-shadow: none;
+  transform: none;
 }
 .btn.small {
   padding: 5px 12px;
@@ -2094,6 +2106,38 @@ footer.site {
   cursor: pointer;
 }
 .pop-close:hover { color: var(--text); }
+
+/* .pop-vivid: the one deliberately loud surface on the site — a signed-out
+   landing-page interrupt, not page chrome, so it does not restyle itself to
+   blend in. Fixed gradient in both themes, same reasoning as the CTA glow
+   above; colours checked against the text they carry, not theme tokens. */
+.pop-vivid {
+  background: linear-gradient(150deg, #1d4ed8 0%, #0f766e 100%);
+  border: none;
+}
+.pop-vivid h3 { color: #fff; }
+.pop-vivid p { color: rgba(255, 255, 255, 0.85); }
+.pop-vivid .live-dot { background: #caff33; }
+.pop-vivid .btn {
+  background: #caff33;
+  color: #0b1a12;
+  box-shadow: 0 4px 14px rgba(202, 255, 51, 0.3);
+}
+.pop-vivid .btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 20px rgba(202, 255, 51, 0.4);
+}
+.pop-dismiss {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.pop-dismiss:hover { color: #fff; }
+.pop-vivid .pop-close { color: rgba(255, 255, 255, 0.85); }
+.pop-vivid .pop-close:hover { color: #fff; }
 
 /* ---------- statistics + chart ---------- */
 

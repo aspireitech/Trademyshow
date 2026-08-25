@@ -6,7 +6,7 @@ starts by opening two or three known files instead of searching the codebase.
 
 Status: branch `claude/landing-dashboard-stock-data-5fngt1`, open as
 [PR #9](https://github.com/aspireitech/Trademyshow/pull/9) · Node 22 ·
-428 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-23.
+455 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-25.
 
 Pushing to the branch updates that PR — there is no second one to open.
 
@@ -118,6 +118,19 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
+- [x] ~~Add a signed-out landing popup so shipped features get announced
+      without the page growing a permanent section per feature.~~ Done:
+      `components/FeatureSpotlight.tsx` shows one random entry from its
+      `FEATURES` array on every landing-page load (signed-in users never see
+      it), reusing the existing `.pop`/`.pop-backdrop` modal with a new
+      `pop-vivid` gradient modifier. Add an entry to the array when something
+      ships; contrast-audit it along with the other `.gsearch-*`/`.stock-*`
+      items below.
+- [x] ~~Concentrate vibrant colour on the primary CTA and the popup only.~~
+      Done: `.btn` got a gradient + glow, `.pop-vivid` a fixed dark
+      blue-to-teal gradient with a lime CTA — the rest of the site keeps its
+      calm, AA-checked base. Deliberate choice over a full repaint;
+      owner-approved after comparing to a broker-style bold palette.
 - [x] ~~Verify the live feed against the real internet.~~ **Confirmed working**
       by the owner on 2026-08-23: real Apple and Amazon prices on a machine
       with open network. The sandbox still blocks the finance hosts, so any
