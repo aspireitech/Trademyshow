@@ -1993,6 +1993,8 @@ footer.site {
 .stock-price > .mono { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
 .stock-change { font-size: 16px; font-weight: 700; }
 .stock-asof { font-size: 12px; margin-top: 2px; }
+.stock-overnight { font-size: 13px; margin-top: 6px; }
+.stock-overnight .mono { font-weight: 600; }
 
 /* ---------- action row ---------- */
 

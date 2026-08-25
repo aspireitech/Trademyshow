@@ -126,12 +126,16 @@ next.config.mjs  legacy redirects live here, not in pages
 - [x] ~~Concentrate vibrant colour on the CTA and popup only, not a repaint.~~
       `.btn` gradient + glow; `.pop-vivid` fixed blue-to-teal with a lime CTA.
       Owner-approved over a broker-style bold palette.
-- News right-rail and an overnight (pre/post-market) price row were both
-      built on the stock page, then **reverted at the owner's request on
-      2026-08-25** — news stays the last full-width card, no overnight row.
-      Reopen only if asked again; the overnight plumbing (Yahoo's
-      `includePrePost` field, an `overnight` column set on
-      `quote_stats_cache`) is fully backed out, not just hidden.
+- [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
+      data only, never simulated: `QuoteStats.overnight` from Yahoo's
+      `includePrePost` chart field (`lib/providers/yahoo.ts`), cached in four
+      `quote_stats_cache` columns, a second price line when present. Built,
+      reverted, then re-requested by the owner same day (2026-08-25) — the
+      churn is why this entry spells out the mechanism rather than just
+      linking the commit. Needs live verification — the sandbox blocks
+      finance hosts — same as the feed itself below. **News stays a
+      full-width bottom card, not a right rail** — that half of the original
+      pairing was not re-requested; do not re-add it without being asked.
 - [x] ~~Social links in the footer.~~ `components/SocialLinks.tsx` — X,
       LinkedIn, YouTube as filled brand-colour circular badges (46px, gradient
       + hover lift) — the one other spot besides the CTA/popup allowed off

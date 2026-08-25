@@ -37,6 +37,8 @@ interface Stats {
   week52Low: number;
   marketCap: number | null;
   marketCapEstimated: boolean;
+  /** Pre/post-market price, only when the vendor actually published one. */
+  overnight: { price: number; changePct: number; kind: "pre" | "post"; asOf: string | null } | null;
 }
 
 interface Fundamentals {
@@ -188,6 +190,21 @@ export default function StockView({ symbol }: { symbol: string }) {
           {source.asOf && (
             <p className="dim stock-asof">
               As of {new Date(source.asOf).toLocaleString()}
+            </p>
+          )}
+          {/* Real vendor data only — there is no simulated overnight price,
+              so this row simply does not appear for a simulated symbol. */}
+          {stats.overnight && (
+            <p className="dim stock-overnight" title={`${stats.overnight.kind === "post" ? "Post-market" : "Pre-market"} price from the vendor`}>
+              <span aria-hidden="true">{stats.overnight.kind === "post" ? "☾" : "☀"}</span>{" "}
+              {stats.overnight.kind === "post" ? "Overnight" : "Pre-market"}:{" "}
+              <span className="mono">{money(stats.overnight.price, stats.currency)}</span>{" "}
+              <span className={`mono ${stats.overnight.changePct >= 0 ? "gain" : "loss"}`}>
+                {stats.overnight.changePct >= 0 ? "+" : ""}{stats.overnight.changePct.toFixed(2)}%
+              </span>
+              {stats.overnight.asOf && (
+                <span className="dim"> · {new Date(stats.overnight.asOf).toLocaleTimeString()}</span>
+              )}
             </p>
           )}
         </div>

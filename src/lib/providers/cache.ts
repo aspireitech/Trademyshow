@@ -153,24 +153,30 @@ export function cacheQuoteStats(s: QuoteStats, fetchedAt: Date = new Date()): vo
   getDb()
     .prepare(
       "INSERT INTO quote_stats_cache (symbol, currency, exchange, open, day_high, day_low,\n" +
-        "  volume, week52_high, week52_low, market_cap, quote_time, fetched_at)\n" +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n" +
+        "  volume, week52_high, week52_low, market_cap, quote_time,\n" +
+        "  overnight_price, overnight_change_pct, overnight_kind, overnight_time, fetched_at)\n" +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n" +
         "ON CONFLICT(symbol) DO UPDATE SET currency = excluded.currency, exchange = excluded.exchange,\n" +
         "  open = excluded.open, day_high = excluded.day_high, day_low = excluded.day_low,\n" +
         "  volume = excluded.volume, week52_high = excluded.week52_high,\n" +
         "  week52_low = excluded.week52_low, market_cap = excluded.market_cap,\n" +
-        "  quote_time = excluded.quote_time, fetched_at = excluded.fetched_at",
+        "  quote_time = excluded.quote_time, overnight_price = excluded.overnight_price,\n" +
+        "  overnight_change_pct = excluded.overnight_change_pct, overnight_kind = excluded.overnight_kind,\n" +
+        "  overnight_time = excluded.overnight_time, fetched_at = excluded.fetched_at",
     )
     .run(
       s.symbol.toUpperCase(), s.currency, s.exchange, s.open, s.dayHigh, s.dayLow,
       s.volume, s.fiftyTwoWeekHigh, s.fiftyTwoWeekLow, s.marketCap, s.quoteTime,
-      fetchedAt.toISOString(),
+      s.overnight?.price ?? null, s.overnight?.changePct ?? null, s.overnight?.kind ?? null,
+      s.overnight?.asOf ?? null, fetchedAt.toISOString(),
     );
 }
 
 interface StatsRow {
   symbol: string; currency: string | null; exchange: string | null;
   open: number | null; day_high: number | null; day_low: number | null;
+  overnight_price: number | null; overnight_change_pct: number | null;
+  overnight_kind: "pre" | "post" | null; overnight_time: string | null;
   volume: number | null; week52_high: number | null; week52_low: number | null;
   market_cap: number | null; quote_time: string | null; fetched_at: string;
 }
@@ -193,6 +199,15 @@ export function cachedQuoteStats(symbol: string, maxAgeMs = 26 * 3600_000): Quot
     fiftyTwoWeekLow: row.week52_low,
     marketCap: row.market_cap,
     quoteTime: row.quote_time,
+    overnight:
+      row.overnight_price !== null && row.overnight_change_pct !== null && row.overnight_kind !== null
+        ? {
+            price: row.overnight_price,
+            changePct: row.overnight_change_pct,
+            kind: row.overnight_kind,
+            asOf: row.overnight_time,
+          }
+        : null,
   };
 }
 
