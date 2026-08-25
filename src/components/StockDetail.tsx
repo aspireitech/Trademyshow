@@ -90,61 +90,67 @@ export default function StockDetail({ symbol }: { symbol: string }) {
         </div>
       )}
 
-      {/* Chart + timeframes */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="tf-tabs" style={{ marginBottom: 12 }}>
-          {TIMEFRAMES.map((t) => (
-            <button key={t} className={t === tf ? "active" : ""} onClick={() => setTf(t)} aria-pressed={t === tf}>
-              {t}
-            </button>
-          ))}
-        </div>
-        <PriceChart points={history} />
-        <p style={{ marginTop: 10 }}>
-          <span className={(trends[tf] ?? 0) >= 0 ? "gain" : "loss"} style={{ fontWeight: 700 }}>
-            {(trends[tf] ?? 0) >= 0 ? "+" : ""}
-            {(trends[tf] ?? 0).toFixed(2)}%
-          </span>{" "}
-          <span className="dim">over {tf}</span>
-        </p>
-      </div>
-
-      {/* All timeframes at a glance */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Every timeframe at a glance</h3>
-        <p className="dim" style={{ fontSize: 14, marginBottom: 10 }}>{trendSummary(trends)}</p>
-        <div className="tf-grid">
-          {TIMEFRAMES.map((t) => {
-            const v = trends[t] ?? 0;
-            return (
-              <button key={t} className="tf-cell" onClick={() => setTf(t)} aria-label={`Show ${t} chart`}>
-                <span className="dim">{t}</span>
-                <strong className={`mono ${v >= 0 ? "gain" : "loss"}`}>
-                  {v >= 0 ? "+" : ""}
-                  {v.toFixed(1)}%
-                </strong>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* News */}
-      {news.length > 0 && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <h3>Latest news</h3>
-          {news.map((n) => (
-            <p key={n.id} style={{ marginTop: 10, fontSize: 14 }}>
-              <span className={`sent ${n.sentiment}`} title={`${n.sentiment} sentiment`} />
-              <strong>{n.headline}</strong>
-              <br />
-              <span className="dim">
-                {n.summary} — {n.source}
-              </span>
+      <div className="stock-layout" style={{ marginTop: 16 }}>
+        <div className="stock-main">
+          {/* Chart + timeframes */}
+          <div className="card">
+            <div className="tf-tabs" style={{ marginBottom: 12 }}>
+              {TIMEFRAMES.map((t) => (
+                <button key={t} className={t === tf ? "active" : ""} onClick={() => setTf(t)} aria-pressed={t === tf}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <PriceChart points={history} />
+            <p style={{ marginTop: 10 }}>
+              <span className={(trends[tf] ?? 0) >= 0 ? "gain" : "loss"} style={{ fontWeight: 700 }}>
+                {(trends[tf] ?? 0) >= 0 ? "+" : ""}
+                {(trends[tf] ?? 0).toFixed(2)}%
+              </span>{" "}
+              <span className="dim">over {tf}</span>
             </p>
-          ))}
+          </div>
+
+          {/* All timeframes at a glance */}
+          <div className="card" style={{ marginTop: 16 }}>
+            <h3>Every timeframe at a glance</h3>
+            <p className="dim" style={{ fontSize: 14, marginBottom: 10 }}>{trendSummary(trends)}</p>
+            <div className="tf-grid">
+              {TIMEFRAMES.map((t) => {
+                const v = trends[t] ?? 0;
+                return (
+                  <button key={t} className="tf-cell" onClick={() => setTf(t)} aria-label={`Show ${t} chart`}>
+                    <span className="dim">{t}</span>
+                    <strong className={`mono ${v >= 0 ? "gain" : "loss"}`}>
+                      {v >= 0 ? "+" : ""}
+                      {v.toFixed(1)}%
+                    </strong>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* News — a persistent side rail on desktop rather than the last thing
+            in a long scroll, the way Bloomberg/Yahoo Finance keep headlines
+            visible next to the chart. Falls below the chart on narrow screens. */}
+        {news.length > 0 && (
+          <aside className="stock-side card">
+            <h3>Latest news</h3>
+            {news.map((n) => (
+              <p key={n.id} style={{ marginTop: 10, fontSize: 14 }}>
+                <span className={`sent ${n.sentiment}`} title={`${n.sentiment} sentiment`} />
+                <strong>{n.headline}</strong>
+                <br />
+                <span className="dim">
+                  {n.summary} — {n.source}
+                </span>
+              </p>
+            ))}
+          </aside>
+        )}
+      </div>
 
       <p className="dim" style={{ fontSize: 12, marginTop: 16 }}>
         Analytics and education only — not investment advice.

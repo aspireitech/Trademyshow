@@ -121,7 +121,10 @@ a:hover {
 /* ---------- buttons & forms ---------- */
 .btn {
   display: inline-block;
-  background: var(--accent);
+  /* Concentrated vibrancy: the site stays on its calm, AA-checked base
+     everywhere, but the one thing every page wants you to click gets a
+     gradient and a glow instead of a flat fill. */
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
   color: #fff;
   border: none;
   border-radius: var(--radius);
@@ -130,15 +133,24 @@ a:hover {
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transition: box-shadow 0.15s ease, transform 0.15s ease, filter 0.15s ease;
 }
 .btn:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
   text-decoration: none;
 }
 .btn.secondary {
   background: var(--bg-raised);
   border: 1px solid var(--border);
   color: var(--text);
+  box-shadow: none;
+}
+.btn.secondary:hover {
+  box-shadow: none;
+  transform: none;
 }
 .btn.small {
   padding: 5px 12px;
@@ -337,6 +349,24 @@ table.holdings tr:hover td {
 }
 .tf-cell strong {
   font-size: 15px;
+}
+
+/* Stock detail: chart on the left, news as a persistent right rail on
+   desktop instead of the last card in a long scroll. Collapses to a single
+   column — news falls below the chart — once there isn't room for both. */
+.stock-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+.stock-side h3 {
+  margin-bottom: 4px;
+}
+@media (max-width: 900px) {
+  .stock-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- landing ---------- */
@@ -767,25 +797,32 @@ footer.site {
   animation: fade 0.2s ease-out both;
 }
 .spotlight-card {
+  /* Fixed vivid gradient in both themes, same reasoning as .sandbox-banner
+     below: this is a deliberate interrupt, not page chrome, so it does not
+     restyle itself to blend in. Colours picked and checked against the text
+     they carry, not inherited from theme tokens. */
   position: relative;
   width: 100%;
   max-width: 440px;
   padding: 28px 26px 24px;
   border-radius: 16px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  box-shadow: 0 24px 60px rgba(8, 12, 22, 0.3);
+  background: linear-gradient(150deg, #1d4ed8 0%, #0f766e 100%);
+  box-shadow: 0 24px 60px rgba(8, 12, 22, 0.35);
   animation: cookie-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.spotlight-card .live-dot {
+  background: #caff33;
 }
 .spotlight-card h2 {
   margin: 10px 0 8px;
   font-size: 22px;
   line-height: 1.2;
+  color: #fff;
 }
 .spotlight-card p {
   margin: 0 0 20px;
   font-size: 14px;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.5;
 }
 .spotlight-actions {
@@ -794,16 +831,25 @@ footer.site {
   gap: 16px;
   flex-wrap: wrap;
 }
+.spotlight-actions .btn {
+  background: #caff33;
+  color: #0b1a12;
+  box-shadow: 0 4px 14px rgba(202, 255, 51, 0.3);
+}
+.spotlight-actions .btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 20px rgba(202, 255, 51, 0.4);
+}
 .spotlight-dismiss {
   border: none;
   background: transparent;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 13px;
   cursor: pointer;
   text-decoration: underline;
 }
 .spotlight-dismiss:hover {
-  color: var(--text);
+  color: #fff;
 }
 .spotlight-close {
   position: absolute;
@@ -816,14 +862,14 @@ footer.site {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
 }
 .spotlight-close:hover {
-  background: var(--bg-hover);
-  color: var(--text);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }
 @media (prefers-reduced-motion: reduce) {
   .spotlight-overlay,
