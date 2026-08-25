@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { apiFetch } from "@/lib/apiClient";
 import { TERMS_VERSION } from "@/lib/legal";
+import { TRIAL_DAYS } from "@/lib/plans";
+
+const PLAN_NAMES: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
 
 export interface AuthProvider {
   id: string;
@@ -21,6 +24,8 @@ export default function AuthForm({
   const router = useRouter();
   const params = useSearchParams();
   const refCode = params.get("ref") ?? undefined;
+  const planParam = params.get("plan");
+  const selectedPlan = planParam && PLAN_NAMES[planParam] ? planParam : null;
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -68,6 +73,20 @@ export default function AuthForm({
     <div style={{ maxWidth: 420, margin: "60px auto" }}>
       <form onSubmit={submit} className="card">
         <h3>{registering ? "Create your account" : "Welcome back"}</h3>
+
+        {/* Every account gets the same trial regardless of which pricing
+            card sent them here — there is no separate signup path per plan.
+            This just confirms the choice honestly instead of pretending the
+            picked plan is already active. */}
+        {registering && selectedPlan && (
+          <p className="dim" style={{ fontSize: 13, marginTop: 6 }}>
+            {selectedPlan === "premium"
+              ? `You picked Premium. Every account starts with a ${TRIAL_DAYS}-day Pro trial first — no card needed — and you can upgrade to Premium from billing whenever you're ready.`
+              : selectedPlan === "pro"
+                ? `Starting your ${TRIAL_DAYS}-day Pro trial — no card needed.`
+                : `Starting on the Free plan. You'll still get a ${TRIAL_DAYS}-day Pro trial first, no card needed, before it settles to Free.`}
+          </p>
+        )}
 
         {providers.length > 0 && (
           <>

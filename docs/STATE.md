@@ -122,25 +122,24 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [x] ~~Signed-out landing popup, CTA/popup vibrancy, footer social row.~~
-      `FeatureSpotlight.tsx`, `.btn` gradient, `SocialLinks.tsx` (Facebook,
-      X, LinkedIn, YouTube). **Placeholder handles** — swap before public.
-- [x] ~~PR #11: sticky news rails (stock page + landing), quieter
-      data-source label.~~ `.stock-lower-side` / `.board-side` are
-      `position: sticky`, not height-matched. Landing wraps
-      `MarketsDashboard`+`MarketNewsFeed` in `.board-layout`, collapses under
-      1180px. `.src-info` ⓘ replaces the pill for real/delayed data at full
-      `--badge-gain` opacity (was too faint) — simulated keeps its pill.
+- [x] ~~Landing popup, CTA vibrancy, footer social row.~~ `FeatureSpotlight.tsx`,
+      `.btn` gradient, `SocialLinks.tsx` (Facebook/X/LinkedIn/YouTube).
+      **Placeholder handles** — swap before public.
+- [x] ~~PR #11: sticky news rails (stock + landing), quieter data-source
+      label, pricing plan carried to signup.~~ `.stock-lower-side` /
+      `.board-side` are `position: sticky`, not height-matched; landing
+      wraps `MarketsDashboard`+`MarketNewsFeed` in `.board-layout`, collapses
+      under 1180px. `.src-info` ⓘ replaces the pill for real/delayed data at
+      full `--badge-gain` opacity — simulated keeps its pill. `/pricing`
+      links carry `?plan=`; `AuthForm` shows an honest note on `/register`
+      (no separate signup path per plan — everyone gets the same trial).
 - [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
       data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
       (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
-      `.stock-price-row` — two equal price+% blocks side by side, not a
-      footnote line. Only populates during an actual extended-hours window —
-      see the trap below before assuming it's broken. Needs live
+      `.stock-price-row` — two equal price+% blocks, not a footnote line.
+      Only populates in an actual extended-hours window — see the trap
+      below before assuming it's broken. Needs live
       verification — the sandbox blocks finance hosts.
-- [x] ~~News as a right rail on the stock page.~~ `.stock-lower` grid in
-      `StockView.tsx` — readings left, `Latest news` pinned right, collapses
-      under 900px. Reverted once, re-requested same day (2026-08-25) — final.
 - [x] ~~Verify the live feed against the real internet.~~ Confirmed by the
       owner 2026-08-23 (real AAPL/AMZN prices). Sandbox still blocks finance
       hosts — verify any future vendor change outside it.
