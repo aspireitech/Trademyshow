@@ -118,19 +118,27 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [x] ~~Add a signed-out landing popup so shipped features get announced
-      without the page growing a permanent section per feature.~~ Done:
-      `components/FeatureSpotlight.tsx` shows one random entry from its
-      `FEATURES` array on every landing-page load (signed-in users never see
-      it), reusing the existing `.pop`/`.pop-backdrop` modal with a new
-      `pop-vivid` gradient modifier. Add an entry to the array when something
-      ships; contrast-audit it along with the other `.gsearch-*`/`.stock-*`
-      items below.
-- [x] ~~Concentrate vibrant colour on the primary CTA and the popup only.~~
-      Done: `.btn` got a gradient + glow, `.pop-vivid` a fixed dark
-      blue-to-teal gradient with a lime CTA — the rest of the site keeps its
-      calm, AA-checked base. Deliberate choice over a full repaint;
-      owner-approved after comparing to a broker-style bold palette.
+- [x] ~~Signed-out landing popup, so shipped features get announced without a
+      permanent page section per feature.~~ `components/FeatureSpotlight.tsx`
+      — one random entry from `FEATURES` per landing-page load, the existing
+      `.pop`/`.pop-backdrop` modal plus a `pop-vivid` gradient modifier. Add
+      an entry when something ships.
+- [x] ~~Concentrate vibrant colour on the CTA and popup only, not a repaint.~~
+      `.btn` gradient + glow; `.pop-vivid` fixed blue-to-teal with a lime CTA.
+      Owner-approved over a broker-style bold palette.
+- [x] ~~News as a right rail on the stock page, not the last card.~~
+      `.stock-lower` grid in `components/stock/StockView.tsx` — readings
+      (timeframes, score, peers) left, `Latest news` pinned right, collapses
+      under 900px.
+- [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
+      data only, never simulated: `QuoteStats.overnight` from Yahoo's
+      `includePrePost` chart field (`lib/providers/yahoo.ts`), cached in four
+      new `quote_stats_cache` columns, shown as a second price line when
+      present. Needs live verification — the sandbox blocks finance hosts —
+      same as the feed itself below.
+- [x] ~~Social links in the footer.~~ `components/SocialLinks.tsx` — X,
+      LinkedIn, YouTube icons. **Placeholder handles** (`x.com/trademyshow`
+      etc.) — swap for the real accounts before they're public.
 - [x] ~~Verify the live feed against the real internet.~~ **Confirmed working**
       by the owner on 2026-08-23: real Apple and Amazon prices on a machine
       with open network. The sandbox still blocks the finance hosts, so any

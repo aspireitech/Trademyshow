@@ -3,6 +3,7 @@ import AdminFooterStats from "./AdminFooterStats";
 import CookieNotice from "./CookieNotice";
 import SiteHeader from "./SiteHeader";
 import SiteSidebar from "./SiteSidebar";
+import SocialLinks from "./SocialLinks";
 
 /**
  * The frame every page sits in: left rail, header with search, content, footer.
@@ -41,10 +42,13 @@ export default function SiteShell({
               investment advice or a recommendation to buy or sell any security. Past
               performance does not predict future results.
             </p>
-            <p className="dim">
-              <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> ·{" "}
-              <Link href="/help">Help centre</Link> · <Link href="/track-record">Track record</Link>
-            </p>
+            <div className="shell-foot-row">
+              <p className="dim">
+                <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> ·{" "}
+                <Link href="/help">Help centre</Link> · <Link href="/track-record">Track record</Link>
+              </p>
+              <SocialLinks />
+            </div>
           </div>
         </footer>
         <CookieNotice />

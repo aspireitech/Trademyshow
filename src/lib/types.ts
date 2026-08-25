@@ -204,6 +204,13 @@ export interface QuoteStats {
   marketCap: number | null;
   /** ISO timestamp the vendor stamped on the price. */
   quoteTime: string | null;
+  /**
+   * Extended-hours trading beyond the regular session — pre-market before the
+   * open or post-market after the close — only when the vendor actually
+   * published one. Null whenever it did not: there is no simulated overnight
+   * price, ever, on the same reasoning as the rest of this record.
+   */
+  overnight: { price: number; changePct: number; kind: "pre" | "post"; asOf: string | null } | null;
 }
 
 /**
