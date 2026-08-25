@@ -64,7 +64,11 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     // Two lines answer "my stock versus the market", which is the question
     // most people arrive with. A fourth line is a power-user need.
     maxCompare: 2,
-    maxAlerts: 0,
+    // Three, not zero. An alert is the feature that brings someone back to the
+    // site a week later, and a free tier that cannot set a single one never
+    // earns the second visit. Three is enough to form the habit and few enough
+    // that anyone tracking a real watchlist runs out.
+    maxAlerts: 3,
     advancedMovers: false,
     csvExport: false,
   },

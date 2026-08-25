@@ -1,5 +1,5 @@
-import { getStockInfo, usingLiveData } from "./marketdata";
-import { cachedNews } from "./providers/cache";
+import { getQuote, getStockInfo, usingLiveData } from "./marketdata";
+import { cachedNews, recentNewsAcross } from "./providers/cache";
 import type { NewsItem } from "./types";
 
 /**
@@ -45,7 +45,12 @@ function hashString(s: string): number {
  * News for a symbol on a given day. `dayChangePct` steers sentiment so the
  * mock feed plausibly explains the price move.
  */
-export function getNews(symbol: string, dayChangePct: number, asOf: Date = new Date()): NewsItem[] {
+export function getNews(
+  symbol: string,
+  dayChangePct: number,
+  asOf: Date = new Date(),
+  limit = 4,
+): NewsItem[] {
   const info = getStockInfo(symbol);
   if (!info) return [];
 
@@ -54,7 +59,7 @@ export function getNews(symbol: string, dayChangePct: number, asOf: Date = new D
   // component of the score defined on days the vendor returns an empty set.
   if (usingLiveData()) {
     const since = new Date(asOf.getTime() - 3 * 86_400_000);
-    const live = cachedNews(symbol, since);
+    const live = cachedNews(symbol, since, limit);
     if (live.length > 0) return live;
   }
   const dayKey = asOf.toISOString().slice(0, 10);
@@ -82,4 +87,45 @@ export function getNews(symbol: string, dayChangePct: number, asOf: Date = new D
     });
   }
   return items;
+}
+
+/**
+ * Headlines across the whole market, newest first.
+ *
+ * Real items win: anything the news feed has cached is genuine reporting with
+ * a link the reader can follow. When nothing is cached — a fresh install, or
+ * no news vendor configured — the day's biggest movers get their generated
+ * headline instead, which is labelled as generated where it is shown.
+ */
+export function marketNews(symbols: string[], limit = 12, asOf: Date = new Date()): {
+  items: NewsItem[];
+  generated: boolean;
+} {
+  if (usingLiveData()) {
+    try {
+      const since = new Date(asOf.getTime() - 4 * 86_400_000);
+      const real = recentNewsAcross(since, limit);
+      if (real.length >= 3) return { items: real, generated: false };
+    } catch {
+      // No cache available; fall through to the generated set.
+    }
+  }
+
+  const items: NewsItem[] = [];
+  for (const symbol of symbols) {
+    const info = getStockInfo(symbol);
+    if (!info) continue;
+    items.push(...getNews(symbol, changeHint(symbol, asOf), asOf));
+    if (items.length >= limit) break;
+  }
+  return { items: items.slice(0, limit), generated: true };
+}
+
+/** The day's move, used only to steer which generated headline is chosen. */
+function changeHint(symbol: string, asOf: Date): number {
+  try {
+    return getQuote(symbol, asOf).changePct;
+  } catch {
+    return 0;
+  }
 }

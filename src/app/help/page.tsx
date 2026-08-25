@@ -1,6 +1,6 @@
+import SiteShell from "@/components/SiteShell";
 import type { Metadata } from "next";
 import Link from "next/link";
-import ThemeToggle from "@/components/ThemeToggle";
 import { articleCount, HELP } from "@/lib/help";
 
 export const metadata: Metadata = {
@@ -30,19 +30,9 @@ export default function HelpPage() {
   };
 
   return (
-    <div className="container">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
-      <nav className="nav">
-        <Link href="/" className="brand">Trade<span>MyShow</span></Link>
-        <div className="links">
-          <ThemeToggle />
-          <Link href="/track-record">Track record</Link>
-          <Link href="/pricing">Pricing</Link>
-          <Link href="/login">Log in</Link>
-        </div>
-      </nav>
+    <SiteShell active="help">
 
-      <main style={{ padding: "30px 0 70px" }}>
+      <main>
         <h1 style={{ marginBottom: 6 }}>Help centre</h1>
         <p className="dim" style={{ maxWidth: "62ch", marginBottom: 22 }}>
           {articleCount()} answers, starting with the ones worth asking before you trust any
@@ -86,6 +76,6 @@ export default function HelpPage() {
           </p>
         </section>
       </main>
-    </div>
+    </SiteShell>
   );
 }

@@ -7,9 +7,10 @@ import { expect, test } from "./fixtures";
 test("full user journey: signup to AI digest", async ({ page }) => {
   const email = `e2e-${Date.now()}@example.com`;
 
-  // Landing
+  // Landing: the market board is the page now, not a pitch.
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("why");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Markets today");
+  await expect(page.locator("table.mkt-table tbody tr").first()).toBeVisible();
 
   // Register
   await page.getByRole("link", { name: /Start .*free trial/ }).first().click();
@@ -45,31 +46,70 @@ test("full user journey: signup to AI digest", async ({ page }) => {
   await page.getByRole("link", { name: "NVDA" }).click();
   await expect(page.getByRole("heading", { name: /NVDA/ })).toBeVisible();
   await expect(page.getByText("Every timeframe at a glance")).toBeVisible();
-  await page.getByRole("button", { name: "Show 1Y chart" }).click();
+  await page.getByRole("button", { name: "Show the 1Y chart" }).click();
   await expect(page.getByText(/over 1Y/)).toBeVisible();
 
-  // New accounts are on a Pro trial, so a second watchlist is allowed.
-  await page.getByRole("link", { name: "← Dashboard" }).click();
+  // Back out through the header, which every page now carries — the stock
+  // page no longer needs a back link of its own.
+  await page.getByRole("link", { name: "Dashboard", exact: true }).first().click();
   await expect(page.getByText(/days of Pro left/)).toBeVisible();
   await page.getByPlaceholder(/New watchlist name/).fill("Second Watchlist");
   await page.getByRole("button", { name: "Create" }).click();
   await expect(page.getByRole("heading", { name: "Second Watchlist" })).toBeVisible();
 });
 
-test("look up any stock directly from the dashboard", async ({ page }) => {
-  const email = `e2e-lookup-${Date.now()}@example.com`;
+test("anyone can look up a stock from the header, signed in or not", async ({ page }) => {
+  // No account, no group, no login wall. Someone who cannot look at a single
+  // stock before signing up has no way to judge whether the analysis is good.
+  await page.goto("/");
+  await page.getByRole("combobox", { name: /Search for a company/ }).fill("TSLA");
+  await page.getByRole("option", { name: /TSLA/ }).first().click();
+
+  await expect(page).toHaveURL(/\/stocks\/TSLA/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("TSLA");
+  await expect(page.getByText(/not investment advice/i)).toBeVisible();
+
+  // Every price says where it came from — that label is not optional.
+  await expect(page.locator(".src-pill").first()).toBeVisible();
+});
+
+test("the whole ticker typed and Enter goes straight to that stock", async ({ page }) => {
+  await page.goto("/");
+  const box = page.getByRole("combobox", { name: /Search for a company/ });
+  await box.fill("MSFT");
+  await box.press("Enter");
+  await expect(page).toHaveURL(/\/stocks\/MSFT/);
+});
+
+test("keeping a stock asks a signed-out visitor for an account", async ({ page }) => {
+  await page.goto("/stocks/NVDA");
+
+  await page.getByRole("button", { name: /Watchlist/ }).click();
+  const dialog = page.getByRole("dialog", { name: /Keep this stock/ });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("link", { name: /Create a free account/ })).toBeVisible();
+});
+
+test("a signed-in visitor keeps a stock in one click", async ({ page }) => {
+  const email = `e2e-watch-${Date.now()}@example.com`;
   await page.goto("/register");
-  await page.getByLabel("Name").fill("Lookup Tester");
+  await page.getByLabel("Name").fill("Watch Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel(/Password/).fill("Str0ng!Pass2026");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Your watchlists" })).toBeVisible();
 
-  // No group needed — search and open a single stock
-  await page.getByPlaceholder(/Look up any stock/).fill("TSLA");
-  await page.getByRole("button", { name: /TSLA/ }).click();
-  await expect(page.getByRole("heading", { name: /TSLA/ })).toBeVisible();
-  await expect(page.getByText(/not investment advice/i)).toBeVisible();
+  await page.goto("/stocks/NVDA");
+  await page.getByRole("button", { name: /Watchlist/ }).click();
+  await expect(page.getByRole("button", { name: /On watchlist/ })).toBeVisible();
+});
+
+test("the old dashboard stock URL still resolves", async ({ page }) => {
+  // Old digest emails and alert notifications point at it; a 404 there looks
+  // like the stock was dropped.
+  await page.goto("/dashboard/stocks/AAPL");
+  await expect(page).toHaveURL(/\/stocks\/AAPL/);
 });
 
 test("the landing page shows a live board before any JavaScript runs", async ({ page }) => {

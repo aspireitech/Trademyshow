@@ -2,6 +2,9 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Creates the demo and admin accounts before the server starts, so the
+  // admin-only surfaces can be tested in a real browser.
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   use: {
     baseURL: "http://localhost:3111",
@@ -22,6 +25,8 @@ export default defineConfig({
     env: {
       DB_PATH: "./data/e2e-test.db",
       AUTH_SECRET: "e2e-test-secret",
+      // The suite must never depend on a vendor being reachable.
+      MARKET_DATA_PROVIDER: "mock",
     },
   },
 });

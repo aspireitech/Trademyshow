@@ -34,6 +34,7 @@ import {
   setEmailOptIn,
   setUserPlan,
 } from "@/lib/db";
+import { getQuote } from "@/lib/marketdata";
 
 async function subscriber(email = "reader@example.com") {
   const user = await createUser(email, "Reader", "hash");
@@ -173,5 +174,38 @@ describe("runAlertJob", () => {
       .prepare("SELECT COUNT(*) AS n FROM notifications WHERE user_id = ?")
       .get(user.id) as { n: number };
     expect(row.n).toBe(1);
+  });
+});
+
+describe("runAlertJob — daily-move (limit) alerts", () => {
+  let n = 0;
+  async function changeAlertFor(direction: "above" | "below", threshold: number) {
+    const user = await createUser(`moves${n++}@example.com`, "Moves", "hash");
+    getDb()
+      .prepare("INSERT INTO alerts (user_id, symbol, kind, direction, threshold) VALUES (?, 'AAPL', 'change', ?, ?)")
+      .run(user.id, direction, threshold);
+    return user;
+  }
+
+  it("fires when today's signed move passes the threshold on the alert's own side", async () => {
+    const changePct = getQuote("AAPL").changePct;
+    const direction = changePct >= 0 ? "above" : "below";
+    await changeAlertFor(direction, Math.abs(changePct));
+    expect(runAlertJob()).toHaveLength(1);
+  });
+
+  it("never fires for a move nowhere near the threshold", async () => {
+    await changeAlertFor("above", 99);
+    await changeAlertFor("below", 99);
+    expect(runAlertJob()).toHaveLength(0);
+  });
+
+  it("does not fire a 'below' alert on an up day just because the number is smaller", async () => {
+    // The bug this guards against: comparing the raw threshold instead of its
+    // negative would let a modest "down 5%" alert fire on a +0.5% day.
+    const changePct = getQuote("AAPL").changePct;
+    if (changePct < 0) return; // only meaningful on an up day for this symbol/date
+    await changeAlertFor("below", 5);
+    expect(runAlertJob()).toHaveLength(0);
   });
 });

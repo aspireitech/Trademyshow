@@ -1,6 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#2563eb"/>
-  <path d="M5 22 L11 15 L16 18 L27 7" fill="none" stroke="#fff" stroke-width="3"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TradeMyShow">
+  <!--
+    The favicon has one job: be recognisable at 16px in a row of twenty tabs.
+    Letters lose at that size — "TMS" becomes three grey smudges — so the mark
+    is a shape instead: three ascending bars with the last one breaking upward.
+    It reads as a market at a glance, and it survives being 16 pixels wide.
+  -->
+  <defs>
+    <linearGradient id="tms" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#tms)"/>
+  <!-- Ascending bars. Rounded caps so nothing looks broken when downscaled. -->
+  <rect x="6"  y="18" width="4.5" height="8"  rx="2.25" fill="#fff" opacity="0.55"/>
+  <rect x="13.75" y="13" width="4.5" height="13" rx="2.25" fill="#fff" opacity="0.8"/>
+  <rect x="21.5" y="8"  width="4.5" height="18" rx="2.25" fill="#fff"/>
+  <!-- The break upward: a single tick above the tallest bar. -->
+  <path d="M20 6.5 L23.75 2.5 L27.5 6.5" fill="none" stroke="#fff" stroke-width="2.6"
         stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="27" cy="7" r="3" fill="#fff"/>
 </svg>

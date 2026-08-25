@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { currentUser } from "@/lib/auth";
 import "./globals.css";
 import { THEME_BOOTSTRAP } from "@/lib/csp";
 import SandboxBanner from "@/components/SandboxBanner";
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const user = await currentUser();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -25,12 +27,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Applies a stored theme choice before first paint, so an explicit
             dark preference never flashes light. Absent a choice, the CSS
             follows prefers-color-scheme on its own. */}
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+        {/* suppressHydrationWarning: browsers deliberately hide a script's own
+            nonce attribute from DOM inspection once parsed, so React's
+            hydration check always sees a mismatch here even though the nonce
+            sent to the browser was correct and the script already ran. A
+            known, harmless interaction — not a real mismatch to fix. */}
+        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
       <body>
         <SandboxBanner />
         {children}
-        <SignupPrompt />
+        <SignupPrompt signedIn={Boolean(user)} />
       </body>
     </html>
   );

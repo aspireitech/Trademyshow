@@ -5,6 +5,7 @@ import {
   getQuote,
   rangeChangePct,
   searchStocks,
+  sectorPeers,
   UNIVERSE,
 } from "@/lib/marketdata";
 import { TIMEFRAMES } from "@/lib/types";
@@ -103,5 +104,22 @@ describe("multi-asset coverage", () => {
 
   it("finds funds by sector name", () => {
     expect(searchStocks("bonds").some((s) => s.symbol === "AGG")).toBe(true);
+  });
+});
+
+describe("sectorPeers", () => {
+  it("returns other shipped symbols in the same sector, never itself", () => {
+    const peers = sectorPeers("AAPL");
+    expect(peers.length).toBeGreaterThan(0);
+    expect(peers.every((p) => p.sector === "Technology")).toBe(true);
+    expect(peers.some((p) => p.symbol === "AAPL")).toBe(false);
+  });
+
+  it("is empty for an unknown symbol", () => {
+    expect(sectorPeers("NOPE")).toEqual([]);
+  });
+
+  it("respects the limit", () => {
+    expect(sectorPeers("AAPL", 2).length).toBeLessThanOrEqual(2);
   });
 });

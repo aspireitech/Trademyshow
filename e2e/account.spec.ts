@@ -224,14 +224,17 @@ test("the help centre answers the advice question without JavaScript", async ({ 
   await expect(page.getByText(/never tells you what to buy, sell or hold/)).toBeVisible();
 });
 
-test("the dashboard shows what moved today", async ({ page }) => {
+test("the dashboard shows the same market board as the home page", async ({ page }) => {
+  // Signing in used to replace the board with a different layout, which threw
+  // away whatever the visitor had just been reading.
   await signUp(page, "movers");
-  await expect(page.getByRole("heading", { name: "What moved today" })).toBeVisible();
-  await expect(page.locator("text=/\\d+ up, \\d+ down/")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Markets today" })).toBeVisible();
+  await expect(page.locator("table.mkt-table tbody tr").first()).toBeVisible();
+  await expect(page.locator("text=/\\d+ up · \\d+ down/")).toBeVisible();
 
-  // Risers and fallers are separate tabs; neither is a ranking of what to buy.
-  await page.getByRole("button", { name: "Fallers" }).click();
-  await expect(page.getByText(/Biggest moves that already happened/)).toBeVisible();
+  // The search box and left rail follow you in, rather than disappearing.
+  await expect(page.getByRole("combobox", { name: /Search for a company/ })).toBeVisible();
+  await expect(page.locator(".side-nav")).toBeVisible();
 });
 
 test("stocks can be compared on one rebased chart", async ({ page }) => {
@@ -251,4 +254,60 @@ test("stocks can be compared on one rebased chart", async ({ page }) => {
 
   await page.getByRole("button", { name: "Remove AMD" }).click();
   await expect(page.locator(".compare-chip")).toHaveCount(2);
+});
+
+/** Sign in with the seeded administrator. */
+async function loginAsAdmin(page: import("@playwright/test").Page) {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("admin@trademyshow.com");
+  await page.getByLabel(/Password/).fill("Sandbox!Admin2026");
+  await page.locator("form.card button.btn").click();
+  await expect(page).toHaveURL(/\/dashboard/);
+}
+
+test("the footer visitor counter is visible to an administrator", async ({ page }) => {
+  await loginAsAdmin(page);
+
+  const counter = page.locator(".admin-footer");
+  await expect(counter).toBeVisible();
+  await expect(counter).toContainText("Admin only");
+  await expect(counter).toContainText("Total views");
+  await expect(counter).toContainText("Unique today");
+  await expect(counter).toContainText("Repeat");
+
+  // It follows the admin around rather than living on one page.
+  await page.goto("/stocks/AAPL");
+  await expect(page.locator(".admin-footer")).toBeVisible();
+});
+
+test("the footer visitor counter is never sent to anybody else", async ({ page }) => {
+  // Not "hidden from" — absent. The check is server-side, so the numbers are
+  // not in the HTML for a non-admin to find with view-source.
+  await page.goto("/");
+  expect(await page.content()).not.toContain("admin-footer");
+  await expect(page.locator(".admin-footer")).toHaveCount(0);
+
+  await signUp(page, "footercounter");
+  await expect(page.locator(".admin-footer")).toHaveCount(0);
+  expect(await page.content()).not.toContain("Total views");
+
+  await page.goto("/stocks/AAPL");
+  await expect(page.locator(".admin-footer")).toHaveCount(0);
+});
+
+test("an ordinary account cannot read the traffic numbers over the API", async ({ page }) => {
+  await signUp(page, "trafficapi");
+  const res = await page.request.get("/api/visits");
+  expect(res.status()).toBe(403);
+});
+
+test("the admin dashboard shows whether prices are real", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/dashboard/admin");
+
+  await expect(page.getByRole("heading", { name: "Market data" })).toBeVisible();
+  await expect(page.getByText("Coverage", { exact: true })).toBeVisible();
+  // Every sampled symbol carries its provenance, so "is this real?" is
+  // answered by looking rather than by trusting a percentage.
+  await expect(page.locator(".src-pill").first()).toBeVisible();
 });

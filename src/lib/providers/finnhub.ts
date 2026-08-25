@@ -1,7 +1,6 @@
 import type { MarketDataProvider, NewsProvider } from "./types";
 import { ProviderError } from "./types";
 import type { NewsItem, PricePoint, Quote } from "../types";
-import { round2 } from "../marketdata";
 
 /**
  * Finnhub adapter.
@@ -17,6 +16,12 @@ import { round2 } from "../marketdata";
  */
 
 const BASE = "https://finnhub.io/api/v1";
+
+/** Local, rather than imported from marketdata: a vendor adapter must not
+ *  depend on the module that decides which vendor to use. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
 
 function apiKey(): string {
   const key = process.env.FINNHUB_API_KEY;

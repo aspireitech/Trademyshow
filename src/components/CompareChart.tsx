@@ -6,6 +6,7 @@ import { TIMEFRAMES, type StockInfo, type Timeframe } from "@/lib/types";
 
 interface Series {
   symbol: string; name: string; sector: string;
+  price: number; changePct: number; source: string;
   points: { t: string; pct: number }[];
   totalReturnPct: number; score: number | null; band: string | null;
 }
@@ -148,7 +149,7 @@ export default function CompareChart({ initial }: { initial: string[] }) {
 
         {data && data.series.length > 0 && (
           <>
-            <div style={{ overflowX: "auto", marginTop: 14 }}>
+            <div className="scroll-x" style={{ marginTop: 14 }}>
               <svg
                 viewBox={`0 0 ${W} ${H}`}
                 className="compare-svg"
@@ -184,27 +185,47 @@ export default function CompareChart({ initial }: { initial: string[] }) {
             <div style={{ overflowX: "auto", marginTop: 14 }}>
               <table className="holdings">
                 <thead>
-                  <tr><th>Instrument</th><th>Sector</th><th>{range} return</th><th>Score</th></tr>
+                  <tr>
+                    <th>Instrument</th>
+                    <th>Sector</th>
+                    <th className="mkt-right">Price</th>
+                    <th className="mkt-right">Today</th>
+                    <th className="mkt-right">{range} return</th>
+                    <th className="mkt-right">Score</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {data.series.map((s, i) => (
                     <tr key={s.symbol}>
                       <td>
                         <span className="compare-swatch" style={{ background: LINE_COLOURS[i % 4] }} />
-                        <Link href={`/dashboard/stocks/${s.symbol}`}><strong>{s.symbol}</strong></Link>
+                        <Link href={`/stocks/${s.symbol}`}><strong>{s.symbol}</strong></Link>
                         <br />
                         <span className="dim" style={{ fontSize: 12 }}>{s.name}</span>
                       </td>
                       <td className="dim" style={{ fontSize: 13 }}>{s.sector}</td>
-                      <td className={`mono ${s.totalReturnPct >= 0 ? "gain" : "loss"}`}>
+                      <td className="mono mkt-right" title={s.source}>
+                        ${s.price.toFixed(2)}
+                      </td>
+                      <td className={`mono mkt-right ${s.changePct >= 0 ? "gain" : "loss"}`}>
+                        {s.changePct >= 0 ? "+" : ""}{s.changePct.toFixed(2)}%
+                      </td>
+                      <td className={`mono mkt-right ${s.totalReturnPct >= 0 ? "gain" : "loss"}`}>
                         {s.totalReturnPct >= 0 ? "+" : ""}{s.totalReturnPct.toFixed(2)}%
                       </td>
-                      <td className="mono dim">{s.score ?? "—"}</td>
+                      <td className="mono mkt-right dim">{s.score ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            {data.series[0] && (
+              <p className={`src-pill ${data.series[0].source.startsWith("Simulated") ? "sim" : "real"}`}
+                style={{ marginTop: 10 }}>
+                {data.series[0].source}
+              </p>
+            )}
 
             {data.series.length > 1 && (
               <p className="dim" style={{ fontSize: 13, marginTop: 12 }}>

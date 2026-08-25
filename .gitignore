@@ -1,7 +1,11 @@
 node_modules/
 .next/
 out/
-data/
+# Anchored to the repo root. Unanchored, "data/" matches a directory named
+# "data" at any depth — which is why src/app/dashboard/settings/data was
+# silently never committed, leaving "Your data" in the settings nav pointing at
+# a 404 for the page where a user exports or deletes their account.
+/data/
 *.db
 *.db-journal
 .env

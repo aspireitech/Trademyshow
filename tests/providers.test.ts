@@ -81,13 +81,27 @@ describe("close and news cache", () => {
   });
 });
 
-describe("live data is opt-in", () => {
-  it("stays on the mock unless a provider is named", () => {
+describe("real data is the default, the simulation is the opt-out", () => {
+  it("is live unless the simulation is explicitly forced on", () => {
+    // The default used to be "mock", which meant an installation showed
+    // invented prices until somebody remembered to set a variable. Defaults
+    // decide what most installations do, so the default is now the real feed.
+    expect(usingLiveData()).toBe(true);
+  });
+
+  it("stays on the simulation when MARKET_DATA_PROVIDER=mock", () => {
+    process.env.MARKET_DATA_PROVIDER = "mock";
     expect(usingLiveData()).toBe(false);
     cacheQuote({ symbol: "AAPL", price: 999, prevClose: 998, changePct: 0.1 });
     // The cached 999 must be ignored while the provider is "mock", or tests
     // and the published track record would stop being reproducible.
     expect(getQuote("AAPL").price).not.toBe(999);
+  });
+
+  it("falls back to the simulation for a symbol with nothing cached", () => {
+    // Live by default does not mean "blank when the vendor is unreachable".
+    // The walk still answers, and sourceFor() is what marks it as simulated.
+    expect(getQuote("MSFT").price).toBeGreaterThan(0);
   });
 
   it("prefers a fresh cached quote once a provider is configured", () => {

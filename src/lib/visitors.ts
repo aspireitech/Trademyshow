@@ -22,6 +22,23 @@ export interface VisitorStats {
   visitsLast30: number;
   /** Share of visitors seen on more than one distinct day. */
   repeatRatePct: number;
+  /** Every page view ever recorded. */
+  totalViews: number;
+  /**
+   * Distinct visitor-days, all time — not distinct people.
+   *
+   * The identifying hash is salted with the date so yesterday's identifier
+   * cannot be linked to today's, which is what stops this from being a
+   * tracking system. The price of that is real: one person visiting on three
+   * days counts three times here. The label in the UI says "visitor-days" for
+   * exactly that reason, because calling it "unique visitors" would be a
+   * number the operator would go on to make decisions with.
+   */
+  uniqueVisitorDays: number;
+  /** Visitor-days with more than one view — someone who came back in-session. */
+  repeatVisitorDays: number;
+  /** Days on which anybody visited at all. */
+  activeDays: number;
 }
 
 function visitorId(ip: string | null, userAgent: string | null, day: string): string {
@@ -76,11 +93,20 @@ export function visitorStats(now: Date = new Date()): VisitorStats {
     "SELECT COALESCE(SUM(views), 0) AS n FROM visitors WHERE day >= ?", from,
   );
 
+  const totalViews = n("SELECT COALESCE(SUM(views), 0) AS n FROM visitors");
+  const uniqueVisitorDays = n("SELECT COUNT(*) AS n FROM visitors");
+  const repeatVisitorDays = n("SELECT COUNT(*) AS n FROM visitors WHERE views > 1");
+  const activeDays = n("SELECT COUNT(DISTINCT day) AS n FROM visitors");
+
   return {
     uniqueToday,
     returningToday,
     uniqueLast30,
     visitsLast30,
     repeatRatePct: uniqueLast30 ? Number(((visitsLast30 / uniqueLast30 - 1) * 100).toFixed(1)) : 0,
+    totalViews,
+    uniqueVisitorDays,
+    repeatVisitorDays,
+    activeDays,
   };
 }

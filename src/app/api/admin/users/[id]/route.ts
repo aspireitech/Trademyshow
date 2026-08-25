@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { userActivity } from "@/lib/activity";
 import { subscriptionState } from "@/lib/billing";
 import { getDb, getUserById, listGroups, listHoldings } from "@/lib/db";
+import { computeGroupFacts } from "@/lib/digest/engine";
 import { audit } from "@/lib/security";
 
 /**
@@ -25,7 +26,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const groups = listGroups(target.id).map((g) => {
     const holdings = listHoldings(g.id);
-    return { id: g.id, name: g.name, holdings: holdings.map((h) => h.symbol), createdAt: g.createdAt };
+    const facts = computeGroupFacts(g.name, holdings);
+    return {
+      id: g.id,
+      name: g.name,
+      createdAt: g.createdAt,
+      totalValue: facts.totalValue,
+      changePct: facts.changePct,
+      holdings: facts.holdings.map((h) => ({ symbol: h.symbol, quantity: h.quantity, price: h.price, value: h.value })),
+    };
   });
 
   const counts = getDb()

@@ -104,7 +104,9 @@ AUTH_SECRET=${AUTH_SECRET}
 CRON_SECRET=${CRON_SECRET}
 DB_PATH=${DATA_DIR}/trademyshow.db
 CONTRACTS_DIR=${DATA_DIR}/contracts
-MARKET_DATA_PROVIDER=mock
+# Live by default: unset means Yahoo Finance, then Stooq, then Finnhub if a
+# key is present. Set it to "mock" only to force the simulation on.
+MARKET_DATA_PROVIDER=auto
 
 # Fill these in before charging anyone. The Terms page warns while they are blank.
 LEGAL_COMPANY_NAME=
