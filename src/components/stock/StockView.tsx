@@ -177,9 +177,25 @@ export default function StockView({ symbol }: { symbol: string }) {
           <p className="stock-meta">
             {stats.exchange ? `${stats.exchange} · ` : ""}
             {info.symbol} · {stats.currency}
-            <span className={`src-pill ${simulated ? "sim" : "real"}`} style={{ marginLeft: 8 }}>
-              {source.text}
-            </span>
+            {/* Simulated data keeps a visible pill — that disclosure carries
+                real weight, per the settled decision that real and simulated
+                figures never look alike. "Delayed quote" on real data is a
+                routine, expected thing (every free quote site says it), so
+                it shrinks to a quiet icon instead of reading as a warning. */}
+            {simulated ? (
+              <span className="src-pill sim" style={{ marginLeft: 8 }}>
+                {source.text}
+              </span>
+            ) : (
+              <span
+                className="src-info"
+                style={{ marginLeft: 8 }}
+                title={source.text}
+                aria-label={source.text}
+              >
+                ⓘ
+              </span>
+            )}
           </p>
           {/* Two blocks side by side when there is an overnight price to show
               — the regular close and the extended-hours figure each get
