@@ -6,7 +6,7 @@ starts by opening two or three known files instead of searching the codebase.
 
 Status: branch `claude/landing-dashboard-stock-data-5fngt1`, open as
 [PR #9](https://github.com/aspireitech/Trademyshow/pull/9) · Node 22 ·
-455 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-25.
+456 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-25.
 
 Pushing to the branch updates that PR — there is no second one to open.
 
@@ -126,19 +126,18 @@ next.config.mjs  legacy redirects live here, not in pages
 - [x] ~~Concentrate vibrant colour on the CTA and popup only, not a repaint.~~
       `.btn` gradient + glow; `.pop-vivid` fixed blue-to-teal with a lime CTA.
       Owner-approved over a broker-style bold palette.
-- [x] ~~News as a right rail on the stock page, not the last card.~~
-      `.stock-lower` grid in `components/stock/StockView.tsx` — readings
-      (timeframes, score, peers) left, `Latest news` pinned right, collapses
-      under 900px.
-- [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
-      data only, never simulated: `QuoteStats.overnight` from Yahoo's
-      `includePrePost` chart field (`lib/providers/yahoo.ts`), cached in four
-      new `quote_stats_cache` columns, shown as a second price line when
-      present. Needs live verification — the sandbox blocks finance hosts —
-      same as the feed itself below.
+- News right-rail and an overnight (pre/post-market) price row were both
+      built on the stock page, then **reverted at the owner's request on
+      2026-08-25** — news stays the last full-width card, no overnight row.
+      Reopen only if asked again; the overnight plumbing (Yahoo's
+      `includePrePost` field, an `overnight` column set on
+      `quote_stats_cache`) is fully backed out, not just hidden.
 - [x] ~~Social links in the footer.~~ `components/SocialLinks.tsx` — X,
-      LinkedIn, YouTube icons. **Placeholder handles** (`x.com/trademyshow`
-      etc.) — swap for the real accounts before they're public.
+      LinkedIn, YouTube as filled brand-colour circular badges (46px, gradient
+      + hover lift) — the one other spot besides the CTA/popup allowed off
+      the calm base palette, since it's decoration, not a reading surface.
+      **Placeholder handles** (`x.com/trademyshow` etc.) — swap for the real
+      accounts before they're public.
 - [x] ~~Verify the live feed against the real internet.~~ **Confirmed working**
       by the owner on 2026-08-23: real Apple and Amazon prices on a machine
       with open network. The sandbox still blocks the finance hosts, so any

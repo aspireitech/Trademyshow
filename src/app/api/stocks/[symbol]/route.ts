@@ -115,9 +115,6 @@ export async function GET(req: Request, { params }: Params) {
       week52Low: range52.low,
       marketCap: marketCap(info.symbol),
       marketCapEstimated: marketCapIsEstimated(info.symbol),
-      // No simulated fallback, ever — an invented after-hours move is worse
-      // than no overnight row at all.
-      overnight: stats?.overnight ?? null,
     },
     // Only ever filled from a real vendor — nothing to show for a simulated
     // symbol, so this stays null rather than the page inventing a P/E.

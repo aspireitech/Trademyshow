@@ -282,7 +282,7 @@ describe("what the UI is allowed to claim", () => {
       {
         symbol: "AAPL", currency: "USD", exchange: "NasdaqGS", open: null, dayHigh: null,
         dayLow: null, volume: null, fiftyTwoWeekHigh: null, fiftyTwoWeekLow: null,
-        marketCap: null, quoteTime: old.toISOString(), overnight: null,
+        marketCap: null, quoteTime: old.toISOString(),
       },
       old,
     );

@@ -72,12 +72,6 @@ interface ChartMeta {
   fiftyTwoWeekHigh?: number;
   fiftyTwoWeekLow?: number;
   regularMarketTime?: number;
-  postMarketPrice?: number;
-  postMarketChangePercent?: number;
-  postMarketTime?: number;
-  preMarketPrice?: number;
-  preMarketChangePercent?: number;
-  preMarketTime?: number;
 }
 
 interface ChartResult {
@@ -90,16 +84,11 @@ interface ChartResponse {
   chart: { result?: ChartResult[] | null; error?: { description?: string } | null };
 }
 
-async function chart(
-  symbol: string,
-  range: string,
-  interval: string,
-  includePrePost = false,
-): Promise<ChartResult | null> {
+async function chart(symbol: string, range: string, interval: string): Promise<ChartResult | null> {
   const body = await get<ChartResponse>(`/v8/finance/chart/${encodeURIComponent(symbol)}`, {
     range,
     interval,
-    includePrePost: includePrePost ? "true" : "false",
+    includePrePost: "false",
   });
   const result = body.chart?.result?.[0];
   return result ?? null;
@@ -126,28 +115,6 @@ function quoteFromMeta(symbol: string, meta: ChartMeta): Quote | null {
   };
 }
 
-/**
- * Post-market wins over pre-market when, implausibly, both are present —
- * post-market is closer to "now" for anyone reading after the close. Either
- * requires both the price and the change percent, or it is not a reading,
- * just a stale field Yahoo left populated from yesterday.
- */
-function overnightFromMeta(meta: ChartMeta): QuoteStats["overnight"] {
-  const post = num(meta.postMarketPrice);
-  const postPct = num(meta.postMarketChangePercent);
-  if (post !== null && postPct !== null) {
-    const t = num(meta.postMarketTime);
-    return { price: round2(post), changePct: round2(postPct), kind: "post", asOf: t === null ? null : new Date(t * 1000).toISOString() };
-  }
-  const pre = num(meta.preMarketPrice);
-  const prePct = num(meta.preMarketChangePercent);
-  if (pre !== null && prePct !== null) {
-    const t = num(meta.preMarketTime);
-    return { price: round2(pre), changePct: round2(prePct), kind: "pre", asOf: t === null ? null : new Date(t * 1000).toISOString() };
-  }
-  return null;
-}
-
 function statsFromMeta(symbol: string, meta: ChartMeta, open: number | null): QuoteStats {
   const t = num(meta.regularMarketTime);
   return {
@@ -164,7 +131,6 @@ function statsFromMeta(symbol: string, meta: ChartMeta, open: number | null): Qu
     // left null here and estimated downstream, where it can be labelled.
     marketCap: null,
     quoteTime: t === null ? null : new Date(t * 1000).toISOString(),
-    overnight: overnightFromMeta(meta),
   };
 }
 
@@ -194,10 +160,7 @@ export const yahooMarketData: MarketDataProvider = {
   async fetchQuoteWithStats(
     symbol: string,
   ): Promise<{ quote: Quote; stats: QuoteStats } | null> {
-    // Only this call asks for extended-hours data — it is the one path that
-    // renders a single symbol's own page, where an overnight price is worth
-    // the extra field. History and intraday chart requests stay lean.
-    const result = await chart(symbol, "1d", "1d", true);
+    const result = await chart(symbol, "1d", "1d");
     if (!result) return null;
     const quote = quoteFromMeta(symbol, result.meta);
     if (!quote) return null;

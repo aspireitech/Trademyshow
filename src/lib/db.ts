@@ -339,19 +339,6 @@ function open(): Database.Database {
   if (!cols.some((c) => c.name === "period")) {
     conn.exec("ALTER TABLE digests ADD COLUMN period TEXT NOT NULL DEFAULT 'daily'");
   }
-
-  // Overnight (pre/post-market) price, added after quote_stats_cache shipped.
-  // Four columns rather than a JSON blob so a blank overnight stays a blank
-  // column, not a null buried inside a string.
-  const statsCols = conn.prepare("PRAGMA table_info(quote_stats_cache)").all() as { name: string }[];
-  const addStatsCol = (name: string, ddl: string) => {
-    if (!statsCols.some((c) => c.name === name)) conn.exec(`ALTER TABLE quote_stats_cache ADD COLUMN ${ddl}`);
-  };
-  addStatsCol("overnight_price", "overnight_price REAL");
-  addStatsCol("overnight_change_pct", "overnight_change_pct REAL");
-  addStatsCol("overnight_kind", "overnight_kind TEXT");
-  addStatsCol("overnight_time", "overnight_time TEXT");
-
   return conn;
 }
 

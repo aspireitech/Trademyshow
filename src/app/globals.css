@@ -1691,19 +1691,46 @@ footer.site {
 }
 .social-links {
   display: flex;
-  gap: 12px;
+  gap: 14px;
 }
+/* Filled brand-colour badges — bigger and louder than a footer link needs to
+   be functionally, on purpose: this row is decoration, the one other spot
+   (besides the CTA and the landing popup) allowed off the calm base palette. */
 .social-links a {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  color: var(--text-dim);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(16, 26, 44, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 .social-links a:hover {
-  background: var(--bg-hover);
-  color: var(--text);
+  transform: translateY(-3px) scale(1.06);
+  filter: brightness(1.08);
+}
+.social-links a.social-x {
+  background: linear-gradient(135deg, #2b2f36, #000);
+}
+.social-links a.social-x:hover {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.social-links a.social-linkedin {
+  background: linear-gradient(135deg, #0a66c2, #073a6e);
+}
+.social-links a.social-linkedin:hover {
+  box-shadow: 0 8px 22px rgba(10, 102, 194, 0.45);
+}
+.social-links a.social-youtube {
+  background: linear-gradient(135deg, #ff3d3d, #c4001d);
+}
+.social-links a.social-youtube:hover {
+  box-shadow: 0 8px 22px rgba(255, 0, 0, 0.4);
+}
+@media (prefers-reduced-motion: reduce) {
+  .social-links a { transition: none; }
+  .social-links a:hover { transform: none; }
 }
 
 /* ---------- type-ahead ---------- */
@@ -1966,8 +1993,6 @@ footer.site {
 .stock-price > .mono { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
 .stock-change { font-size: 16px; font-weight: 700; }
 .stock-asof { font-size: 12px; margin-top: 2px; }
-.stock-overnight { font-size: 13px; margin-top: 6px; }
-.stock-overnight .mono { font-weight: 600; }
 
 /* ---------- action row ---------- */
 
@@ -2225,21 +2250,6 @@ footer.site {
   .stock-grid { grid-template-columns: minmax(0, 1fr); }
   .stock-head { flex-direction: column; }
   .stock-price > .mono { font-size: 27px; }
-}
-
-/* Readings (timeframes, score, peers) on the left; news pinned as a right
-   rail so it stays visible instead of trailing at the bottom of the page.
-   Collapses to one column — news falls below the readings — on narrow
-   screens, same breakpoint as .stock-grid above. */
-.stock-lower {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
-  gap: 16px;
-  align-items: start;
-}
-.stock-lower-side h3 { margin-bottom: 4px; }
-@media (max-width: 900px) {
-  .stock-lower { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ================= news ================= */
