@@ -22,7 +22,7 @@ cannot copy a history.
 | Light theme is the true default | User requirement. The `prefers-color-scheme: dark` block was removed; dark is opt-in only. |
 | No permanent "70% OFF" banner | A permanent discount is a false anchor and is actionable under UK/EU/US pricing rules. |
 | Market data is simulated, and says so | No paid feed is bought yet. Prices are a seeded random walk pinned to realistic anchor levels. |
-| New landing-page features get announced via the dismissible `AnnouncementBar`, never a new permanent section | Stacking a "what's new"/showcase block per feature made the landing page grow without bound. The bar is one rotating slot; update its id/copy instead of appending markup. |
+| New landing-page features get announced via the `FeatureSpotlight` popup, never a new permanent section | Stacking a "what's new"/showcase block per feature made the landing page grow without bound. The popup shows one random entry from `FEATURES` to signed-out visitors on every landing-page load, closes to reveal the market table; add an entry to the array instead of appending markup. |
 | Free tier proves the product; the exact score is the upgrade trigger | Free: 1 watchlist, 2-way compare, 15 rows on 52-week screens. Pro/Premium unlock the rest. |
 
 ## 3. Architecture quick map
@@ -64,12 +64,14 @@ test suite time out when the universe grew from 61 to 150 symbols.
 - Prices anchored to realistic per-instrument levels, with volume and market-cap
   columns on every screen.
 - Landing hero compressed to a band so the market data sits above the fold.
-- Dismissible announcement bar (`src/components/AnnouncementBar.tsx`) above the
-  hero, replacing the old pattern of permanently stacking "what's new" sections
-  onto the landing page. One rotating slot: bump `ANNOUNCEMENT_ID` and the copy
-  to run a new announcement, dismissal is per-id in localStorage so a new one
-  reappears even for visitors who closed an older one. Landing page length no
-  longer grows with each shipped feature.
+- `FeatureSpotlight` popup (`src/components/FeatureSpotlight.tsx`), signed-out
+  visitors only: on every landing-page load one random entry from the small
+  `FEATURES` pool (track record, score breakdown, market screens, compare,
+  free plan) shows as a modal over the page, closed with X/Escape/backdrop
+  click to reveal the market table underneath. Nothing is persisted between
+  visits — the pool is meant to grow by adding an entry, not by adding a new
+  landing-page section. Replaces the earlier inline `AnnouncementBar` attempt
+  (removed; a modal was closer to what the owner wanted).
 
 ## 5. Next up
 
