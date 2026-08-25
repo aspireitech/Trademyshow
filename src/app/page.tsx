@@ -151,9 +151,14 @@ export default async function LandingPage({
         </dl>
       </div>
 
-      <MarketsDashboard view={view} basePath="/" />
-
-      <MarketNewsFeed />
+      <div className="board-layout">
+        <div className="board-main">
+          <MarketsDashboard view={view} basePath="/" />
+        </div>
+        <aside className="board-side">
+          <MarketNewsFeed />
+        </aside>
+      </div>
 
       <NewsletterSignup source="landing" />
 

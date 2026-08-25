@@ -1928,13 +1928,41 @@ footer.site {
 .src-info {
   display: inline-flex;
   cursor: help;
-  color: var(--gain);
-  opacity: 0.75;
-  font-size: 13px;
+  /* Full opacity, same green the "real data" pill itself uses — a
+     disclosure that's too faint to notice defeats the point of disclosing.
+     Quiet in shape (an icon, not a pill), not quiet in colour. */
+  color: var(--badge-gain);
+  font-size: 15px;
+  font-weight: 700;
 }
-.src-info:hover { opacity: 1; }
+.src-info:hover { filter: brightness(1.15); }
 
 /* ================= board intro ================= */
+
+/* Market table on the left, the news ticker pinned as a right rail instead
+   of a full-width strip below the table — the news widget is already
+   bounded-height and self-scrolling (.news-ticker), so it was always a
+   rail waiting to happen. Sticky for the same reason as the stock page's
+   news rail: a tall table shouldn't leave the rail behind as you scroll.
+   The table's own .mkt-tablewrap already scrolls horizontally on its own,
+   so narrowing its column here is safe rather than breaking the layout.
+   Collapses to one column below 1180px, where the table's columns start
+   losing room to the rail before either has space to breathe. */
+.board-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  gap: 16px;
+  align-items: start;
+}
+.board-side {
+  position: sticky;
+  top: 76px;
+}
+.board-side .news-panel { margin-top: 0; }
+@media (max-width: 1180px) {
+  .board-layout { grid-template-columns: minmax(0, 1fr); }
+  .board-side { position: static; }
+}
 
 .board-intro {
   display: flex;

@@ -125,11 +125,12 @@ next.config.mjs  legacy redirects live here, not in pages
 - [x] ~~Signed-out landing popup, CTA/popup vibrancy, footer social row.~~
       `FeatureSpotlight.tsx`, `.btn` gradient, `SocialLinks.tsx` (Facebook,
       X, LinkedIn, YouTube). **Placeholder handles** — swap before public.
-- [x] ~~PR #11: sticky news rail, quieter data-source label.~~
-      `.stock-lower-side` is `position: sticky` instead of height-matched —
-      a short news list no longer leaves blank space. `.src-pill` shrinks to
-      a `.src-info` ⓘ icon for real/delayed data (tooltip carries the text);
-      simulated data keeps its visible pill.
+- [x] ~~PR #11: sticky news rails (stock page + landing), quieter
+      data-source label.~~ `.stock-lower-side` / `.board-side` are
+      `position: sticky`, not height-matched. Landing wraps
+      `MarketsDashboard`+`MarketNewsFeed` in `.board-layout`, collapses under
+      1180px. `.src-info` ⓘ replaces the pill for real/delayed data at full
+      `--badge-gain` opacity (was too faint) — simulated keeps its pill.
 - [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
       data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
       (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
