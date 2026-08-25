@@ -10,6 +10,12 @@
  */
 const LINKS: { name: string; href: string; className: string; path: string }[] = [
   {
+    name: "Facebook",
+    href: "https://www.facebook.com/trademyshow",
+    className: "social-facebook",
+    path: "M13.5 9H16V6h-2.5C11.6 6 10 7.6 10 9.5V11H8v3h2v7h3v-7h2.4l.6-3H13v-1.2c0-.44.36-.8.8-.8H13.5z",
+  },
+  {
     name: "X",
     href: "https://x.com/trademyshow",
     className: "social-x",

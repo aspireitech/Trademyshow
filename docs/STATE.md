@@ -118,33 +118,24 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [x] ~~Signed-out landing popup, so shipped features get announced without a
-      permanent page section per feature.~~ `components/FeatureSpotlight.tsx`
-      — one random entry from `FEATURES` per landing-page load, the existing
-      `.pop`/`.pop-backdrop` modal plus a `pop-vivid` gradient modifier. Add
-      an entry when something ships.
-- [x] ~~Concentrate vibrant colour on the CTA and popup only, not a repaint.~~
-      `.btn` gradient + glow; `.pop-vivid` fixed blue-to-teal with a lime CTA.
-      Owner-approved over a broker-style bold palette.
+- [x] ~~Signed-out landing popup, CTA/popup vibrancy, footer social row.~~
+      `components/FeatureSpotlight.tsx` (`.pop-vivid` modal, random entry per
+      load); `.btn` gradient+glow; `components/SocialLinks.tsx` — Facebook,
+      X, LinkedIn, YouTube as brand-colour circular badges. **Placeholder
+      handles** — swap for the real accounts before they're public.
 - [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
-      data only, never simulated: `QuoteStats.overnight` from Yahoo's
-      `includePrePost` chart field (`lib/providers/yahoo.ts`), cached in four
-      `quote_stats_cache` columns. Shown as `.stock-price-row` — two full
-      price+% blocks side by side (regular close, then overnight past a
-      divider), not a small line under the main price; owner specifically
-      wanted them reading as equals. Needs live verification — the sandbox
-      blocks finance hosts. **News stays a full-width bottom card, not a
-      right rail** — not re-requested; don't re-add without being asked.
-- [x] ~~Social links in the footer.~~ `components/SocialLinks.tsx` — X,
-      LinkedIn, YouTube as filled brand-colour circular badges (46px, gradient
-      + hover lift) — the one other spot besides the CTA/popup allowed off
-      the calm base palette, since it's decoration, not a reading surface.
-      **Placeholder handles** (`x.com/trademyshow` etc.) — swap for the real
-      accounts before they're public.
-- [x] ~~Verify the live feed against the real internet.~~ **Confirmed working**
-      by the owner on 2026-08-23: real Apple and Amazon prices on a machine
-      with open network. The sandbox still blocks the finance hosts, so any
-      future vendor change has to be verified outside it.
+      data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
+      (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
+      `.stock-price-row` — two equal price+% blocks side by side, not a
+      footnote line. Only populates during an actual extended-hours window —
+      see the trap below before assuming it's broken. Needs live
+      verification — the sandbox blocks finance hosts.
+- [x] ~~News as a right rail on the stock page.~~ `.stock-lower` grid in
+      `StockView.tsx` — readings left, `Latest news` pinned right, collapses
+      under 900px. Reverted once, re-requested same day (2026-08-25) — final.
+- [x] ~~Verify the live feed against the real internet.~~ Confirmed by the
+      owner 2026-08-23 (real AAPL/AMZN prices). Sandbox still blocks finance
+      hosts — verify any future vendor change outside it.
 - [ ] Anchors for instruments outside the shipped 150, or a share-count source,
       so market cap is not blank for them. Blank is correct today; a real
       figure would be better.
@@ -167,6 +158,13 @@ default branch still needs flipping to `main`.
 ## 8. Traps that have already cost a session
 
 - `better-sqlite3` has no Node 24 prebuild. Use Node 22.
+- Overnight price only populates during the real pre/post-market window
+  (~4-9:30am / 4-8pm ET), and only from the last `npm run refresh` /
+  scheduled refresh, not the page request — a symbol already marked real
+  skips `refreshSymbolDeeply` in the stock API route. A blank overnight row
+  outside that window is correct, not a bug. There is no free 24h
+  "overnight venue" feed (Blue Ocean ATS/"BOATS"-style); that's a separate
+  paid vendor, same bucket as the licensed feed below.
 - Stop the running server before `npm ci` on Windows or the native module
   fails to unlink with `EPERM`. A running `next start` also keeps serving the
   *previous* build — which looks exactly like a change that did not take. Kill

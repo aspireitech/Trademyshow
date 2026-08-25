@@ -408,101 +408,106 @@ export default function StockView({ symbol }: { symbol: string }) {
         </div>
       </div>
 
-      {/* ---------- every timeframe ---------- */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Every timeframe at a glance</h3>
-        <p className="dim" style={{ fontSize: 14, marginBottom: 10 }}>{trendSummary(trends)}</p>
-        <div className="tf-grid">
-          {RANGES.map((t) => {
-            const v = trends[t] ?? 0;
-            return (
-              <button key={t} className="tf-cell" onClick={() => setRange(t)}
-                aria-label={`Show the ${t} chart`}>
-                <span className="dim">{RANGE_LABEL[t] ?? t}</span>
-                <strong className={`mono ${v >= 0 ? "gain" : "loss"}`}>
-                  {v >= 0 ? "+" : ""}{v.toFixed(1)}%
-                </strong>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ---------- our own reading ---------- */}
-      {score && (
-        <div style={{ marginTop: 16 }}>
-          <ScoreCard score={score} expectations={expectations} />
-        </div>
-      )}
-
-      {/* ---------- sector peers ---------- */}
-      {peers.length > 0 && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <div className="sec-head">
-            <h3 style={{ margin: 0 }}>{info.sector} peers</h3>
-            {data.signedIn ? (
-              <Link
-                className="btn small secondary"
-                href={`/dashboard/compare?symbols=${encodeURIComponent(
-                  [info.symbol, ...peers.slice(0, 3).map((p) => p.symbol)].join(","),
-                )}`}
-              >
-                Compare all
-              </Link>
-            ) : (
-              <button type="button" className="btn small secondary" onClick={() => setGate(true)}>
-                Compare all
-              </button>
-            )}
+      {/* ---------- everything else: readings on the left, news pinned on the right ---------- */}
+      <div className="stock-lower" style={{ marginTop: 16 }}>
+        <div className="stock-lower-main">
+          {/* ---------- every timeframe ---------- */}
+          <div className="card">
+            <h3>Every timeframe at a glance</h3>
+            <p className="dim" style={{ fontSize: 14, marginBottom: 10 }}>{trendSummary(trends)}</p>
+            <div className="tf-grid">
+              {RANGES.map((t) => {
+                const v = trends[t] ?? 0;
+                return (
+                  <button key={t} className="tf-cell" onClick={() => setRange(t)}
+                    aria-label={`Show the ${t} chart`}>
+                    <span className="dim">{RANGE_LABEL[t] ?? t}</span>
+                    <strong className={`mono ${v >= 0 ? "gain" : "loss"}`}>
+                      {v >= 0 ? "+" : ""}{v.toFixed(1)}%
+                    </strong>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <ul className="peer-list">
-            {peers.map((p) => (
-              <li key={p.symbol}>
-                <Link href={`/stocks/${p.symbol}`} className="mkt-sym">
-                  <strong>{p.symbol}</strong> <span className="dim">{p.name}</span>
-                </Link>
-                <span className="mono">{money(p.price, stats.currency)}</span>
-                <span className={`mono ${p.changePct >= 0 ? "gain" : "loss"}`}>
-                  {p.changePct >= 0 ? "+" : ""}
-                  {p.changePct.toFixed(2)}%
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
 
-      {/* ---------- news ---------- */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Latest news</h3>
-        {news.length === 0 ? (
-          <p className="dim" style={{ fontSize: 14, marginTop: 8 }}>
-            No headlines for {info.symbol} in the last few days.
-          </p>
-        ) : (
-          <div className={`news-scroll-box ${news.length > 5 ? "bounded" : ""}`}>
-            <ul className="news-list">
-              {news.map((n) => (
-                <li key={n.id}>
-                  <span className={`sent ${n.sentiment}`} title={`${n.sentiment} tone`} />
-                  <div>
-                    {n.url ? (
-                      <a href={n.url} target="_blank" rel="noopener noreferrer nofollow">
-                        {n.headline}
-                      </a>
-                    ) : (
-                      <strong>{n.headline}</strong>
-                    )}
-                    <p className="dim">
-                      {n.summary ? `${n.summary} — ` : ""}
-                      {n.source} · {new Date(n.publishedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          {/* ---------- our own reading ---------- */}
+          {score && (
+            <div style={{ marginTop: 16 }}>
+              <ScoreCard score={score} expectations={expectations} />
+            </div>
+          )}
+
+          {/* ---------- sector peers ---------- */}
+          {peers.length > 0 && (
+            <div className="card" style={{ marginTop: 16 }}>
+              <div className="sec-head">
+                <h3 style={{ margin: 0 }}>{info.sector} peers</h3>
+                {data.signedIn ? (
+                  <Link
+                    className="btn small secondary"
+                    href={`/dashboard/compare?symbols=${encodeURIComponent(
+                      [info.symbol, ...peers.slice(0, 3).map((p) => p.symbol)].join(","),
+                    )}`}
+                  >
+                    Compare all
+                  </Link>
+                ) : (
+                  <button type="button" className="btn small secondary" onClick={() => setGate(true)}>
+                    Compare all
+                  </button>
+                )}
+              </div>
+              <ul className="peer-list">
+                {peers.map((p) => (
+                  <li key={p.symbol}>
+                    <Link href={`/stocks/${p.symbol}`} className="mkt-sym">
+                      <strong>{p.symbol}</strong> <span className="dim">{p.name}</span>
+                    </Link>
+                    <span className="mono">{money(p.price, stats.currency)}</span>
+                    <span className={`mono ${p.changePct >= 0 ? "gain" : "loss"}`}>
+                      {p.changePct >= 0 ? "+" : ""}
+                      {p.changePct.toFixed(2)}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* ---------- news: a persistent right rail on desktop ---------- */}
+        <aside className="card stock-lower-side">
+          <h3>Latest news</h3>
+          {news.length === 0 ? (
+            <p className="dim" style={{ fontSize: 14, marginTop: 8 }}>
+              No headlines for {info.symbol} in the last few days.
+            </p>
+          ) : (
+            <div className={`news-scroll-box ${news.length > 5 ? "bounded" : ""}`}>
+              <ul className="news-list">
+                {news.map((n) => (
+                  <li key={n.id}>
+                    <span className={`sent ${n.sentiment}`} title={`${n.sentiment} tone`} />
+                    <div>
+                      {n.url ? (
+                        <a href={n.url} target="_blank" rel="noopener noreferrer nofollow">
+                          {n.headline}
+                        </a>
+                      ) : (
+                        <strong>{n.headline}</strong>
+                      )}
+                      <p className="dim">
+                        {n.summary ? `${n.summary} — ` : ""}
+                        {n.source} · {new Date(n.publishedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </aside>
       </div>
 
       <p className="dim" style={{ fontSize: 12, marginTop: 16 }}>
