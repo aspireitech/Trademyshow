@@ -76,7 +76,14 @@ export default function FeatureSpotlight({ signedIn }: { signedIn: boolean }) {
 
   useEffect(() => {
     if (signedIn) return;
-    setFeature(FEATURES[Math.floor(Math.random() * FEATURES.length)]);
+    // A pop-up that appears before the page has even settled reads as an
+    // ad, not a feature. Landing on the market table first, then having
+    // this arrive a beat later, is the difference between an interruption
+    // and a follow-up.
+    const timer = setTimeout(() => {
+      setFeature(FEATURES[Math.floor(Math.random() * FEATURES.length)]);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [signedIn]);
 
   useEffect(() => {

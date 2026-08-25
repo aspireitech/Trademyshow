@@ -158,15 +158,31 @@ export default function AuthForm({
             <span>
               I have read and agree to the <Link href="/terms" target="_blank">Terms of Service</Link>{" "}
               and <Link href="/privacy" target="_blank">Privacy Policy</Link>. I understand
-              TradeMyShow publishes analytics and education, <strong>not investment advice</strong>,
+              TradeMyShow publishes analytics and education, not investment advice,
               and that I am responsible for my own investment decisions.
             </span>
           </label>
         )}
 
-        <button className="btn" disabled={busy || (registering && !accepted)} style={{ width: "100%" }}>
-          {busy ? "…" : registering ? "Create account" : "Log in"}
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className="btn"
+            disabled={busy || (registering && !accepted)}
+            style={{ flex: 1 }}
+          >
+            {busy ? "…" : registering ? "Create account" : "Log in"}
+          </button>
+          {/* The other mode as an equal-weight button, not a small text link
+              underneath — someone without an account should not have to
+              find a sentence, they should see a second button. */}
+          <Link
+            href={registering ? "/login" : "/register"}
+            className="btn secondary"
+            style={{ flex: 1, textAlign: "center" }}
+          >
+            {registering ? "Log in instead" : "Sign up"}
+          </Link>
+        </div>
 
         {registering && (
           <p id="consent-note" className="dim" style={{ fontSize: 11, marginTop: 10 }}>

@@ -119,6 +119,13 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
+- [x] ~~Market news showed one symbol only; popup snapped in instantly; login
+      had no signup button; bold "not investment advice" read as a warning.~~
+      `recentNewsAcross` caps rows per symbol (news is cached per-page-visit,
+      not backfilled — a heavily-viewed symbol crowded out the rest).
+      `FeatureSpotlight` waits 1.5s + fades in (`pop-fade`/`pop-in`, shared
+      by `SignupGate`). `AuthForm`: Log in/Sign up as equal buttons, not a
+      button plus a text link; advice disclaimer un-bolded.
 - [x] ~~Annual discount to 20% (was 17%); trial-ending promo email.~~
       `PLAN_PRICING`. `jobs.ts#runTrialNudgeJob` mails once at ≤3 days left
       (guarded by `trial_nudge_sent_at`, not the window, so a missed cron
@@ -126,23 +133,16 @@ next.config.mjs  legacy redirects live here, not in pages
       `job=trial-nudge` on `/api/cron`. `BillingSection.tsx` reads `?promo=`
       from the link, validates, applies at checkout. **Sends nothing until
       a real mail provider is set** — §7.
-- [x] ~~Landing popup, CTA vibrancy, footer social row.~~ `FeatureSpotlight.tsx`,
-      `.btn` gradient, `SocialLinks.tsx` (Facebook/X/LinkedIn/YouTube).
-      **Placeholder handles** — swap before public.
-- [x] ~~Sticky news rails (stock + landing), quieter data-source label,
-      plan carried to signup.~~ `.stock-lower-side` / `.board-side` are
-      `position: sticky`, not height-matched; landing wraps
-      `MarketsDashboard`+`MarketNewsFeed` in `.board-layout`, collapses
-      under 1180px. `.src-info` ⓘ replaces the pill for real/delayed data —
-      simulated keeps its pill. `/pricing` links carry `?plan=`; `AuthForm`
-      notes it honestly (no separate signup path per plan).
-- [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
-      data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
-      (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
-      `.stock-price-row` — two equal price+% blocks, not a footnote line.
-      Only populates in an actual extended-hours window — see the trap
-      below before assuming it's broken. Needs live
-      verification — the sandbox blocks finance hosts.
+- [x] ~~PR #11, earlier rounds: landing popup (`FeatureSpotlight.tsx`,
+      **placeholder social handles**), `.btn` CTA gradient, sticky news
+      rails on both stock (`.stock-lower-side`) and landing
+      (`.board-side`/`.board-layout`, collapses under 1180px), `.src-info`
+      ⓘ replacing the delayed-quote pill for real data, `/pricing` plan
+      carried to `/register` via `?plan=`, overnight (pre/post-market)
+      price as an equal `.stock-price-row` block — real Yahoo
+      `includePrePost` data only, populates in an actual extended-hours
+      window (see the trap below), needs live verification (sandbox blocks
+      finance hosts).~~
 - [ ] Anchors for instruments outside the shipped 150, or a share-count source,
       so market cap is not blank for them. Blank is correct today; a real
       figure would be better.
