@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { refreshMarketData, runAlertJob, runDigestJob } from "@/lib/jobs";
+import { refreshMarketData, runAlertJob, runDigestJob, runTrialNudgeJob } from "@/lib/jobs";
 import { purgeExpiredTokens } from "@/lib/tokens";
 import { seedAllowed, seedSandbox } from "@/lib/seed";
 import type { DigestPeriod } from "@/lib/types";
@@ -27,6 +27,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ job, period, report: await runDigestJob(period) });
     case "alerts":
       return NextResponse.json({ job, fired: runAlertJob().length });
+    case "trial-nudge":
+      return NextResponse.json({ job, report: await runTrialNudgeJob() });
     case "purge":
       return NextResponse.json({ job, purged: purgeExpiredTokens() });
     case "seed": {
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ job, report: await refreshMarketData() });
     default:
       return NextResponse.json(
-        { error: "job must be digest, alerts, purge, market-data or seed" },
+        { error: "job must be digest, alerts, trial-nudge, purge, market-data or seed" },
         { status: 400 },
       );
   }

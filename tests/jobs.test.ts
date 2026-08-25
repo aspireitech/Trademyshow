@@ -23,18 +23,20 @@ vi.mock("@/lib/mailer", async (importOriginal) => {
   };
 });
 
-import { runAlertJob, runDigestJob } from "@/lib/jobs";
+import { runAlertJob, runDigestJob, runTrialNudgeJob, TRIAL_NUDGE_PROMO_CODE } from "@/lib/jobs";
 import {
   addHolding,
   createGroup,
   createUser,
   getDb,
+  getUserById,
   markEmailVerified,
   resetDbForTests,
   setEmailOptIn,
   setUserPlan,
 } from "@/lib/db";
 import { getQuote } from "@/lib/marketdata";
+import { checkPromo } from "@/lib/billing";
 
 async function subscriber(email = "reader@example.com") {
   const user = await createUser(email, "Reader", "hash");
@@ -207,5 +209,69 @@ describe("runAlertJob — daily-move (limit) alerts", () => {
     if (changePct < 0) return; // only meaningful on an up day for this symbol/date
     await changeAlertFor("below", 5);
     expect(runAlertJob()).toHaveLength(0);
+  });
+});
+
+describe("runTrialNudgeJob", () => {
+  const now = new Date("2026-06-15T12:00:00.000Z");
+
+  async function trialingUser(daysLeft: number, email = "trial@example.com") {
+    const trialEndsAt = new Date(now.getTime() + daysLeft * 24 * 3600_000).toISOString();
+    const user = await createUser(email, "Trialing", "hash", trialEndsAt);
+    markEmailVerified(user.id);
+    setEmailOptIn(user.id, true);
+    return user;
+  }
+
+  it("emails a trialing user whose trial ends within the window", async () => {
+    const user = await trialingUser(2);
+    const report = await runTrialNudgeJob(now);
+    expect(report.sent).toBe(1);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].to).toBe(user.email);
+    expect(sent[0].subject).toContain("2 days");
+
+    const updated = getUserById(user.id)!;
+    expect(updated.trialNudgeSentAt).toBe(now.toISOString());
+  });
+
+  it("creates a redeemable promo code the email can reference", async () => {
+    await trialingUser(1);
+    await runTrialNudgeJob(now);
+    expect(checkPromo(TRIAL_NUDGE_PROMO_CODE, now)).toMatchObject({ valid: true, percentOff: 20 });
+  });
+
+  it("does not email someone whose trial still has plenty of time left", async () => {
+    await trialingUser(10);
+    const report = await runTrialNudgeJob(now);
+    expect(report.sent).toBe(0);
+    expect(sent).toHaveLength(0);
+  });
+
+  it("does not email a non-trialing (plan already resolved) user", async () => {
+    const free = await createUser("free@example.com", "Free", "hash"); // no trial set
+    markEmailVerified(free.id);
+    setEmailOptIn(free.id, true);
+    await runTrialNudgeJob(now);
+    expect(sent).toHaveLength(0);
+  });
+
+  it("never sends the nudge twice, even across separate runs", async () => {
+    await trialingUser(1);
+    await runTrialNudgeJob(now);
+    expect(sent).toHaveLength(1);
+    await runTrialNudgeJob(new Date(now.getTime() + 24 * 3600_000));
+    expect(sent).toHaveLength(1);
+  });
+
+  it("skips an unverified or opted-out address, same gate as the digest", async () => {
+    const a = await createUser("unverified@example.com", "A", "hash", new Date(now.getTime() + 24 * 3600_000).toISOString());
+    setEmailOptIn(a.id, true); // verified is still false
+
+    const b = await trialingUser(1, "declined@example.com");
+    setEmailOptIn(b.id, false);
+
+    await runTrialNudgeJob(now);
+    expect(sent).toHaveLength(0);
   });
 });

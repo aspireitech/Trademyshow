@@ -3,9 +3,9 @@ import { computeGroupFacts } from "./digest/engine";
 import { writeDigest } from "./digest/writer";
 import { scoreStock } from "./insight/score";
 import { getQuote } from "./marketdata";
-import { digestTemplate, sendMail } from "./mailer";
-import { subscriptionState } from "./billing";
-import { effectiveLimits } from "./plans";
+import { digestTemplate, sendMail, trialEndingTemplate } from "./mailer";
+import { createPromo, subscriptionState } from "./billing";
+import { effectiveLimits, isTrialing, trialDaysRemaining } from "./plans";
 import { siteUrl } from "./site";
 import { unsubscribeToken } from "./tokens";
 import type { DigestPeriod, User } from "./types";
@@ -109,6 +109,76 @@ export async function runDigestJob(
       if (result.ok) {
         getDb()
           .prepare("UPDATE users SET last_digest_sent_at = ? WHERE id = ?")
+          .run(now.toISOString(), user.id);
+        report.sent++;
+      } else {
+        report.failed++; note(report, `send_failed:${result.error.slice(0, 40)}`);
+      }
+    } catch (err) {
+      report.failed++; note(report, `error:${String(err).slice(0, 60)}`);
+    }
+  }
+
+  return report;
+}
+
+// ---------- trial-ending nudge ----------
+
+/** Standing code the nudge email offers — created idempotently on each run
+    rather than seeded separately, so there is nothing extra to set up. */
+export const TRIAL_NUDGE_PROMO_CODE = "TRIALSAVE20";
+const TRIAL_NUDGE_PERCENT_OFF = 20;
+/** Send once the trial has this many days or fewer left. */
+const TRIAL_NUDGE_WINDOW_DAYS = 3;
+
+/**
+ * A one-time discount email as a trial nears its end — the same promo-code
+ * machinery already used at checkout, just reached by a scheduled job instead
+ * of someone typing a code in by hand. Never fires twice for the same
+ * account: trial_nudge_sent_at is the guard, not the days-remaining window,
+ * so a missed cron run still gets exactly one send rather than none.
+ */
+export async function runTrialNudgeJob(now: Date = new Date()): Promise<JobReport> {
+  const report = emptyReport();
+
+  // No expiry, no redemption cap — the urgency in this email is the trial
+  // ending, not the code. Upsert is cheap and keeps this job self-contained.
+  createPromo(TRIAL_NUDGE_PROMO_CODE, TRIAL_NUDGE_PERCENT_OFF);
+
+  for (const user of eligibleUsers()) {
+    report.considered++;
+
+    if (!user.emailVerifiedAt) {
+      report.skipped++; note(report, "email_unverified"); continue;
+    }
+    if (!user.emailOptIn) {
+      report.skipped++; note(report, "opted_out"); continue;
+    }
+    if (user.trialNudgeSentAt) {
+      report.skipped++; note(report, "already_sent"); continue;
+    }
+    if (!isTrialing(user, now)) {
+      report.skipped++; note(report, "not_trialing"); continue;
+    }
+    const daysLeft = trialDaysRemaining(user, now);
+    if (daysLeft > TRIAL_NUDGE_WINDOW_DAYS) {
+      report.skipped++; note(report, "trial_not_ending_soon"); continue;
+    }
+
+    try {
+      const mail = trialEndingTemplate(
+        user.name,
+        Math.max(daysLeft, 1),
+        TRIAL_NUDGE_PROMO_CODE,
+        TRIAL_NUDGE_PERCENT_OFF,
+        `${siteUrl()}/dashboard/settings/billing?promo=${TRIAL_NUDGE_PROMO_CODE}`,
+        `${siteUrl()}/unsubscribe?token=${unsubscribeToken(user.id)}`,
+      );
+      const result = await sendMail({ ...mail, to: user.email });
+
+      if (result.ok) {
+        getDb()
+          .prepare("UPDATE users SET trial_nudge_sent_at = ? WHERE id = ?")
           .run(now.toISOString(), user.id);
         report.sent++;
       } else {

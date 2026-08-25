@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, apiPost } from "@/lib/apiClient";
 
@@ -21,12 +22,21 @@ interface ReferralData {
 }
 
 export default function BillingSection() {
+  const params = useSearchParams();
   const [sub, setSub] = useState<SubState | null>(null);
   const [referrals, setReferrals] = useState<ReferralData | null>(null);
   const [pauseDays, setPauseDays] = useState(30);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // A trial-ending email links here with ?promo=CODE — checked once on
+  // arrival so clicking the email link is enough, with the same input
+  // available for anyone typing a code in by hand.
+  const [promoInput, setPromoInput] = useState(params.get("promo") ?? "");
+  const [promo, setPromo] = useState<{ code: string; percentOff: number } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
 
   const refresh = useCallback(async () => {
     const [s, r] = await Promise.all([
@@ -37,6 +47,28 @@ export default function BillingSection() {
     setReferrals(r as ReferralData | null);
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
+
+  const checkPromo = useCallback(async (code: string) => {
+    if (!code.trim()) return;
+    setCheckingPromo(true); setPromoError(null);
+    const res = await apiFetch(`/api/billing/promo?code=${encodeURIComponent(code.trim())}`);
+    const data = (await res.json().catch(() => ({}))) as { valid?: boolean; percentOff?: number; reason?: string };
+    setCheckingPromo(false);
+    if (data.valid) {
+      setPromo({ code: code.trim().toUpperCase(), percentOff: data.percentOff ?? 0 });
+    } else {
+      setPromo(null);
+      setPromoError(data.reason ?? "That code did not apply.");
+    }
+  }, []);
+
+  useEffect(() => {
+    const fromLink = params.get("promo");
+    if (fromLink) void checkPromo(fromLink);
+    // Only ever auto-check the code the page loaded with, not on every
+    // keystroke into the input below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function act(body: Record<string, unknown>) {
     setBusy(true); setError(null);
@@ -50,6 +82,7 @@ export default function BillingSection() {
     setBusy(true); setError(null);
     const { ok, data } = await apiPost<{ url?: string; error?: string }>("/api/billing/checkout", {
       plan, interval: "monthly",
+      ...(promo ? { promoCode: promo.code } : {}),
     });
     setBusy(false);
     if (!ok) { setError(data.error ?? "Could not start checkout."); return; }
@@ -101,10 +134,39 @@ export default function BillingSection() {
           </p>
         )}
 
+        {nextPlan && !state.paused && (
+          <div className="inline-form" style={{ marginTop: 12 }}>
+            <label htmlFor="promo-code" className="dim" style={{ fontSize: 13 }}>Promo code</label>
+            <input
+              id="promo-code"
+              className="input"
+              style={{ maxWidth: 160, textTransform: "uppercase" }}
+              value={promoInput}
+              onChange={(e) => { setPromoInput(e.target.value); setPromo(null); setPromoError(null); }}
+              placeholder="e.g. TRIALSAVE20"
+            />
+            <button
+              type="button"
+              className="btn small secondary"
+              onClick={() => void checkPromo(promoInput)}
+              disabled={checkingPromo || !promoInput.trim()}
+            >
+              {checkingPromo ? "Checking…" : "Apply"}
+            </button>
+            {promo && (
+              <span className="gain" style={{ fontSize: 13 }}>{promo.percentOff}% off applied</span>
+            )}
+            {promoError && <span className="error" style={{ fontSize: 13 }}>{promoError}</span>}
+          </div>
+        )}
+
         <div className="plan-actions">
           {nextPlan && !state.paused && (
             <button className="btn small" onClick={() => upgrade(nextPlan)} disabled={busy}>
-              Upgrade to {nextPlan} — ${pricing[nextPlan]?.monthlyUsd}/mo
+              Upgrade to {nextPlan}
+              {promo
+                ? ` — $${(pricing[nextPlan]!.monthlyUsd * (1 - promo.percentOff / 100)).toFixed(2)}/mo`
+                : ` — $${pricing[nextPlan]?.monthlyUsd}/mo`}
             </button>
           )}
           {canPause && !state.paused && (

@@ -19,6 +19,9 @@ export interface User {
   emailOptIn: boolean;
   stripeCustomerId: string | null;
   lastDigestSentAt: string | null;
+  /** Set once the trial-ending discount nudge has gone out — a one-time
+      email, not a recurring one, so this is the guard against resending it. */
+  trialNudgeSentAt: string | null;
   /** When this account accepted the Terms, and which version. */
   termsAcceptedAt: string | null;
   termsVersion: string | null;

@@ -158,6 +158,34 @@ export function digestTemplate(
   };
 }
 
+export function trialEndingTemplate(
+  name: string,
+  daysLeft: number,
+  promoCode: string,
+  percentOff: number,
+  billingUrl: string,
+  unsubscribeUrl: string,
+): Mail & { to: string } {
+  const dayWord = daysLeft === 1 ? "day" : "days";
+  return {
+    to: "",
+    subject: `Your Pro trial ends in ${daysLeft} ${dayWord} — ${percentOff}% off if you stay`,
+    html:
+      layout(
+        `Your trial ends in ${daysLeft} ${dayWord}`,
+        `<p>Hi ${escapeHtml(name)}, your ${BRAND} Pro trial wraps up in ${daysLeft} ${dayWord}. After
+         that the account moves to the free plan automatically — nothing is charged, and nothing you
+         built is lost.</p>
+         <p>If you want to keep the exact scores, the weekly read and the rest of Pro, use
+         <strong style="font-family:monospace;font-size:16px;letter-spacing:1px">${escapeHtml(promoCode)}</strong>
+         for ${percentOff}% off.</p>`,
+        { label: "Continue on Pro", url: billingUrl },
+      ) +
+      `<div style="max-width:520px;margin:0 auto;font-size:11px;color:#56657f;text-align:center;padding:8px 16px 24px"><a href="${unsubscribeUrl}" style="color:#56657f">Unsubscribe from these emails</a></div>`,
+    text: `Hi ${name}, your ${BRAND} Pro trial ends in ${daysLeft} ${dayWord}. After that you move to the free plan automatically -- no charge, nothing lost.\n\nWant to keep Pro? Use code ${promoCode} for ${percentOff}% off: ${billingUrl}\n\nUnsubscribe: ${unsubscribeUrl}`,
+  };
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

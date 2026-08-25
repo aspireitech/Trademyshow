@@ -5,14 +5,11 @@ session costs almost nothing: the map below says which file owns what, so work
 starts by opening two or three known files instead of searching the codebase.
 
 Status: `claude/landing-dashboard-stock-data-5fngt1` ([PR #9](https://github.com/aspireitech/Trademyshow/pull/9))
-is **frozen** at the owner's request. Active work is branch
-`claude/stock-page-rail-and-quote-label`, [PR #11](https://github.com/aspireitech/Trademyshow/pull/11)
-against #9, not main · Node 22 · 454 unit tests, 38 e2e, `next build` clean ·
-2026-08-25.
-
-Push to the PR #11 branch, never to #9, unless told otherwise. (PR #10: a
-different, uncoordinated Claude session's follow-on to #9 — closed
-2026-08-25, superseded by #11.)
+is **frozen**. Active work: `claude/stock-page-rail-and-quote-label`,
+[PR #11](https://github.com/aspireitech/Trademyshow/pull/11) against #9, not
+main · Node 22 · 460 unit tests, 38 e2e, `next build` clean · 2026-08-25.
+Push to PR #11, never #9, unless told otherwise. (PR #10: a different
+Claude session's uncoordinated follow-on — closed, superseded by #11.)
 
 `tests/docs-map.test.ts` asserts every path in the map below exists and that
 this file stays short enough to be worth reading every time. If you rename a
@@ -122,17 +119,23 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
+- [x] ~~Annual discount to 20% (was 17%); trial-ending promo email.~~
+      `PLAN_PRICING`. `jobs.ts#runTrialNudgeJob` mails once at ≤3 days left
+      (guarded by `trial_nudge_sent_at`, not the window, so a missed cron
+      run still sends once), code `TRIALSAVE20` (idempotent, not seeded),
+      `job=trial-nudge` on `/api/cron`. `BillingSection.tsx` reads `?promo=`
+      from the link, validates, applies at checkout. **Sends nothing until
+      a real mail provider is set** — §7.
 - [x] ~~Landing popup, CTA vibrancy, footer social row.~~ `FeatureSpotlight.tsx`,
       `.btn` gradient, `SocialLinks.tsx` (Facebook/X/LinkedIn/YouTube).
       **Placeholder handles** — swap before public.
-- [x] ~~PR #11: sticky news rails (stock + landing), quieter data-source
-      label, pricing plan carried to signup.~~ `.stock-lower-side` /
-      `.board-side` are `position: sticky`, not height-matched; landing
-      wraps `MarketsDashboard`+`MarketNewsFeed` in `.board-layout`, collapses
-      under 1180px. `.src-info` ⓘ replaces the pill for real/delayed data at
-      full `--badge-gain` opacity — simulated keeps its pill. `/pricing`
-      links carry `?plan=`; `AuthForm` shows an honest note on `/register`
-      (no separate signup path per plan — everyone gets the same trial).
+- [x] ~~Sticky news rails (stock + landing), quieter data-source label,
+      plan carried to signup.~~ `.stock-lower-side` / `.board-side` are
+      `position: sticky`, not height-matched; landing wraps
+      `MarketsDashboard`+`MarketNewsFeed` in `.board-layout`, collapses
+      under 1180px. `.src-info` ⓘ replaces the pill for real/delayed data —
+      simulated keeps its pill. `/pricing` links carry `?plan=`; `AuthForm`
+      notes it honestly (no separate signup path per plan).
 - [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
       data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
       (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
@@ -140,9 +143,6 @@ next.config.mjs  legacy redirects live here, not in pages
       Only populates in an actual extended-hours window — see the trap
       below before assuming it's broken. Needs live
       verification — the sandbox blocks finance hosts.
-- [x] ~~Verify the live feed against the real internet.~~ Confirmed by the
-      owner 2026-08-23 (real AAPL/AMZN prices). Sandbox still blocks finance
-      hosts — verify any future vendor change outside it.
 - [ ] Anchors for instruments outside the shipped 150, or a share-count source,
       so market cap is not blank for them. Blank is correct today; a real
       figure would be better.

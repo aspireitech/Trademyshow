@@ -100,9 +100,11 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 };
 
+// Annual price is ~20% off twelve months at the monthly rate, rounded to a
+// whole dollar (pro: 12*12*0.8=115.20 -> 115; premium: 29*12*0.8=278.4 -> 278).
 export const PLAN_PRICING: Record<Exclude<Plan, "free">, PlanPricing> = {
-  pro: { monthlyUsd: 12, annualUsd: 120, annualSavingPct: 17 },
-  premium: { monthlyUsd: 29, annualUsd: 290, annualSavingPct: 17 },
+  pro: { monthlyUsd: 12, annualUsd: 115, annualSavingPct: 20 },
+  premium: { monthlyUsd: 29, annualUsd: 278, annualSavingPct: 20 },
 };
 
 export function limitsFor(plan: Plan): PlanLimits {
