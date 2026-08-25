@@ -1984,6 +1984,20 @@ footer.site {
   color: var(--text-dim);
   margin-bottom: 8px;
 }
+/* Regular close and, when the vendor has one, the overnight price as two
+   blocks side by side — each with its own big price and its own %, the way
+   a visitor compares two numbers rather than reading one as a footnote to
+   the other. */
+.stock-price-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.stock-price-block-overnight {
+  padding-left: 24px;
+  border-left: 1px solid var(--border);
+}
 .stock-price {
   display: flex;
   align-items: baseline;
@@ -1993,8 +2007,19 @@ footer.site {
 .stock-price > .mono { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
 .stock-change { font-size: 16px; font-weight: 700; }
 .stock-asof { font-size: 12px; margin-top: 2px; }
-.stock-overnight { font-size: 13px; margin-top: 6px; }
-.stock-overnight .mono { font-weight: 600; }
+.stock-overnight-info {
+  display: inline-block;
+  cursor: help;
+  opacity: 0.7;
+}
+@media (max-width: 520px) {
+  .stock-price-block-overnight {
+    padding-left: 0;
+    border-left: none;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+}
 
 /* ---------- action row ---------- */
 

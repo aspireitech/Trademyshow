@@ -129,13 +129,12 @@ next.config.mjs  legacy redirects live here, not in pages
 - [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
       data only, never simulated: `QuoteStats.overnight` from Yahoo's
       `includePrePost` chart field (`lib/providers/yahoo.ts`), cached in four
-      `quote_stats_cache` columns, a second price line when present. Built,
-      reverted, then re-requested by the owner same day (2026-08-25) — the
-      churn is why this entry spells out the mechanism rather than just
-      linking the commit. Needs live verification — the sandbox blocks
-      finance hosts — same as the feed itself below. **News stays a
-      full-width bottom card, not a right rail** — that half of the original
-      pairing was not re-requested; do not re-add it without being asked.
+      `quote_stats_cache` columns. Shown as `.stock-price-row` — two full
+      price+% blocks side by side (regular close, then overnight past a
+      divider), not a small line under the main price; owner specifically
+      wanted them reading as equals. Needs live verification — the sandbox
+      blocks finance hosts. **News stays a full-width bottom card, not a
+      right rail** — not re-requested; don't re-add without being asked.
 - [x] ~~Social links in the footer.~~ `components/SocialLinks.tsx` — X,
       LinkedIn, YouTube as filled brand-colour circular badges (46px, gradient
       + hover lift) — the one other spot besides the CTA/popup allowed off

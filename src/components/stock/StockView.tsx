@@ -181,32 +181,50 @@ export default function StockView({ symbol }: { symbol: string }) {
               {source.text}
             </span>
           </p>
-          <p className="stock-price">
-            <span className="mono">{money(quote.price, stats.currency)}</span>
-            <span className={`stock-change mono ${up ? "gain" : "loss"}`}>
-              {up ? "+" : ""}{change.toFixed(2)} ({up ? "+" : ""}{quote.changePct.toFixed(2)}%)
-            </span>
-          </p>
-          {source.asOf && (
-            <p className="dim stock-asof">
-              As of {new Date(source.asOf).toLocaleString()}
-            </p>
-          )}
-          {/* Real vendor data only — there is no simulated overnight price,
-              so this row simply does not appear for a simulated symbol. */}
-          {stats.overnight && (
-            <p className="dim stock-overnight" title={`${stats.overnight.kind === "post" ? "Post-market" : "Pre-market"} price from the vendor`}>
-              <span aria-hidden="true">{stats.overnight.kind === "post" ? "☾" : "☀"}</span>{" "}
-              {stats.overnight.kind === "post" ? "Overnight" : "Pre-market"}:{" "}
-              <span className="mono">{money(stats.overnight.price, stats.currency)}</span>{" "}
-              <span className={`mono ${stats.overnight.changePct >= 0 ? "gain" : "loss"}`}>
-                {stats.overnight.changePct >= 0 ? "+" : ""}{stats.overnight.changePct.toFixed(2)}%
-              </span>
-              {stats.overnight.asOf && (
-                <span className="dim"> · {new Date(stats.overnight.asOf).toLocaleTimeString()}</span>
+          {/* Two blocks side by side when there is an overnight price to show
+              — the regular close and the extended-hours figure each get
+              their own price and their own %, the way a visitor actually
+              reads two numbers: compared, not one buried under the other. */}
+          <div className="stock-price-row">
+            <div className="stock-price-block">
+              <p className="stock-price">
+                <span className="mono">{money(quote.price, stats.currency)}</span>
+                <span className={`stock-change mono ${up ? "gain" : "loss"}`}>
+                  {up ? "+" : ""}{change.toFixed(2)} ({up ? "+" : ""}{quote.changePct.toFixed(2)}%)
+                </span>
+              </p>
+              {source.asOf && (
+                <p className="dim stock-asof">
+                  At close: {new Date(source.asOf).toLocaleString()}
+                </p>
               )}
-            </p>
-          )}
+            </div>
+
+            {/* Real vendor data only — there is no simulated overnight price,
+                so this block simply does not appear for a simulated symbol. */}
+            {stats.overnight && (
+              <div className="stock-price-block stock-price-block-overnight">
+                <p className="stock-price">
+                  <span className="mono">{money(stats.overnight.price, stats.currency)}</span>
+                  <span className={`stock-change mono ${stats.overnight.changePct >= 0 ? "gain" : "loss"}`}>
+                    {stats.overnight.changePct >= 0 ? "+" : ""}{stats.overnight.changePct.toFixed(2)}%
+                  </span>
+                </p>
+                <p className="dim stock-asof">
+                  <span aria-hidden="true">{stats.overnight.kind === "post" ? "☾" : "☀"}</span>{" "}
+                  {stats.overnight.kind === "post" ? "Overnight" : "Pre-market"}
+                  {stats.overnight.asOf && `: ${new Date(stats.overnight.asOf).toLocaleTimeString()}`}
+                  {" "}
+                  <span
+                    className="stock-overnight-info"
+                    title={`${stats.overnight.kind === "post" ? "Post-market" : "Pre-market"} price from the vendor, not a live feed.`}
+                  >
+                    ⓘ
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="stock-actions">
