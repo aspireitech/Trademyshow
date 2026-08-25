@@ -23,6 +23,8 @@ cannot copy a history.
 | No permanent "70% OFF" banner | A permanent discount is a false anchor and is actionable under UK/EU/US pricing rules. |
 | Market data is simulated, and says so | No paid feed is bought yet. Prices are a seeded random walk pinned to realistic anchor levels. |
 | New landing-page features get announced via the `FeatureSpotlight` popup, never a new permanent section | Stacking a "what's new"/showcase block per feature made the landing page grow without bound. The popup shows one random entry from `FEATURES` to signed-out visitors on every landing-page load, closes to reveal the market table; add an entry to the array instead of appending markup. |
+| Vibrancy is concentrated on CTAs and the `FeatureSpotlight` popup, not a sitewide repaint | A tastytrade-style bold palette fits an active-trading broker selling urgency; this product sells "check my work," which a loud red/black palette undercuts. Bold colour is spent only where an interrupt is intentional (primary buttons, the popup) — the rest of the site keeps its measured, AA-checked base. Owner-approved. |
+| Stock-page news is a right-side rail next to the chart on desktop, not a bottom card | Matches Bloomberg/Yahoo Finance convention — headlines stay visible while watching price action instead of requiring a scroll past the score and chart. Collapses to one column under 900px. Decided by Claude as the acting web designer, per the owner's request. |
 | Free tier proves the product; the exact score is the upgrade trigger | Free: 1 watchlist, 2-way compare, 15 rows on 52-week screens. Pro/Premium unlock the rest. |
 
 ## 3. Architecture quick map
@@ -72,6 +74,14 @@ test suite time out when the universe grew from 61 to 150 symbols.
   visits — the pool is meant to grow by adding an entry, not by adding a new
   landing-page section. Replaces the earlier inline `AnnouncementBar` attempt
   (removed; a modal was closer to what the owner wanted).
+- "Concentrated vibrancy" colour pass: the site keeps its calm, AA-checked
+  light palette everywhere, but the primary `.btn` (used on every page) and
+  the `FeatureSpotlight` card now carry a fixed vivid gradient + glow, the
+  same theme-independent treatment `.sandbox-banner` already used. Deliberate
+  choice over a full tastytrade-style repaint — see settled decisions.
+- Stock detail page (`src/components/StockDetail.tsx`): news moved from the
+  last card in a single-column scroll to a persistent right-side panel next
+  to the chart (`.stock-layout`, collapses to one column under 900px).
 
 ## 5. Next up
 
