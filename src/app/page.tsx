@@ -7,7 +7,7 @@ import { UNIVERSE } from "@/lib/marketdata";
 import MarketsDashboard from "@/components/MarketsDashboard";
 import SiteSidebar from "@/components/SiteSidebar";
 import ThemeToggle from "@/components/ThemeToggle";
-import AnnouncementBar from "@/components/AnnouncementBar";
+import FeatureSpotlight from "@/components/FeatureSpotlight";
 
 export const metadata: Metadata = {
   title: "TradeMyShow — Know why your stocks moved, and what usually happens next",
@@ -124,7 +124,7 @@ export default async function LandingPage() {
           </div>
         </nav>
 
-        <AnnouncementBar />
+        <FeatureSpotlight signedIn={!!user} />
 
         {/* A compact band, not a full screen of headline. Someone landing here
             came to look at the market; the pitch has to earn its space beside
