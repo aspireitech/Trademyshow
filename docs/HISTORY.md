@@ -99,3 +99,51 @@ Newest last.
   change nothing. They now fetch and check out explicitly, resolve the project
   root from their own location, compare captured SHAs instead of `HEAD@{1}`,
   and run `npm run refresh`.
+
+## PR #11 (branched off #9, which stays frozen)
+
+- Signed-out landing popup (`FeatureSpotlight.tsx`): one random entry from a
+  `FEATURES` array per landing-page load, reusing the site's `.pop`/
+  `.pop-backdrop` modal with a `pop-vivid` gradient variant. Waits 1.5s and
+  fades/scales in rather than snapping into view (`pop-fade`/`pop-in`,
+  shared by `SignupGate`). Replaced an earlier inline announcement-bar
+  attempt and a rival, uncoordinated Claude session's permanent "what's new"
+  carousel (PR #10, closed — its approach re-introduced the ever-growing
+  landing section the popup exists to avoid).
+- Concentrated colour vibrancy on the primary CTA (`.btn` gradient+glow) and
+  the popup only — a deliberate choice over a full broker-style repaint, so
+  the rest of the site keeps its calm, contrast-checked base.
+- Sticky news rails: stock page (`.stock-lower-side`) and landing
+  (`.board-side`/`.board-layout`, market table + `MarketNewsFeed` side by
+  side, collapses under 1180px). Chosen over height-matching because the
+  paired content is a different length on every page — sticky just tracks
+  the scroll instead of leaving blank space under a short list.
+  `recentNewsAcross` was later found to have no per-symbol cap, so a
+  heavily-viewed ticker could fill the "market-wide" widget with itself;
+  fixed to cap rows per symbol.
+- Overnight (pre/post-market) price on the stock page: real Yahoo
+  `includePrePost` data only, cached in `quote_stats_cache`, shown as an
+  equal `.stock-price-row` block beside the regular close (not a footnote
+  line) — only appears in an actual extended-hours window; needs live
+  verification since the sandbox blocks finance hosts.
+- "Delayed quote" pill shrunk to a quiet `.src-info` ⓘ icon for real/delayed
+  data (tooltip carries the full text) — it was reading as a warning for
+  something routine. Simulated data keeps its visible pill; that disclosure
+  actually matters.
+- Footer social icons (`SocialLinks.tsx`): Facebook/X/LinkedIn/YouTube as
+  filled brand-colour circular badges. **Placeholder handles** — swap for
+  the real accounts before launch.
+- Pricing: annual discount raised to ~20% (was 17%); `/pricing` and the
+  landing page's own "Straightforward pricing" cards (`app/page.tsx` —
+  a separate, previously non-interactive section) both carry
+  `?plan=free|pro|premium` to `/register`, which shows an honest note (no
+  separate signup path per plan — everyone gets the same trial).
+  `AuthForm` shows Log in/Sign up as equal-weight buttons; un-bolded the
+  "not investment advice" consent text.
+- Trial-ending discount email: `jobs.ts#runTrialNudgeJob` mails once when a
+  trial has ≤3 days left (guarded by a one-time `trial_nudge_sent_at`
+  column, not the days-left window), offering promo code `TRIALSAVE20` via
+  the existing checkout promo system. `BillingSection.tsx` gained an actual
+  promo-code input, which hadn't existed before. `scripts/create-promo.ts`
+  / `job=promo` on `/api/cron` mint arbitrary codes without a DB client.
+  **Nothing sends until a real mail provider is configured** — §7.

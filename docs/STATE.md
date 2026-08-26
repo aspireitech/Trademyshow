@@ -119,30 +119,14 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [x] ~~One-symbol market news; popup snapped in instantly; login had no
-      signup button; bold advice disclaimer; landing pricing cards
-      (`app/page.tsx`, separate from `/pricing`) weren't clickable.~~
-      `recentNewsAcross` caps rows/symbol (news is cached per-visit, not
-      backfilled). `FeatureSpotlight` waits 1.5s + fades in, shared by
-      `SignupGate`. `AuthForm`: equal Log in/Sign up buttons, disclaimer
-      un-bolded. Landing cards now link `/register?plan=X` like `/pricing`.
-- [x] ~~Annual discount to 20% (was 17%); trial-ending promo email.~~
-      `PLAN_PRICING`. `jobs.ts#runTrialNudgeJob` mails once at ≤3 days left
-      (guarded by `trial_nudge_sent_at`, not the window, so a missed cron
-      run still sends once), code `TRIALSAVE20` (idempotent, not seeded),
-      `job=trial-nudge` on `/api/cron`. `BillingSection.tsx` reads `?promo=`
-      from the link, validates, applies at checkout. **Sends nothing until
-      a real mail provider is set** — §7.
-- [x] ~~PR #11, earlier rounds: landing popup (`FeatureSpotlight.tsx`,
-      **placeholder social handles**), `.btn` CTA gradient, sticky news
-      rails on both stock (`.stock-lower-side`) and landing
-      (`.board-side`/`.board-layout`, collapses under 1180px), `.src-info`
-      ⓘ replacing the delayed-quote pill for real data, `/pricing` plan
-      carried to `/register` via `?plan=`, overnight (pre/post-market)
-      price as an equal `.stock-price-row` block — real Yahoo
-      `includePrePost` data only, populates in an actual extended-hours
-      window (see the trap below), needs live verification (sandbox blocks
-      finance hosts).~~
+PR #11 work through the promo-code tooling is done; see `docs/HISTORY.md`
+§"PR #11" for the full list and mechanisms rather than re-deriving it here.
+Test/mint a code with `npx tsx scripts/create-promo.ts CODE PERCENT [max]
+[expires]` or `job=promo` on `/api/cron`; enter it at
+`/dashboard/settings/billing`. Overnight price and the trial-nudge email
+both need live verification once real network/mail access exists — see §7
+and the trap below.
+
 - [ ] Anchors for instruments outside the shipped 150, or a share-count source,
       so market cap is not blank for them. Blank is correct today; a real
       figure would be better.

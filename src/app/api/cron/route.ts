@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { refreshMarketData, runAlertJob, runDigestJob, runTrialNudgeJob } from "@/lib/jobs";
+import { createPromo } from "@/lib/billing";
 import { purgeExpiredTokens } from "@/lib/tokens";
 import { seedAllowed, seedSandbox } from "@/lib/seed";
 import type { DigestPeriod } from "@/lib/types";
@@ -44,9 +45,28 @@ export async function POST(req: Request) {
       // Must run before the digest job: a digest built on yesterday's cache
       // explains yesterday's moves.
       return NextResponse.json({ job, report: await refreshMarketData() });
+    case "promo": {
+      // Same reasoning as "seed": reachable over HTTP because a deployed
+      // container has no source tree to run a script from. Behind
+      // CRON_SECRET, same as every other job here — this mints a working
+      // discount code, so it is not something to leave open.
+      const code = url.searchParams.get("code");
+      const percent = Number(url.searchParams.get("percent") ?? "");
+      if (!code || !Number.isFinite(percent) || percent <= 0 || percent > 100) {
+        return NextResponse.json(
+          { error: "promo needs code and percent (1-100) query params" },
+          { status: 400 },
+        );
+      }
+      const maxParam = url.searchParams.get("max");
+      const maxRedemptions = maxParam ? Number(maxParam) : undefined;
+      const expiresAt = url.searchParams.get("expires") ?? undefined;
+      createPromo(code, percent, maxRedemptions, expiresAt);
+      return NextResponse.json({ job, code: code.toUpperCase(), percent, maxRedemptions, expiresAt });
+    }
     default:
       return NextResponse.json(
-        { error: "job must be digest, alerts, trial-nudge, purge, market-data or seed" },
+        { error: "job must be digest, alerts, trial-nudge, purge, market-data, promo or seed" },
         { status: 400 },
       );
   }
