@@ -119,13 +119,13 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [x] ~~Market news showed one symbol only; popup snapped in instantly; login
-      had no signup button; bold "not investment advice" read as a warning.~~
-      `recentNewsAcross` caps rows per symbol (news is cached per-page-visit,
-      not backfilled — a heavily-viewed symbol crowded out the rest).
-      `FeatureSpotlight` waits 1.5s + fades in (`pop-fade`/`pop-in`, shared
-      by `SignupGate`). `AuthForm`: Log in/Sign up as equal buttons, not a
-      button plus a text link; advice disclaimer un-bolded.
+- [x] ~~One-symbol market news; popup snapped in instantly; login had no
+      signup button; bold advice disclaimer; landing pricing cards
+      (`app/page.tsx`, separate from `/pricing`) weren't clickable.~~
+      `recentNewsAcross` caps rows/symbol (news is cached per-visit, not
+      backfilled). `FeatureSpotlight` waits 1.5s + fades in, shared by
+      `SignupGate`. `AuthForm`: equal Log in/Sign up buttons, disclaimer
+      un-bolded. Landing cards now link `/register?plan=X` like `/pricing`.
 - [x] ~~Annual discount to 20% (was 17%); trial-ending promo email.~~
       `PLAN_PRICING`. `jobs.ts#runTrialNudgeJob` mails once at ≤3 days left
       (guarded by `trial_nudge_sent_at`, not the window, so a missed cron
