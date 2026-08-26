@@ -4,11 +4,12 @@
 session costs almost nothing: the map below says which file owns what, so work
 starts by opening two or three known files instead of searching the codebase.
 
-Status: branch `claude/landing-dashboard-stock-data-5fngt1`, open as
-[PR #9](https://github.com/aspireitech/Trademyshow/pull/9) · Node 22 ·
-456 unit tests, 38 e2e specs, `next build` clean · updated 2026-08-25.
-
-Pushing to the branch updates that PR — there is no second one to open.
+Status: `claude/landing-dashboard-stock-data-5fngt1` ([PR #9](https://github.com/aspireitech/Trademyshow/pull/9))
+is **frozen**. Active work: `claude/stock-page-rail-and-quote-label`,
+[PR #11](https://github.com/aspireitech/Trademyshow/pull/11) against #9, not
+main · Node 22 · 460 unit tests, 38 e2e, `next build` clean · 2026-08-25.
+Push to PR #11, never #9, unless told otherwise. (PR #10: a different
+Claude session's uncoordinated follow-on — closed, superseded by #11.)
 
 `tests/docs-map.test.ts` asserts every path in the map below exists and that
 this file stays short enough to be worth reading every time. If you rename a
@@ -118,24 +119,14 @@ next.config.mjs  legacy redirects live here, not in pages
 
 ## 6. Next up
 
-- [x] ~~Signed-out landing popup, CTA/popup vibrancy, footer social row.~~
-      `components/FeatureSpotlight.tsx` (`.pop-vivid` modal, random entry per
-      load); `.btn` gradient+glow; `components/SocialLinks.tsx` — Facebook,
-      X, LinkedIn, YouTube as brand-colour circular badges. **Placeholder
-      handles** — swap for the real accounts before they're public.
-- [x] ~~Overnight (pre/post-market) price on the stock page.~~ Real vendor
-      data only: `QuoteStats.overnight` from Yahoo's `includePrePost` field
-      (`lib/providers/yahoo.ts`), cached in `quote_stats_cache`. Shown as
-      `.stock-price-row` — two equal price+% blocks side by side, not a
-      footnote line. Only populates during an actual extended-hours window —
-      see the trap below before assuming it's broken. Needs live
-      verification — the sandbox blocks finance hosts.
-- [x] ~~News as a right rail on the stock page.~~ `.stock-lower` grid in
-      `StockView.tsx` — readings left, `Latest news` pinned right, collapses
-      under 900px. Reverted once, re-requested same day (2026-08-25) — final.
-- [x] ~~Verify the live feed against the real internet.~~ Confirmed by the
-      owner 2026-08-23 (real AAPL/AMZN prices). Sandbox still blocks finance
-      hosts — verify any future vendor change outside it.
+PR #11 work through the promo-code tooling is done; see `docs/HISTORY.md`
+§"PR #11" for the full list and mechanisms rather than re-deriving it here.
+Test/mint a code with `npx tsx scripts/create-promo.ts CODE PERCENT [max]
+[expires]` or `job=promo` on `/api/cron`; enter it at
+`/dashboard/settings/billing`. Overnight price and the trial-nudge email
+both need live verification once real network/mail access exists — see §7
+and the trap below.
+
 - [ ] Anchors for instruments outside the shipped 150, or a share-count source,
       so market cap is not blank for them. Blank is correct today; a real
       figure would be better.

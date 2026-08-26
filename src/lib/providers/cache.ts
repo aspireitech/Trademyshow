@@ -360,16 +360,35 @@ export function cachedIntraday(symbol: string, maxAgeMs = 30 * 60_000): PricePoi
   }
 }
 
-/** Recent headlines across every symbol, newest first. */
-export function recentNewsAcross(since: Date, limit = 12): NewsItem[] {
+/**
+ * Recent headlines across every symbol, newest first, capped per symbol.
+ * News is cached per symbol as its page gets visited — not backfilled for
+ * the whole universe at once — so a symbol someone happened to look up a lot
+ * (or one a vendor covered heavily that day) can otherwise fill the entire
+ * "newest first" query with itself, crowding out everything else. Pulling a
+ * wider pool and capping how many any one symbol contributes is what keeps
+ * this an actual market-wide feed rather than one ticker's news with extra
+ * steps.
+ */
+export function recentNewsAcross(since: Date, limit = 12, maxPerSymbol = 2): NewsItem[] {
   const rows = getDb()
     .prepare(
       "SELECT * FROM news_cache WHERE published_at >= ? ORDER BY published_at DESC LIMIT ?",
     )
-    .all(since.toISOString(), limit) as NewsRow[];
-  return rows.map((r) => ({
-    id: r.id, symbol: r.symbol, headline: r.headline, summary: r.summary,
-    source: r.source, url: r.url ?? undefined, publishedAt: r.published_at,
-    sentiment: r.sentiment, impact: r.impact,
-  }));
+    .all(since.toISOString(), Math.max(limit * 8, 100)) as NewsRow[];
+
+  const perSymbol = new Map<string, number>();
+  const out: NewsItem[] = [];
+  for (const r of rows) {
+    const count = perSymbol.get(r.symbol) ?? 0;
+    if (count >= maxPerSymbol) continue;
+    perSymbol.set(r.symbol, count + 1);
+    out.push({
+      id: r.id, symbol: r.symbol, headline: r.headline, summary: r.summary,
+      source: r.source, url: r.url ?? undefined, publishedAt: r.published_at,
+      sentiment: r.sentiment, impact: r.impact,
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
 }

@@ -151,9 +151,14 @@ export default async function LandingPage({
         </dl>
       </div>
 
-      <MarketsDashboard view={view} basePath="/" />
-
-      <MarketNewsFeed />
+      <div className="board-layout">
+        <div className="board-main">
+          <MarketsDashboard view={view} basePath="/" />
+        </div>
+        <aside className="board-side">
+          <MarketNewsFeed />
+        </aside>
+      </div>
 
       <NewsletterSignup source="landing" />
 
@@ -250,7 +255,7 @@ export default async function LandingPage({
           Start with {TRIAL_DAYS} days of Pro, no card. Keep a free plan afterwards.
         </p>
         <div className="grid cols-3">
-          <div className="card lift">
+          <div className="card lift" style={{ display: "flex", flexDirection: "column" }}>
             <span className="badge">Free</span>
             <p className="price" style={{ marginTop: 10 }}>$0 <small>forever</small></p>
             <ul className="features">
@@ -259,8 +264,18 @@ export default async function LandingPage({
               <li>Daily insight</li>
               <li>Score band for any stock</li>
             </ul>
+            <Link
+              href="/register?plan=free"
+              className="btn secondary"
+              style={{ marginTop: "auto", width: "100%", textAlign: "center" }}
+            >
+              Create free account
+            </Link>
           </div>
-          <div className="card lift" style={{ borderColor: "var(--accent)" }}>
+          <div
+            className="card lift"
+            style={{ display: "flex", flexDirection: "column", borderColor: "var(--accent)" }}
+          >
             <span className="badge">Pro · most popular</span>
             <p className="price" style={{ marginTop: 10 }}>
               ${PLAN_PRICING.pro.monthlyUsd} <small>/ month</small>
@@ -272,8 +287,15 @@ export default async function LandingPage({
               <li>Historical base rates</li>
               <li>Full 52-week screens</li>
             </ul>
+            <Link
+              href="/register?plan=pro"
+              className="btn"
+              style={{ marginTop: "auto", width: "100%", textAlign: "center" }}
+            >
+              Start {TRIAL_DAYS}-day trial
+            </Link>
           </div>
-          <div className="card lift">
+          <div className="card lift" style={{ display: "flex", flexDirection: "column" }}>
             <span className="badge">Premium</span>
             <p className="price" style={{ marginTop: 10 }}>
               ${PLAN_PRICING.premium.monthlyUsd} <small>/ month</small>
@@ -284,6 +306,13 @@ export default async function LandingPage({
               <li>Deepest per-holding analysis</li>
               <li>CSV export</li>
             </ul>
+            <Link
+              href="/register?plan=premium"
+              className="btn secondary"
+              style={{ marginTop: "auto", width: "100%", textAlign: "center" }}
+            >
+              Start {TRIAL_DAYS}-day trial
+            </Link>
           </div>
         </div>
         <p style={{ marginTop: 18 }}>

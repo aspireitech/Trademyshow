@@ -8,7 +8,7 @@ process.env.DB_PATH = ":memory:";
 
 import {
   cacheCloses, cacheNews, cacheQuote, cacheStats, cachedCloses,
-  cachedNews, cachedQuote, quoteAgeHours,
+  cachedNews, cachedQuote, quoteAgeHours, recentNewsAcross,
 } from "@/lib/providers/cache";
 import { finnhubMarketData, finnhubNews } from "@/lib/providers/finnhub";
 import { ProviderError } from "@/lib/providers/types";
@@ -78,6 +78,33 @@ describe("close and news cache", () => {
     ]);
     const recent = cachedNews("AAPL", new Date("2026-08-01"));
     expect(recent.map((n) => n.headline)).toEqual(["New"]);
+  });
+
+  it("recentNewsAcross does not let one symbol's burst crowd out the rest", () => {
+    // News is cached per symbol as its page gets visited, not backfilled for
+    // the whole universe at once -- a heavily-viewed symbol can end up with
+    // far more cached rows than everything else combined. The market-wide
+    // widget still has to read as market-wide.
+    const items = [];
+    for (let i = 0; i < 10; i++) {
+      items.push({
+        id: `sndk-${i}`, symbol: "SNDK", headline: `SNDK headline ${i}`, summary: "",
+        source: "s", publishedAt: `2026-08-2${4 - Math.floor(i / 3)}T0${i % 9}:00:00Z`,
+        sentiment: "neutral" as const, impact: 0.5,
+      });
+    }
+    cacheNews("SNDK", items);
+    cacheNews("AAPL", [
+      { id: "aapl-1", symbol: "AAPL", headline: "AAPL headline", summary: "", source: "s", publishedAt: "2026-08-23T12:00:00Z", sentiment: "neutral", impact: 0.5 },
+    ]);
+    cacheNews("MSFT", [
+      { id: "msft-1", symbol: "MSFT", headline: "MSFT headline", summary: "", source: "s", publishedAt: "2026-08-22T12:00:00Z", sentiment: "neutral", impact: 0.5 },
+    ]);
+
+    const across = recentNewsAcross(new Date("2026-08-01"), 6);
+    const symbols = across.map((n) => n.symbol);
+    expect(new Set(symbols).size).toBeGreaterThan(1);
+    expect(symbols.filter((s) => s === "SNDK").length).toBeLessThan(across.length);
   });
 });
 

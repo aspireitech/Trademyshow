@@ -155,6 +155,7 @@ function open(): Database.Database {
   addUserCol("role", "role TEXT NOT NULL DEFAULT 'user'");
   addUserCol("stripe_customer_id", "stripe_customer_id TEXT");
   addUserCol("last_digest_sent_at", "last_digest_sent_at TEXT");
+  addUserCol("trial_nudge_sent_at", "trial_nudge_sent_at TEXT");
   addUserCol("terms_accepted_at", "terms_accepted_at TEXT");
   addUserCol("terms_version", "terms_version TEXT");
   addUserCol("phone", "phone TEXT");
@@ -383,6 +384,7 @@ interface UserRow {
   email_opt_in: number;
   stripe_customer_id: string | null;
   last_digest_sent_at: string | null;
+  trial_nudge_sent_at: string | null;
   terms_accepted_at: string | null;
   terms_version: string | null;
   phone: string | null;
@@ -405,6 +407,7 @@ function toUser(r: UserRow): User {
     emailOptIn: r.email_opt_in !== 0,
     stripeCustomerId: r.stripe_customer_id,
     lastDigestSentAt: r.last_digest_sent_at,
+    trialNudgeSentAt: r.trial_nudge_sent_at,
     termsAcceptedAt: r.terms_accepted_at ?? null,
     termsVersion: r.terms_version ?? null,
     phone: r.phone ?? null,

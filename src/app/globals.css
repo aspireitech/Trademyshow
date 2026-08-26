@@ -1925,8 +1925,44 @@ footer.site {
 }
 .src-pill.real { color: var(--badge-gain); border-color: var(--gain); background: var(--gain-soft); }
 .src-pill.sim { color: var(--badge-warn); border-color: var(--warn); background: rgba(180, 83, 9, 0.09); }
+.src-info {
+  display: inline-flex;
+  cursor: help;
+  /* Full opacity, same green the "real data" pill itself uses — a
+     disclosure that's too faint to notice defeats the point of disclosing.
+     Quiet in shape (an icon, not a pill), not quiet in colour. */
+  color: var(--badge-gain);
+  font-size: 15px;
+  font-weight: 700;
+}
+.src-info:hover { filter: brightness(1.15); }
 
 /* ================= board intro ================= */
+
+/* Market table on the left, the news ticker pinned as a right rail instead
+   of a full-width strip below the table — the news widget is already
+   bounded-height and self-scrolling (.news-ticker), so it was always a
+   rail waiting to happen. Sticky for the same reason as the stock page's
+   news rail: a tall table shouldn't leave the rail behind as you scroll.
+   The table's own .mkt-tablewrap already scrolls horizontally on its own,
+   so narrowing its column here is safe rather than breaking the layout.
+   Collapses to one column below 1180px, where the table's columns start
+   losing room to the rail before either has space to breathe. */
+.board-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  gap: 16px;
+  align-items: start;
+}
+.board-side {
+  position: sticky;
+  top: 76px;
+}
+.board-side .news-panel { margin-top: 0; }
+@media (max-width: 1180px) {
+  .board-layout { grid-template-columns: minmax(0, 1fr); }
+  .board-side { position: static; }
+}
 
 .board-intro {
   display: flex;
@@ -2155,6 +2191,11 @@ footer.site {
 
 /* ---------- sign-up gate ---------- */
 
+@keyframes pop-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 .pop-backdrop {
   position: fixed;
   inset: 0;
@@ -2164,6 +2205,7 @@ footer.site {
   justify-content: center;
   padding: 20px;
   background: rgba(16, 26, 44, 0.45);
+  animation: pop-fade 0.25s ease-out both;
 }
 .pop {
   position: relative;
@@ -2173,6 +2215,10 @@ footer.site {
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(16, 26, 44, 0.28);
+  animation: pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop-backdrop, .pop { animation: none; }
 }
 .pop h3 { font-size: 19px; margin-bottom: 6px; }
 .pop p { font-size: 14px; }
@@ -2296,8 +2342,19 @@ footer.site {
   align-items: start;
 }
 .stock-lower-side h3 { margin-bottom: 4px; }
+/* Sticky rather than height-matched: the readings column (timeframes, score,
+   peers) is a different length on every symbol, so trying to make the news
+   card match it left blank space under a short news list. Pinning the rail
+   instead — the same technique .topbar already uses — means it just tracks
+   the scroll and never runs out of content to show. 76px clears the sticky
+   topbar (its own height plus a little air). */
+.stock-lower-side {
+  position: sticky;
+  top: 76px;
+}
 @media (max-width: 900px) {
   .stock-lower { grid-template-columns: minmax(0, 1fr); }
+  .stock-lower-side { position: static; }
 }
 
 /* ================= news ================= */

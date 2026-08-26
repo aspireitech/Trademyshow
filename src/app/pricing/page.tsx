@@ -91,7 +91,7 @@ export default function PricingPage() {
                 <li>Score band for any stock</li>
                 <li>All nine timeframes</li>
               </ul>
-              <Link href="/register" className="btn secondary" style={{ width: "100%", textAlign: "center" }}>
+              <Link href="/register?plan=free" className="btn secondary" style={{ width: "100%", textAlign: "center" }}>
                 Create free account
               </Link>
             </div>
@@ -112,7 +112,7 @@ export default function PricingPage() {
                 <li>Historical base rates</li>
                 <li>Email delivery</li>
               </ul>
-              <Link href="/register" className="btn" style={{ width: "100%", textAlign: "center" }}>
+              <Link href="/register?plan=pro" className="btn" style={{ width: "100%", textAlign: "center" }}>
                 Start {TRIAL_DAYS}-day trial
               </Link>
             </div>
@@ -132,7 +132,7 @@ export default function PricingPage() {
                 <li>Deepest per-holding analysis</li>
                 <li>Priority processing</li>
               </ul>
-              <Link href="/register" className="btn secondary" style={{ width: "100%", textAlign: "center" }}>
+              <Link href="/register?plan=premium" className="btn secondary" style={{ width: "100%", textAlign: "center" }}>
                 Start {TRIAL_DAYS}-day trial
               </Link>
             </div>
